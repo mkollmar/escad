@@ -1,0 +1,118 @@
+;; Copyright (C) 2013 Markus Kollmar
+;;
+;; This file is part of ESCAD.
+;;
+;; ESCAD is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU Affero General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
+;;
+;; ESCAD is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU Affero General Public License for more details.
+;;
+;; You should have received a copy of the GNU Affero General Public License
+;; along with ESCAD.  If not, see <http://www.gnu.org/licenses/>.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CONTENTS:
+
+1. INTRODUCTION
+2. USAGE
+3. END
+
+
+
+1. INTRODUCTION
+***************
+
+Hello, and welcome to ESCAD.
+
+ESCAD stands for <E>xtendable <S>ymbolic <C>omputer <A>ided <D>escription.
+It is a tool which allows you to model parts of the real world in symbolic form.
+Therefore it uses 2 objects:
+ - Symbols
+ - Relations.
+
+Symbols represent things or processes in the real world. For example a "man" could be a symbol.
+Relations represent relations between the symbols. For example "is_friend_of" could be a relation between to "man"-symbols.
+The whole system is extendable through expansions.
+
+
+
+2. USAGE
+********
+
+Quickstart
+----------
+In order to use escad, just load the lisp file.
+
+
+Help to help
+------------
+Follow commands are currently supported by escad:
+
+cs cls cos export-dot export-svg help lov lr ls mr ms nr ns r rr rs s sc ss sav tv.
+
+You can get the help to each command if you read the documentation string:
+(documentation 'ls 'function)  ; gives the documentation of the command "ls".
+
+
+Glossary
+--------
+Following explanations of terms will probably help you in further use:
+
+VIEW: place (server, file, device,...) which contains SCHEMATIC data.
+SCHEMATIC: combinations of symbols and relations in a view which can also contain references to other VIEWS.
+OBJECT: SYMBOL or RELATION.
+OBJECT-PROPERTY: All information a OBJECT contains. It's name is no property, it is it's idendity.
+URI (see rfc3986): specifies what kind of physic media the data is stored.
+DOMAIN: seperate namespace which groups OBJECT's or SCHEMATIC's. A DOMAIN name
+SYMBOL: object which represents/models something (state, thing, process,...) the editor want. 
+RELATION: object which represents/models a relationship between SYMBOLS.
+CONTEXT: The set of symbols and relations which are directly related to a symbol or relation.
+DATA: additional property of a object which is used mostly for representation tasks. In order to get
+      some effect of this data, you need a function for each data.
+EXPANSION: special symbol which has special functions and which can automatically generate things in DATA property.
+
+
+Usage-examples
+--------------
+For fast usage, here is a short introductional work-flow, which covers some basic tasks you
+may do with escad:
+
+(ls)  ; shows all currently existing symbols
+(ns "Man")  ; creates a new symbol with name "Man"
+(ns "Man2")  ; creates a new symbol with name "Man2"
+(nr "is_friend_of" "Man" "Man2")  ; creates a new relation "is_friend_of" from symbol "Man" to symbol "Man2"
+(lr)  ; list all relations
+(sav "filename.escad")  ; saves this current view
+(export_dot)  ; exports the current view to dot-file
+(export_svg)  ; exports the current view to svg-file
+(tv)  ; toggle in the other (until now empty) view of escad
+(lov "filename.lisp")  ; loads file in this view (now both view's have same content
+
+
+Future functions
+----------------
+
+- further export formats like "GraphML" or "rdf" to interact better with other tools
+- analysis tools to get statistics over symbols/relations
+- querys based not on query language, but of a model in escad itself.
+
+
+
+3. END
+******
+
+What i am allowed to do?
+------------------------
+COPYRIGHT on ESCAD has Markus Kollmar <markuskollmar@onlinehome.de>.
+ESCAD is licensed under: GNU AFFERO GENERAL PUBLIC LICENSE Version 3, 19 November 2007.
+If you want a other license (like for commercial purposes), please contact Markus Kollmar <markuskollmar@onlinehome.de>.
+
+
+HAVE FUN WITH ESCAD.
+
+:-)
