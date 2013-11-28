@@ -18,12 +18,10 @@
 
 ;;;;
 ;; TODO:
-;;   - Support URI names in symbols, relations and view-references.
-;;   - RDF support.
-;;   - querys based not on query language, but of a model in escad itself.
+;;   - Support URI in symbol-names, relation-names and view-reference-names.
+;;   - RDF export/import support via expansion.
+;;   - querys based on special symbols and tied relations in escad.
 ;;;
-
-;; GLOBAL definitions
 
 (in-package "COMMON-LISP-USER")
 (defpackage :de.markus-herbert-kollmar.escad
@@ -117,7 +115,7 @@
   (print-unreadable-object (object *current-stream* :type t)
 			   (with-slots (attributes comment data taxonomy ref_to ref_from view weight) object
 				       (format *current-stream*
-					       "attributes: ~s comment: ~s data: ~s taxonomy: ~s ref_to: ~s ref_from: ~s view_: ~s weight: ~s"
+					       "attributes: ~s comment: ~s data: ~s taxonomy: ~s ref_to: ~s ref_from: ~s view: ~s weight: ~s"
 					       attributes comment data taxonomy ref_to ref_from view weight))))
 
 (defparameter *current-stream* *STANDARD-OUTPUT*)
@@ -145,17 +143,17 @@
   (finish-output)
 )
 
-(defun get-tax-item (taxonomy-name)
-  ""
+(defun get-taxonomy-item (taxonomy-name)
+   "taxonomy-string -> taxonomy-item-list"
   (dolist (taxonomy-item (cadr *taxonomy*))
-    (if (search taxonomy-name (getf taxonomy-item :taxonomy))
-	(return-from get-tax-item taxonomy-item)))
+    (if (string= taxonomy-name (getf taxonomy-item :taxonomy))
+	(return-from get-taxonomy-item taxonomy-item)))
   nil)
 
 (defun get-taxonomy-type (taxonomy-name)
   "taxonomy-string -> type-string
 get the type of the taxonomy"
-  (let ((item (get-tax-item taxonomy-name)))
+  (let ((item (get-taxonomy-item taxonomy-name)))
     (if item
       (getf item :data-type)
       nil)))
@@ -225,13 +223,25 @@ get the type of the taxonomy"
   (nr "hatEnkel" "Mutter" "Kind")
   (nr "hatOma" "Kind" "Mutter"))
 
+(defun make-test-schematic2 ()
+  "Test commands."
+  (ns "Vater") (ns "Ich")
+  (nr "hatKind1" "Vater" "Ich"))
+
+(defun make-tutorial-schematic ()
+  "Deletes current view and creates schematic for internal tutorial."
+  (cls)
+  (ns "mother") (ns "father") (ns "myself")
+  (nr "has_child[1]" "mother" "myself") (nr "has_child[2]" "father" "myself") (nr "are_married" "father" "mother") (nr "hatKind1" "Vater" "Ich"))
+
 (defun path (path-list &optional (max-depth 10))
-  "given-path-list [depth] -> list of flat path(s)
-List all directed <path>s outgoing from given path with last retrieved (newest) symbol first.
+  "path-list [depth] -> list of flat path(s)
+List all directed <path>s outgoing from given path-list with last retrieved (newest) symbol first.
 Makes a list of flat path ((A B C A) (C B)) - no nested structures. Optional give a maximum iteration depth."
   (let ((start-sym '()) (result '()))
     (dolist (given-path path-list)  ; process all given paths
-      ;(print given-path)
+      (when (and (not result) (> (length given-path) 1))   ; if given path ends, save it and give it back again
+	(setq result (cons given-path result)))
       (setq start-sym (car given-path))
 	(with-slots ((ref_to-rels ref_to)) (gethash start-sym *symbols*)  ; get all outgoing relations
 	  (when ref_to-rels
@@ -248,7 +258,7 @@ Makes a list of flat path ((A B C A) (C B)) - no nested structures. Optional giv
 					      result))))
 		      (setq result (cons (nconc (list symbol ref_name) given-path)
 					 result)))))))))))
-  result))
+    result))
 
 (defun prompt-integer (prompt)
   "Prompt for integer, if none valid entered use 0."
@@ -399,20 +409,22 @@ COPYRIGHT on ESCAD has Markus Kollmar <markuskollmar@onlinehome.de>.
 ESCAD is licensed under: GNU AFFERO GENERAL PUBLIC LICENSE Version 3, 19 November 2007.
 
 Definitions of terms:
- * VIEW: referable place (server, file, device, memory...) which contains SCHEMATIC data. the two escad view's at runtime are referenced as
-         escad:1 and escad:2. Schematics on http server is escad:http://www.domain.org/file, for local file escad:file://dir/file.
- * SCHEMATIC: combinations of symbols and relations (can also describe a graph) in a view which can also contain references to other VIEWS.
- * OBJECT: SYMBOL or RELATION.
- * OBJECT-PROPERTY: All information a OBJECT contains. It's name is no property, it is it's idendity.
- * URI (see rfc3986): specifies what kind of physic media the data (e.g. view) is stored.
- * SYMBOL: object which represents/models something (state, thing, process,...) the editor want. 
- * RELATION: object which represents/models a relationship between SYMBOLS.
  * CONTEXT: The set of symbols and relations which are directly related to a symbol or relation.
  * DATA: universal usable property of a object depending on it's taxonomy.
  * EXPANSION: Concept to adapt escad for a special domain-specific purpose. It is similar like a app for your smartphone.
               Used expansions appear as symbols in your schematic too. Expansions must at least provide 2 methods:
                 1. a '(help)' method which gives a help string about aim of the expansion, usage and all methods and options.
                 2. a '(compatible ESCAD_VERSION_string)' method, which should signal true if expansion is compatible with given escad version.
+ * OBJECT-PROPERTY: All information a OBJECT contains. It's name is no property, it is it's idendity.
+ * OBJECT: SYMBOL or RELATION.
+ * PATH-LIST: List with list(s) of symbol-relation-symbol-relation... names which are connected (at least a symbol must be given):
+              '((Sym1 Rel2) (SymX)).
+ * RELATION: object which represents/models a relationship between SYMBOLS.
+ * SCHEMATIC: combinations of symbols and relations (can also describe a graph) in a view which can also contain references to other VIEWS.
+ * SYMBOL: object which represents/models something (state, thing, process,...) the editor want. 
+ * URI (see rfc3986): specifies what kind of physic media the data (e.g. view) is stored.
+ * VIEW: referable place (server, file, device, memory...) which contains SCHEMATIC data. the two escad view's at runtime are referenced as
+         escad:1 and escad:2. Schematics on http server is escad:http://www.domain.org/file, for local file escad:file://dir/file.
 
 Following commands (collected in a list) are currently available:")
 `(let ((lst ()))
@@ -439,7 +451,9 @@ This activates the symbol. You can do this with every symbol. But depending on t
 E.g. expansion-symbols will do their configured work if you activate them.
 But most of the symbols only print some text, which is the DATA (content) of the symbol."))
     ((= ,step 1)
-(format t "Now we want begin to make something usefull. We want create a small and simple family-tree. Just type following lines:
+(format t "Now we want begin to make something usefull. We want create a small and simple family-tree. Just type following line:
+'(make-tutorial-schematic)'
+which in automatically executes following commands:
 '(ns \"mother\")'
 '(ns \"father\")'
 '(ns \"myself\")'
