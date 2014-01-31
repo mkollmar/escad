@@ -18,9 +18,8 @@
 
 ;;;;
 ;; TODO:
-;;   - Support URI in symbol-names, relation-names and view-reference-names.
+;;   - Support URI in links to symbol-names and links to relation-names.
 ;;   - RDF export/import support via expansion.
-;;   - querys based on special symbols and tied relations in escad.
 ;;;
 
 (in-package "COMMON-LISP-USER")
@@ -28,50 +27,43 @@
   (:use :common-lisp :system)
   (:nicknames :escad)
   (:shadow #:cos :exp)
-  (:export :ad :adp :apc :as :asp :aup :cs :cls :cos :get-copyright-info :grp :gsp :help :help-command :help-tutorial :le :lea :lov :lr :ls
-	   :lta :mr :ms :nr :ns :r :rr :rs :s :sc :ss :sav :tv)
+  (:export :rel :ref_from :ref_to
+	   :ad :adp :apc :as :asp :aup :cs :cls :cos :get-copyright-info :grp :gsp :help :help-command :help-tutorial
+	   :le :lov :lr :ls :lta :mr :ms :nr :ns :r :rr :rs :s :sc :ss :sav :tv
+	   :*escad-lib-dir* :*escad-view-dir*)
   (:documentation "Expandable Symbolic Computer Aided Description."))
 (in-package :de.markus-herbert-kollmar.escad)
 
 
 ;; USER CONFIG START
-(defparameter *escad-view-dir* "./")
-(defparameter *escad-attribute-file* "./lib/attribute.lisp")
-(defparameter *escad-expansion-file* "./lib/expansion.lisp")
-(defparameter *escad-taxonomy-file* "./lib/taxonomy.lisp")
-(defparameter *escad_tmp_file* "./escad4567.tmp")
+(defparameter *escad-view-dir* "./" "This directory will be used to save and load view's if no directory is specified.")
+(defparameter *escad-lib-dir* "./lib/" "This directory will be used to look for expansions and the standard escad-taxonomy.")
+(defparameter *escad-taxonomy-file* "./lib/escad_taxonomy.lisp" "Actual valid taxonomy-tree for whole insertable symbols and relations.")
+(defparameter *escad_tmp_file* "./escad4567.tmp" "Temporary file used mostly for export-functions.")
 ;; USER CONFIG END
 
 
 (defclass obj ()
-  ((comment
+  ((attributes
+    :initarg :attributes
+    :documentation "Association list with attributes, which specify things of object nearer as: (KEY VALUE). Some attributes control data-slot."
+    :initform '()
+    :reader attributes)
+   (comment
     :documentation "Description or notices to a object."
     :initarg :comment
     :initform "")
-   (data
-    :documentation "List with contents depending on taxonomy, which explains object in more detail."
-    :initarg :data
-    :initform '())
-   (view
-    :documentation "URI describing the location of the data. Escad view in memory has URI escad:1 or escad:2."
-    :initarg :view
-    :initform '())
+   (taxonomy
+    :documentation "Classificates the object into a defined taxonomy-scheme to indicate basic meaning of the object."
+    :initarg :taxonomy
+    :reader taxonomy)
    (weight
     :initarg :weight
     :documentation "Number from -100 to 100 that indicates the rated weight/importance of object."
     :initform '())))
 
 (defclass sym (obj)
-  ((taxonomy
-    :initarg :taxonomy
-    :initform "escad.symbol"
-    :reader taxonomy)
-   (attributes
-    :initarg :attributes
-    :documentation "List with attributes, which specify things of symbol nearer."
-    :initform '()
-    :reader attributes)
-   (ref_to
+  ((ref_to
     :initarg :ref_to
     :documentation "List with relation-names, which indicate the relations which go to another symbol (but need not to be directed!)."
     :initform '())   
@@ -81,16 +73,7 @@
     :initform '())))
 
 (defclass rel (obj)
-  ((taxonomy
-    :initarg :taxonomy
-    :initform "escad.relation"
-    :reader taxonomy)
-   (attributes
-    :initarg :attributes
-    :documentation "Association list with attributes, which specify things of relation as: (KEY VALUE)."
-    :initform '()
-    :reader attributes)
-   (ref_to
+  ((ref_to
     :initarg :ref_to
     :documentation "List with one symbol-name that indicate to which symbol the relation points.")
    (ref_from
@@ -99,24 +82,24 @@
 
 (defmethod print-object ((object obj) *current-stream*)
   (print-unreadable-object (object *current-stream* :type t)
-			   (with-slots (comment data view weight) object
+			   (with-slots (comment weight) object
 				       (format *current-stream*
-					       "comment: ~s data: ~s view: ~s weight: ~s"
-					        comment data view weight))))
+					       "comment: ~s weight: ~s"
+					        comment weight))))
 
 (defmethod print-object ((object sym) *current-stream*)
   (print-unreadable-object (object *current-stream* :type t)
-			   (with-slots (attributes comment data taxonomy ref_to ref_from view weight) object
+			   (with-slots (attributes comment taxonomy ref_to ref_from weight) object
 				       (format *current-stream*
-					       "attributes: ~s comment: ~s data: ~s taxonomy: ~s ref_to: ~s ref_from: ~s view: ~s weight: ~s"
-					        attributes comment data taxonomy ref_to ref_from view weight))))
+					       "attributes: ~s comment: ~s taxonomy: ~s ref_to: ~s ref_from: ~s weight: ~s"
+					        attributes comment taxonomy ref_to ref_from weight))))
 
 (defmethod print-object ((object rel) *current-stream*)
   (print-unreadable-object (object *current-stream* :type t)
-			   (with-slots (attributes comment data taxonomy ref_to ref_from view weight) object
+			   (with-slots (attributes comment taxonomy ref_to ref_from view weight) object
 				       (format *current-stream*
-					       "attributes: ~s comment: ~s data: ~s taxonomy: ~s ref_to: ~s ref_from: ~s view: ~s weight: ~s"
-					       attributes comment data taxonomy ref_to ref_from view weight))))
+					       "attributes: ~s comment: ~s taxonomy: ~s ref_to: ~s ref_from: ~s weight: ~s"
+					       attributes comment taxonomy ref_to ref_from weight))))
 
 (defparameter *current-stream* *STANDARD-OUTPUT*)
 (defparameter *symbols1* (make-hash-table :test 'equal))
@@ -130,8 +113,7 @@
 (defvar *current_symbol* *current_symbol1*)
 (defparameter *escad_version* 0)
 (defparameter *escad_file_format* 0)
-(defparameter *attributes* nil "Whole available attribute-tree of escad for symbols and relations.")
-(defparameter *taxonomy* nil "Whole available taxonomy-tree of escad for symbols and relations.")
+(defparameter *taxonomy* nil "Whole available taxonomy-tree of escad for symbols, relations and attributes.")
 (defparameter *expansions* nil "What expansion are currently available.")
 
 
@@ -150,19 +132,17 @@
 	(return-from get-taxonomy-item taxonomy-item)))
   nil)
 
-(defun get-taxonomy-type (taxonomy-name)
-  "taxonomy-string -> type-string
-get the type of the taxonomy"
+(defun get-taxo-prop (taxonomy-name property)
+  "taxonomy-string :property-key -> type-string
+<get> <taxo>nomy <prop>erty of the taxonomy."
   (let ((item (get-taxonomy-item taxonomy-name)))
     (if item
-      (getf item :data-type)
+      (getf item property)
       nil)))
 
 (defun init-escad ()
   (init-views)
   (load-taxonomy)
-  (load-attributes)
-  (load-expansion-info)
   (pprint "Welcome and thanks for using escad!  :-)")
   (pprint "If you are new to escad and need help:")
   (pprint "Type now '(in-package :escad)' to get into escad namespace.")
@@ -170,8 +150,8 @@ get the type of the taxonomy"
 
 (defun init-views ()
   "Initialize escad view."
-  (ns "_escad_") (s "_escad_" :data '(:author "?") :taxonomy "escad.symbol.escad.environment") (tv)
-  (ns "_escad_") (s "_escad_" :data '(:author "?") :taxonomy "escad.symbol.escad.environment") (tv)  (cs "_escad_"))
+  (ns "_escad") (s "_escad" :taxonomy "escad.symbol._escad.config") (tv)
+  (ns "_escad") (s "_escad" :taxonomy "escad.symbol._escad.config") (tv)  (cs "_escad"))
 
 (defun join-string-list (string-list)
     "Concatenates a list of strings and puts ', ' between the elements."
@@ -190,24 +170,6 @@ get the type of the taxonomy"
              (function <)
 	     :key (function car))))
 
-(defun load-attributes (&optional (attributes-filename *escad-attribute-file*))
-  "Load in all available attributes information."
-  (with-open-file (in attributes-filename)
-		  (with-standard-io-syntax
-		   (setf *attributes* (read in)))))
-
-(defun load-expansion-info (&optional (expansion-filename *escad-expansion-file*))
-  "Load in expansion information."
-  (with-open-file (in expansion-filename)
-		  (with-standard-io-syntax
-		   (setf *expansions* (read in)))))
-
-(defun load-expansion (&optional (expansion-filename *escad-expansion-file*))
-  "Load in expansion functions."
-  (with-open-file (in expansion-filename)
-		  (with-standard-io-syntax
-		   (setf *expansions* (read in)))))
-
 (defun load-taxonomy (&optional (taxonomy-filename *escad-taxonomy-file*))
   "Load in taxonomy-tree information."
   (with-open-file (in taxonomy-filename)
@@ -217,6 +179,7 @@ get the type of the taxonomy"
 (defun make-test-schematic ()
   "Test commands."
   (ns "Vater") (ns "Ich") (ns "Kind") (ns "Mutter")
+  (ns "report-expansion" :taxonomy "escad.symbol._escad.report.txt")
   (nr "hatKind1" "Vater" "Ich")
   (nr "hatKind2" "Ich" "Kind")
   (nr "hatKind3" "Mutter" "Ich")
@@ -276,6 +239,36 @@ Makes a list of flat path ((A B C A) (C B)) - no nested structures. Optional giv
 
 ;;;;
 ;; USER-COMMANDS:
+(defun asa (symbol-name attribute-taxonomy value)
+  "symbol-name ->
+<A>dd <s>ymbol <a>ttributes depending of key."
+  (multiple-value-bind (sym sym-exists) (gethash symbol-name *symbols*)
+		       (if sym-exists
+			 (with-slots ((a attributes)) (gethash symbol-name *symbols*)
+				     (setf a (remove attribute-taxonomy a :key #'car :test #'string=))  ; remove some possibly existing key
+				     (setf a (acons attribute-taxonomy value a))
+				     a))
+		       nil))
+
+(defun rsa (symbol-name attribute-taxonomy)
+  "symbol-name ->
+<R>emove <s>ymbol <a>ttributes depending of key."
+  (multiple-value-bind (sym sym-exists) (gethash symbol-name *symbols*)
+		       (if sym-exists
+			 (with-slots ((a attributes)) (gethash symbol-name *symbols*)
+				     (setf a (remove attribute-taxonomy a :key #'car :test #'string=))
+				     a))
+		       nil))
+
+(defun gsa (symbol-name attribute-taxonomy)
+  "symbol-name ->
+<G>et <s>ymbol <a>ttributes depending of key."
+  (multiple-value-bind (sym sym-exists) (gethash symbol-name *symbols*)
+		       (if sym-exists
+			 (with-slots ((a attributes)) (gethash symbol-name *symbols*)
+				     (cdr (assoc attribute-taxonomy a :test #'string=)))
+			 nil)))
+
 (defun ad ()
   "-> diameter longest-path
 <a>nalyze <d>iameter (length of longest path) of current view."
@@ -306,22 +299,23 @@ Makes a list of flat path ((A B C A) (C B)) - no nested structures. Optional giv
 	(return-from apc nil)))
   t)
 
-(defun as (&optional (symbol "_escad_"))
+(defun as (&optional (symbol "_escad"))
   "[symbol-name] ->
 <a>ctivate <s>ymbol in current view.
 What happens depends on the taxonomy of the symbol. Many symbols print out a string as their contents.
 Symbols which represent expansions will execute the configured function of the expansion."
-  (let* ((taxonomy-name (getf (gsp (s symbol)) :taxonomy)) (taxonomy-type (get-taxonomy-type taxonomy-name)))
+  (let* ((taxonomy-name (getf (gsp (s symbol)) :taxonomy))
+	 (expansion-file (get-taxo-prop taxonomy-name :expansion))
+	 (expansion-package (get-taxo-prop taxonomy-name :package))
+	 (taxonomy-documentation (get-taxo-prop taxonomy-name :doc))
+	 (expansion-function (get-taxo-prop taxonomy-name :function)))
     (cond
-     ((string= "STRING" taxonomy-type)  ; print out string (used by many symbols)
-      (car (getf (gsp (s symbol)) :data)))
-     ((string= "VALUE-LIST" taxonomy-type)  ; print value list (mostly used by group-symbols)
-      (getf (gsp (s symbol)) :data))
-     ((string= "KEY_VALUE-LIST" taxonomy-type)  ; print key-values (mostly used by configuration-symbols)
-      (getf (gsp (s symbol)) :data))
-     ((string= "CALL-LIST" taxonomy-type)  ; used to call expansions
-      (apply (car (getf (gsp (s symbol)) :data)) (rest (getf (gsp (s symbol))))))
-     (t "nil"))))
+     (expansion-file  ; this seems to be expansion
+      (load (concatenate 'string *escad-lib-dir* expansion-file))
+      (use-package expansion-package)
+      (funcall (read-from-string expansion-function) (list symbol))
+      (pprint taxonomy-documentation))
+     (t (pprint taxonomy-documentation)))))
 
 (defun asp (symbol1 symbol2)
   "symbol-name1 symbol-name2 -> path-list
@@ -382,9 +376,9 @@ If you want a other license (like for commercial purposes), please contact Marku
   "relation-object -> property-list
 <g>et <r>elation <p>roperties as result in a property list."
   (if (eq (type-of relation) 'REL)
-      (with-slots ((data1 data) (comment1 comment) (taxonomy1 taxonomy)
+      (with-slots ((comment1 comment) (taxonomy1 taxonomy)
 		   (ref_from1 ref_from) (ref_to1 ref_to)) relation
-		   (list :comment comment1 :data data1 :taxonomy taxonomy1
+		   (list :comment comment1 :taxonomy taxonomy1
 			 :ref_from ref_from1 :ref_to ref_to1))
     nil))
 
@@ -392,25 +386,25 @@ If you want a other license (like for commercial purposes), please contact Marku
   "symbol-object -> property-list
 <g>et <s>ymbol <p>roperties as result in a property list."
   (if (eq (type-of symbol) 'SYM)
-      (with-slots ((data1 data) (comment1 comment) (taxonomy1 taxonomy)) symbol
-		  (list :comment comment1 :data data1 :taxonomy taxonomy1))
+      (with-slots ((comment1 comment) (taxonomy1 taxonomy)) symbol
+		  (list :comment comment1 :taxonomy taxonomy1))
     nil))
 
 (defmacro help ()
   "-> command-list
 Print overview of escad, meaning of terms and all available commands."
 (pprint
-"escad allows you to create, edit and view graphs. There can be expansions for all domains you want model as graph.
+"escad allows you to create, edit, analyze and view graphs. There can be expansions for all domains you want model as graph.
 Call (help-command 'Command-name) or (help) for more help.
 Call (help-tutorial <step>) where step is a number starting from 0 (beginnging) to get a interactive tutorial to get a feeling of escad's basics.
-Try this tutorial if you new - you will create a nice family-tree there.  :-)
+Try this tutorial if you new.  :-)
 
 COPYRIGHT on ESCAD has Markus Kollmar <markuskollmar@onlinehome.de>.
 ESCAD is licensed under: GNU AFFERO GENERAL PUBLIC LICENSE Version 3, 19 November 2007.
 
 Definitions of terms:
+ * ATTRIBUTES: universal usable property of a object.
  * CONTEXT: The set of symbols and relations which are directly related to a symbol or relation.
- * DATA: universal usable property of a object depending on it's taxonomy.
  * EXPANSION: Concept to adapt escad for a special domain-specific purpose. It is similar like a app for your smartphone.
               Used expansions appear as symbols in your schematic too. Expansions must at least provide 2 methods:
                 1. a '(help)' method which gives a help string about aim of the expansion, usage and all methods and options.
@@ -441,19 +435,20 @@ Following commands (collected in a list) are currently available:")
 Print a defined part of a tutorial which covers all basic usage of escad."
   `(cond
     ((= ,step 0)
-(format t "First try to type
+(format t "Hello, welcome to the escad tutorial. Hope you have fun! :-) Let's start immediately! First try to type
 '(ls)'.
 This shows you all symbols on the schematic. You may expect none, but instead you should see one.
 There is nothing wrong with this. It is a symbol which escad creates automatically. With this symbol you can configure your escad environment
-for the current session. To see what the possible settings of the symbol are, type
-'(as \"_escad_\")'.
-This activates the symbol. You can do this with every symbol. But depending on the taxonomy of the symbol, there is different behaviour.
+for the current session. It also show command-history, status- and error-messages of escad.
+To see more about this symbol, type
+'(as \"_escad\")'.
+This 'activates' the symbol. You can do this with every symbol. But depending on the taxonomy of the symbol, there is different behaviour.
 E.g. expansion-symbols will do their configured work if you activate them.
-But most of the symbols only print some text, which is the DATA (content) of the symbol."))
+But most of the symbols print some text, which is the meaningfull (content) of the symbol."))
     ((= ,step 1)
 (format t "Now we want begin to make something usefull. We want create a small and simple family-tree. Just type following line:
 '(make-tutorial-schematic)'
-which in automatically executes following commands:
+which automatically executes following commands:
 '(ns \"mother\")'
 '(ns \"father\")'
 '(ns \"myself\")'
@@ -481,29 +476,31 @@ To get the shortest path between 2 symbols use:
 "))
     ((= ,step 3)
 (format t "This may all be nice, but we want also a printing of our family-tree. Some things are better seen in a graphical way.
-Luckily escad has a tool for you. Since escad is a commandline-tool to describe schematics, you have no direct command to do this.
-But for additional purposes there are EXPANSIONS. Those tools allow you to make further things with your modeled graph.
-Some expansions also allow you a easier editing and creation of your schematic. But we need a export-expansion, which
-exports our family-tree to graphic.
-To show all available expansions use this:
-'(lea)'
+Luckily escad has a tool for you. If you are curious, you probably will search for such a command. But i must admit there is none!
+So how can we do such things? You always may have heard about expansions. Exactly that is our solution.
+Since escad is a tool to describe schematics, you have no direct command to do this. Instead you insert another symbol, which represents
+a 'exporter' tool. Those symbol you can 'activate' with 'as'-command again. Then it invokes the expansion which the symbols represents
+and exports your schematic. Easy - isn't it?
+This is true for all expansions! This is the basic princip you work in escad. Nothing much more than inserting symbols and relations
+and setting those.
+Of course there need first to exist a expansion programmed for your need. Currently there are not much expansions (of course escad works
+also without expansions). But escad grows and you can programm (or let programm)
+expansions for your need, since escad programm-code is free!
+
+To show all available exporting-related symbol-taxonomies, use this:
+'(lta \"escad.symbol._escad.export\")'
 It looks good, SVG is a graphic-format you can mostly view in your browser and it is also good vector-graphic quality.
-To use this export-expansion you have to insert it in your current schematic. It will show up there as a new symbol - but do not
+To use this export-symbol you have to insert it in your current schematic. It will show up there as a new symbol - but do not
 panic, it will not be shown on our graphical family-tree. So type:
-'(ne \"Make-SVG-Graphic\" \"escad.export.svg\" \"activate\")'
+'(ns \"Make-SVG-Graphic\" : taxonomy \"_escad.export.svg\")'
 "))
     ((= ,step 4)
-(format t "Now you should first save our view (the family-tree) on the file-system of your computer with:
+(format t "Now you should first save our view (this family-tree) on the file-system of your computer with:
 '(sav)'
-To generate your svg-graphic just activate our expansion, whic is now nothing else than a normal escad-symbol,
-you can prove by the known command:
-'(ls)'
-There is also a special command which only lists the expansion in the view:
-'(le)'
-However you know already that activation makes symbols which represent expansions, to work - so type:
+To generate your svg-graphic just activate our expansion-related symbol with
 '(as \"Make-SVG-Graphic\")'
 This produces a svg-file in a settable directory - standard is the directory where your escad.lisp file is.
-To whatch the svg file, simple turn on an new web-browser with svg-support and search the file.
+To whatch the svg file, simple turn on an actual web-browser with svg-support and search the file.
 "))
     ((= ,step 5)
 (format t "Now you got the very basic idea of escad. Try to explore it by yourself. The online-documentation will perhaps help you:
@@ -517,25 +514,9 @@ Thanks. :-)
 "))
     (t (princ "Type (help-tutorial N) where N is a number beginning with 0, to describe which tutorial step you want see."))))
 
-(defun le (&optional filter)
-  "<L>ist all symbols which represent <e>xpansions in current schematic."
-  (ssel (ls) :taxonomy "escad.symbol.escad.expansion"))
-
-(defun lea (&optional filter)
-  "[filter-string] -> list of all, or matching the filter-string, expansion-strings
-<L>ist <e>xpansions currently loaded and <a>vailable for schematic."
-  (let ((expansions '()))
-    (if filter
-	(dolist (expansion-item (cadr *expansions*))
-	  (if (search filter (getf expansion-item :expansion))
-	      (push (getf expansion-item :expansion) expansions)))
-      (dolist (expansion-item (cadr *expansions*))
-	(push (getf expansion-item :expansion) expansions)))
-    expansions))
-
 (defun lov (file_name)
   "file-name -> T
-<lo>ad <v>iew from file[18~ into memory. All current symbols and relations will be deleted!"
+<lo>ad <v>iew from file into memory. All current symbols and relations will be deleted!"
   (let ((input '()) header symbols relations)
     (with-open-file (in (concatenate 'string *escad-view-dir* file_name))
 		    (with-standard-io-syntax
@@ -551,12 +532,12 @@ Thanks. :-)
     (clrhash *relations*)
     (dolist (x symbols)
       (setf (gethash (cdr (assoc 'name x)) *symbols*)
-	    (make-instance 'sym :comment (cdr (assoc 'comment x)) :data (cdr (assoc 'data x))
+	    (make-instance 'sym :comment (cdr (assoc 'comment x)) :attributes (cdr (assoc 'attributes x))
 			   :ref_from (cdr (assoc 'ref_from x)) :ref_to (cdr (assoc 'ref_to x))
 			   :taxonomy (cdr (assoc 'taxonomy x)))))
     (dolist (x relations)
       (setf (gethash (cdr (assoc 'name x)) *relations*)
-	    (make-instance 'sym :comment (cdr (assoc 'comment x)) :data (cdr (assoc 'data x))
+	    (make-instance 'sym :comment (cdr (assoc 'comment x)) :attributes (cdr (assoc 'attributes x))
 			   :ref_from (cdr (assoc 'ref_from x)) :ref_to (cdr (assoc 'ref_to x))
 			   :taxonomy (cdr (assoc 'taxonomy x))))))
   T)
@@ -599,14 +580,7 @@ Thanks. :-)
   (remhash name *symbols*)
   (gethash new_name *symbols*))
 
-(defun ne (name expansion_name command &key comment)
-  "symbol-name expansion-name command-string [comment] -> symbol-object
-Create a <n>ew <e>xpansion with given name and possible additional values in schematic."
-  (if (load-expansion expansion_name)
-      (ns name :comment comment :data (list (read-from-string command)) :taxonomy "escad.symbol.escad.expansion")
-    nil))
-
-(defun nr (name ref_from ref_to &key comment data (taxonomy "escad.relation.directed") weight)
+(defun nr (name ref_from ref_to &key attributes comment (taxonomy "escad.relation") weight)
   "relation-name ref_from ref_to [comment data taxonomy weight] -> relation-object
 Create <n>ew directed (default) <r>elation with given name and possible additional values in schematic.
 To make this relation undirected or bidirected, set the correct taxonomy."
@@ -619,17 +593,17 @@ To make this relation undirected or bidirected, set the correct taxonomy."
 			   (with-slots ((ref_to2 ref_to)) (gethash ref_from *symbols*)
 				       (pushnew name ref_to2))
 			   (setf (gethash name *relations*)
-				 (make-instance 'rel :comment comment :data data
+				 (make-instance 'rel :attributes attributes :comment comment
 						:ref_to (list ref_to) :ref_from (list ref_from) :taxonomy taxonomy))))))
 
-(defun ns (name &key comment data (taxonomy "escad.symbol"))
-  "symbol-name [comment data taxonomy] -> symbol-object
+(defun ns (name &key attributes comment (taxonomy "escad.symbol") weight)
+  "symbol-name [attributes comment taxonomy] -> symbol-object
 Create a <n>ew <s>ymbol with given name and possible additional values in schematic."
   (multiple-value-bind (sym sym-exists) (gethash name *symbols*)
 		       (if sym-exists
 			   nil
 			 (setf (gethash name *symbols*)
-			       (make-instance 'sym :comment comment :data data :taxonomy taxonomy)))))
+			       (make-instance 'sym :attributes attributes :comment comment :taxonomy taxonomy)))))
 
 (defun psd (name)
   "<P>rompt for guided <s>ymbol <d>ata input. TODO!"
@@ -637,18 +611,17 @@ Create a <n>ew <s>ymbol with given name and possible additional values in schema
     (if (setq tax (taxonomy (s name)))
 	(progn
 	  (cond
-	   ((string= "EXPANSION-INTERFACE_LIST" (get-taxonomy-type tax)) (setq data (prompt-expansion-interface-list))))
+	   ((string= "EXPANSION-INTERFACE_LIST" (get-taxo-prop tax :data-type)) (setq data (prompt-expansion-interface-list))))
 	  (s name :data data))
       (error "no taxonomy"))))
 
-(defun r (name &key comment data ref_from ref_to taxonomy)
-  "relation-name [comment data ref_from ref_to taxonomy] -> nil
+(defun r (name &key attributes comment ref_from ref_to taxonomy)
+  "relation-name [attributes comment ref_from ref_to taxonomy] -> nil
 Sets <r>elation properties (slots) given by key - if any given - and returns relation, or 'nil' if not existent."
   (multiple-value-bind (rel rel-exists) (gethash name *relations*)
 		       (if rel-exists
-			 (with-slots ((data1 data) (comment1 comment) (ref_from1 ref_from) (ref_to1 ref_to)
+			 (with-slots ((comment1 comment) (ref_from1 ref_from) (ref_to1 ref_to)
 				      (taxonomy1 taxonomy)) (gethash name *relations*)
-				      (if data     (setf data1 data))
 				      (if comment  (setf comment1 comment))
 				      (if ref_from (push ref_from ref_from1))
 				      (if ref_to   (push ref_to ref_to1))
@@ -680,13 +653,13 @@ Sets <r>elation properties (slots) given by key - if any given - and returns rel
   (remhash name *symbols*)
   name)
 
-(defun s (name &key comment data taxonomy)
+(defun s (name &key attributes comment taxonomy)
   "symbol-name ->
-Sets <s>ymbol properties (slots) given by key - if any given - and returns symbol, or 'nil' if not existent."
+Sets <s>ymbol comment or taxonomy depending of key - if any given - and returns symbol, or 'nil' if not existent."
   (multiple-value-bind (sym sym-exists) (gethash name *symbols*)
 		       (if sym-exists
-			 (with-slots ((data1 data) (comment1 comment) (taxonomy1 taxonomy)) (gethash name *symbols*)
-				     (if data (setf data1 data))
+			 (with-slots ((attributes1 attributes) (comment1 comment) (taxonomy1 taxonomy)) (gethash name *symbols*)
+				     (if attributes (setf attributes1 attributes))
 				     (if comment (setf comment1 comment))
 				     (if taxonomy (setf taxonomy1 taxonomy))
 				     (gethash name *symbols*))
@@ -698,13 +671,13 @@ Sets <s>ymbol properties (slots) given by key - if any given - and returns symbo
   (let ((output (make-array 3 :fill-pointer 0)) (symbols '()) (relations '()))
     (vector-push (list (cons 'escad_version *escad_version*) (cons 'escad_file_format *escad_file_format*)) output)
     (dolist (name (ls))
-      (with-slots (comment data ref_from ref_to taxonomy weight) (gethash name *symbols*)
-		  (push (list (cons 'name name) (cons 'data data) (cons 'comment comment) (cons 'taxonomy taxonomy)
+      (with-slots (attributes comment ref_from ref_to taxonomy weight) (gethash name *symbols*)
+		  (push (list (cons 'attributes attributes) (cons 'name name) (cons 'comment comment) (cons 'taxonomy taxonomy)
 			      (cons 'ref_from ref_from) (cons 'ref_to ref_to) (cons 'weight weight)) symbols)))
     (vector-push symbols output)
     (dolist (name (lr))
-      (with-slots (comment data ref_from ref_to taxonomy weight) (gethash name *relations*)
-		  (push (list (cons 'name name) (cons 'data data) (cons 'comment comment) (cons 'taxonomy taxonomy)
+      (with-slots (attributes comment ref_from ref_to taxonomy weight) (gethash name *relations*)
+		  (push (list (cons 'attributes attributes) (cons 'name name) (cons 'comment comment) (cons 'taxonomy taxonomy)
 			      (cons 'ref_from ref_from) (cons 'ref_to ref_to) (cons 'weight weight)) relations)))
     (vector-push relations output)
     (with-open-file (out (concatenate 'string *escad-view-dir* file_name)
