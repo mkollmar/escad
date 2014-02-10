@@ -1,4 +1,4 @@
-;; Copyright (C) 2011, 2012, 2013 Markus Kollmar
+;; Copyright (C) 2011, 2012, 2013, 2014 Markus Kollmar (email: markuskollmar@onlinehome.de)
 ;;
 ;; This file is part of ESCAD.
 ;;
@@ -16,21 +16,16 @@
 ;; along with ESCAD.  If not, see <http://www.gnu.org/licenses/>.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;;;;
-;; TODO:
-;;   - Support URI in links to symbol-names and links to relation-names.
-;;   - RDF export/import support via expansion.
-;;;
-
 (in-package "COMMON-LISP-USER")
 (defpackage :de.markus-herbert-kollmar.escad
   (:use :common-lisp :system)
   (:nicknames :escad)
   (:shadow #:cos :exp)
-  (:export :rel :ref_from :ref_to
-	   :ad :adp :apc :as :asp :aup :cs :cls :cos :get-copyright-info :grp :gsp :help :help-command :help-tutorial
-	   :le :lov :lr :ls :lta :mr :ms :nr :ns :r :rr :rs :s :sc :ss :sav :tv
-	   :*escad-lib-dir* :*escad-view-dir*)
+  (:export :attributes :comment :taxonomy :rel :ref_from :ref_to
+	   :ad :adp :apc :ara :as :asa :asp :aup :cs :cls :cos :get-copyright-info :gra :grp :gsa :gsp :help :help-command :help-tutorial
+	   :le :los :lov :lr :ls :lta :mr :ms :nr :ns :r :rp :rr :rra :rs :rsa :s :sc :sp :ss :sav :tv
+	   :call-expansion-function :file-data2string
+	   :*escad-lib-dir* :*escad-view-dir* :*escad_tmp_file*)
   (:documentation "Expandable Symbolic Computer Aided Description."))
 (in-package :de.markus-herbert-kollmar.escad)
 
@@ -114,16 +109,30 @@
 (defparameter *escad_version* 0)
 (defparameter *escad_file_format* 0)
 (defparameter *taxonomy* nil "Whole available taxonomy-tree of escad for symbols, relations and attributes.")
-(defparameter *expansions* nil "What expansion are currently available.")
 
 
 ;;;;
 ;; helper-functions
+(defun call-expansion-function (taxonomy-name expansion-function &optional arguments)
+  "taxonomy-name-string expansion-function-name-string -> return-value-from-expansion_function
+call expansion function."
+  (load (concatenate 'string *escad-lib-dir* (get-taxo-prop taxonomy-name :expansion)))
+  (use-package (get-taxo-prop taxonomy-name :package))
+  (funcall (read-from-string (get-taxo-prop taxonomy-name :function)) (list arguments)))
+
 (defun escad-debug-message (string)
   "Writes string to stderr and flush."
   (format *error-output* "DEBUG: ~S " string)
   (finish-output)
 )
+
+(defun file-data2string (path)
+  "file-name-string -> string
+read all contents of file into a string"
+  (with-open-file (stream path)
+    (let ((string (make-string (file-length stream))))
+      (read-sequence string stream)
+      string)))
 
 (defun get-taxonomy-item (taxonomy-name)
    "taxonomy-string -> taxonomy-item-list"
@@ -143,15 +152,16 @@
 (defun init-escad ()
   (init-views)
   (load-taxonomy)
-  (pprint "Welcome and thanks for using escad!  :-)")
+  (pprint "Welcome and thanks for using escad (version gamma-2014)!  :-)")
   (pprint "If you are new to escad and need help:")
   (pprint "Type now '(in-package :escad)' to get into escad namespace.")
   (pprint "Then type '(help)' to get further info about your escad, and what you can do with it."))
 
 (defun init-views ()
   "Initialize escad view."
-  (ns "_escad") (s "_escad" :taxonomy "escad.symbol._escad.config") (tv)
-  (ns "_escad") (s "_escad" :taxonomy "escad.symbol._escad.config") (tv)  (cs "_escad"))
+  (ns "_escad") (s "_escad" :taxonomy "escad.symbol._escad") (ns "_view") (s "_view" :taxonomy "escad.symbol._thisView") (tv)
+  (ns "_escad") (s "_escad" :taxonomy "escad.symbol._escad") (ns "_view") (s "_view" :taxonomy "escad.symbol._thisView")
+  (cs "_escad"))
 
 (defun join-string-list (string-list)
     "Concatenates a list of strings and puts ', ' between the elements."
@@ -239,36 +249,6 @@ Makes a list of flat path ((A B C A) (C B)) - no nested structures. Optional giv
 
 ;;;;
 ;; USER-COMMANDS:
-(defun asa (symbol-name attribute-taxonomy value)
-  "symbol-name ->
-<A>dd <s>ymbol <a>ttributes depending of key."
-  (multiple-value-bind (sym sym-exists) (gethash symbol-name *symbols*)
-		       (if sym-exists
-			 (with-slots ((a attributes)) (gethash symbol-name *symbols*)
-				     (setf a (remove attribute-taxonomy a :key #'car :test #'string=))  ; remove some possibly existing key
-				     (setf a (acons attribute-taxonomy value a))
-				     a))
-		       nil))
-
-(defun rsa (symbol-name attribute-taxonomy)
-  "symbol-name ->
-<R>emove <s>ymbol <a>ttributes depending of key."
-  (multiple-value-bind (sym sym-exists) (gethash symbol-name *symbols*)
-		       (if sym-exists
-			 (with-slots ((a attributes)) (gethash symbol-name *symbols*)
-				     (setf a (remove attribute-taxonomy a :key #'car :test #'string=))
-				     a))
-		       nil))
-
-(defun gsa (symbol-name attribute-taxonomy)
-  "symbol-name ->
-<G>et <s>ymbol <a>ttributes depending of key."
-  (multiple-value-bind (sym sym-exists) (gethash symbol-name *symbols*)
-		       (if sym-exists
-			 (with-slots ((a attributes)) (gethash symbol-name *symbols*)
-				     (cdr (assoc attribute-taxonomy a :test #'string=)))
-			 nil)))
-
 (defun ad ()
   "-> diameter longest-path
 <a>nalyze <d>iameter (length of longest path) of current view."
@@ -281,7 +261,7 @@ Makes a list of flat path ((A B C A) (C B)) - no nested structures. Optional giv
 (defun adp (&optional start)
   "[start_symbol_name] -> list with paths
 <a>nalyze all <d>irected <p>aths from every symbol or from the given start symbol."
-  (TODO))
+  (path '(())))
 
 (defun aap ()
   "-> path-list
@@ -298,6 +278,17 @@ Makes a list of flat path ((A B C A) (C B)) - no nested structures. Optional giv
     (if (not (member symbol path :test #'string=))
 	(return-from apc nil)))
   t)
+
+(defun ara (symbol-name attribute-taxonomy value)
+  "relation-name ->
+<A>dd <r>elation <a>ttributes depending of key."
+  (multiple-value-bind (rel rel-exists) (gethash relation-name *relations*)
+		       (if rel-exists
+			 (with-slots ((a attributes)) (gethash relation-name *relations*)
+				     (setf a (remove attribute-taxonomy a :key #'car :test #'string=))  ; remove some possibly existing key
+				     (setf a (acons attribute-taxonomy value a))
+				     a))
+		       nil))
 
 (defun as (&optional (symbol "_escad"))
   "[symbol-name] ->
@@ -317,6 +308,17 @@ Symbols which represent expansions will execute the configured function of the e
       (pprint taxonomy-documentation))
      (t (pprint taxonomy-documentation)))))
 
+(defun asa (symbol-name attribute-taxonomy value)
+  "symbol-name ->
+<A>dd <s>ymbol <a>ttributes depending of key."
+  (multiple-value-bind (sym sym-exists) (gethash symbol-name *symbols*)
+		       (if sym-exists
+			 (with-slots ((a attributes)) (gethash symbol-name *symbols*)
+				     (setf a (remove attribute-taxonomy a :key #'car :test #'string=))  ; remove some possibly existing key
+				     (setf a (acons attribute-taxonomy value a))
+				     a))
+		       nil))
+
 (defun asp (symbol1 symbol2)
   "symbol-name1 symbol-name2 -> path-list
 <a>nalyze <s>hortest <p>ath between 2 given symbols."
@@ -330,10 +332,6 @@ Symbols which represent expansions will execute the configured function of the e
 	  (setq shortest (cons path shortest))))
     shortest))
 
-(defun aup (&optional start)
-  "<a>nalyze <u>ndirected <p>ath."
-  (TODO))
-
 (defun cs (&optional (symbol "_escad_"))
   "[symbol-name ->
 Set <c>urrent <s>ymbol in current view."
@@ -341,8 +339,7 @@ Set <c>urrent <s>ymbol in current view."
 
 (defun cls ()
   "<cl>ear <s>chematic. This removes ALL symbols and relations in current view!"
-  (clrhash *symbols*)
-  (clrhash *relations*)
+  (clrhash *symbols*) (clrhash *relations*) (init-views)
   t)
 
 (defun cos (symbols)
@@ -372,6 +369,15 @@ COPYRIGHT on ESCAD has Markus Kollmar <markuskollmar@onlinehome.de>.
 ESCAD is licensed under: GNU AFFERO GENERAL PUBLIC LICENSE Version 3, 19 November 2007.
 If you want a other license (like for commercial purposes), please contact Markus Kollmar <markuskollmar@onlinehome.de>."))
 
+(defun gra (relation-name attribute-taxonomy)
+  "relation-name ->
+<G>et <r>elation <a>ttributes depending of key."
+  (multiple-value-bind (rel rel-exists) (gethash relation-name *relations*)
+		       (if rel-exists
+			 (with-slots ((a attributes)) (gethash relation-name *relations*)
+				     (cdr (assoc attribute-taxonomy a :test #'string=)))
+			 nil)))
+
 (defun grp (relation)
   "relation-object -> property-list
 <g>et <r>elation <p>roperties as result in a property list."
@@ -381,6 +387,15 @@ If you want a other license (like for commercial purposes), please contact Marku
 		   (list :comment comment1 :taxonomy taxonomy1
 			 :ref_from ref_from1 :ref_to ref_to1))
     nil))
+
+(defun gsa (symbol-name attribute-taxonomy)
+  "symbol-name ->
+<G>et <s>ymbol <a>ttributes depending of key."
+  (multiple-value-bind (sym sym-exists) (gethash symbol-name *symbols*)
+		       (if sym-exists
+			 (with-slots ((a attributes)) (gethash symbol-name *symbols*)
+				     (cdr (assoc attribute-taxonomy a :test #'string=)))
+			 nil)))
 
 (defun gsp (symbol)
   "symbol-object -> property-list
@@ -403,13 +418,10 @@ COPYRIGHT on ESCAD has Markus Kollmar <markuskollmar@onlinehome.de>.
 ESCAD is licensed under: GNU AFFERO GENERAL PUBLIC LICENSE Version 3, 19 November 2007.
 
 Definitions of terms:
- * ATTRIBUTES: universal usable property of a object.
+ * ATTRIBUTES: universal usable property of a object additional to the standard attributes (each symbol may contain different or none).
  * CONTEXT: The set of symbols and relations which are directly related to a symbol or relation.
  * EXPANSION: Concept to adapt escad for a special domain-specific purpose. It is similar like a app for your smartphone.
-              Used expansions appear as symbols in your schematic too. Expansions must at least provide 2 methods:
-                1. a '(help)' method which gives a help string about aim of the expansion, usage and all methods and options.
-                2. a '(compatible ESCAD_VERSION_string)' method, which should signal true if expansion is compatible with given escad version.
- * OBJECT-PROPERTY: All information a OBJECT contains. It's name is no property, it is it's idendity.
+ * OBJECT-NAME: Is no property, it is it's idendity-string.
  * OBJECT: SYMBOL or RELATION.
  * PATH-LIST: List with list(s) of symbol-relation-symbol-relation... names which are connected (at least a symbol must be given):
               '((Sym1 Rel2) (SymX)).
@@ -420,6 +432,12 @@ Definitions of terms:
  * VIEW: referable place (server, file, device, memory...) which contains SCHEMATIC data. the two escad view's at runtime are referenced as
          escad:1 and escad:2. Schematics on http server is escad:http://www.domain.org/file, for local file escad:file://dir/file.
 
+Commands grouped depending on function:
+
+ * INSERT objects: nr, ns
+ * REMOVE objects: rr, rs
+ * EDIT   objects: r, s
+ * SAVE schematic: sav
 Following commands (collected in a list) are currently available:")
 `(let ((lst ()))
   (do-external-symbols (s (find-package :escad)) (push s lst))
@@ -514,6 +532,11 @@ Thanks. :-)
 "))
     (t (princ "Type (help-tutorial N) where N is a number beginning with 0, to describe which tutorial step you want see."))))
 
+(defun los (file_name)
+  "file-name ->
+<lo>ad <s>cript and work at current schematic."
+  (load file_name))
+
 (defun lov (file_name)
   "file-name -> T
 <lo>ad <v>iew from file into memory. All current symbols and relations will be deleted!"
@@ -548,11 +571,16 @@ Thanks. :-)
     (maphash #'(lambda (k v) (push k rels)) *relations*)
     rels))
 
-(defun ls (&optional filter)
-  "<L>ist all <s>ymbols in current schematic."
-  (let ((syms '()))
-    (maphash #'(lambda (k v) (push k syms)) *symbols*)
-    syms))
+(defun ls (&key (exclude-taxonomy nil exclude-p))
+  "[exclude-taxonomy_string-list -> symbol-list
+<L>ist all <s>ymbols in current schematic."
+  (let ((all-syms '()) (return-syms '()) (exclude-syms '()))
+    (maphash #'(lambda (k v) (push k all-syms)) *symbols*)
+    (if exclude-p
+	(set-difference all-syms (loop for taxonomy in exclude-taxonomy
+				       append (ssel all-syms :taxonomy taxonomy)) :test #'string=)  ; return only symbols not in exclude list
+      all-syms)  ; return all symbols if no exclude clause
+    ))
 
 (defun lta (&optional filter)
   "[filter-string] -> list of all, or matching the filter-string, taxonomy-strings
@@ -597,23 +625,13 @@ To make this relation undirected or bidirected, set the correct taxonomy."
 						:ref_to (list ref_to) :ref_from (list ref_from) :taxonomy taxonomy))))))
 
 (defun ns (name &key attributes comment (taxonomy "escad.symbol") weight)
-  "symbol-name [attributes comment taxonomy] -> symbol-object
+  "symbol-name [attributes comment taxonomy weight] -> symbol-object
 Create a <n>ew <s>ymbol with given name and possible additional values in schematic."
   (multiple-value-bind (sym sym-exists) (gethash name *symbols*)
 		       (if sym-exists
 			   nil
 			 (setf (gethash name *symbols*)
 			       (make-instance 'sym :attributes attributes :comment comment :taxonomy taxonomy)))))
-
-(defun psd (name)
-  "<P>rompt for guided <s>ymbol <d>ata input. TODO!"
-  (let ((data '()) (tax nil))
-    (if (setq tax (taxonomy (s name)))
-	(progn
-	  (cond
-	   ((string= "EXPANSION-INTERFACE_LIST" (get-taxo-prop tax :data-type)) (setq data (prompt-expansion-interface-list))))
-	  (s name :data data))
-      (error "no taxonomy"))))
 
 (defun r (name &key attributes comment ref_from ref_to taxonomy)
   "relation-name [attributes comment ref_from ref_to taxonomy] -> nil
@@ -629,6 +647,11 @@ Sets <r>elation properties (slots) given by key - if any given - and returns rel
 				      (gethash name *relations*))
 			 nil)))
 
+(defun rp (relation-name property-name)
+  "relation-name property-name -> property-string
+Get <r>elation <p>roperty as result."
+  (slot-value (r relation-name) property-name))
+
 (defun rr (name)
   "relation-name -> relation-name
 <R>emove <r>elation."
@@ -642,6 +665,16 @@ Sets <r>elation properties (slots) given by key - if any given - and returns rel
   (remhash name *relations*)
   name)
 
+(defun rra (relation-name attribute-taxonomy)
+  "relation-name ->
+<R>emove <r>elation <a>ttributes depending of key."
+  (multiple-value-bind (rel rel-exists) (gethash relation-name *relations*)
+		       (if rel-exists
+			 (with-slots ((a attributes)) (gethash relation-name *relations*)
+				     (setf a (remove attribute-taxonomy a :key #'car :test #'string=))
+				     a))
+		       nil))
+
 (defun rs (name)
   "symbol-name -> symbol-name
 <R>emove <s>ymbol."
@@ -652,6 +685,16 @@ Sets <r>elation properties (slots) given by key - if any given - and returns rel
 		(rr y)))
   (remhash name *symbols*)
   name)
+
+(defun rsa (symbol-name attribute-taxonomy)
+  "symbol-name ->
+<R>emove <s>ymbol <a>ttributes depending of key."
+  (multiple-value-bind (sym sym-exists) (gethash symbol-name *symbols*)
+		       (if sym-exists
+			 (with-slots ((a attributes)) (gethash symbol-name *symbols*)
+				     (setf a (remove attribute-taxonomy a :key #'car :test #'string=))
+				     a))
+		       nil))
 
 (defun s (name &key attributes comment taxonomy)
   "symbol-name ->
@@ -705,6 +748,11 @@ List <c>ontext of the current or a given <s>ymbol (default is current)."
     ; ((("rel_in_1" . "sym1")) (("rel_out" . "sym2") ("rel2_out" . "ssym"))):
     (list in-relsym out-relsym)))
 
+(defun sp (symbol-name property-name)
+  "symbol-name-string property-name-symbol -> property-string
+get <s>ymbol <p>roperty as result."
+  (slot-value (s symbol-name) property-name))
+
 (defun ssel (symbols &key (name nil name-p) (comment nil comment-p) (ref_from nil ref_from-p) (ref_to nil ref_to-p)
 		     (taxonomy nil taxonomy-p))
   "symbol-name [name comment ref_from ref_to taxonomy] -> (symbol-names)
@@ -716,7 +764,6 @@ List <c>ontext of the current or a given <s>ymbol (default is current)."
 			   (if comment-p  (string-equal comment comment_) t)
 			   (if ref_from-p (not (set-exclusive-or ref_from ref_from_)) t)
 			   (if ref_to-p   (not (set-exclusive-or ref_to ref_to_)) t)
-			   (if comment-p  (string-equal comment comment_) t)
 			   (if taxonomy-p (string-equal taxonomy taxonomy_) t))
 		      (push sname sym_set))))
     sym_set))
