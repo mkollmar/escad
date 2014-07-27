@@ -1,0 +1,117 @@
+#!/bin/bash
+#
+# Copyright (C) 2011, 2014 Markus Kollmar
+#
+# This file is part of ESCAD.
+#
+# ESCAD is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# ESCAD is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with ESCAD.  If not, see <http://www.gnu.org/licenses/>.
+##############################################################################
+
+# CONFIG:
+ESCAD_ROOT_DIR="./"
+ESCAD='escad.lisp'
+ESCAD_REST_SERVER='rest-server.js'
+ESCAD_INIT_FILE="${ESCAD_ROOT_DIR}escad_init.lisp"
+ESCAD_LOG_FILE="${ESCAD_ROOT_DIR}escad.log"
+CLISP_BIN=$(which clisp)
+DOT_BIN=$(which dot)
+MODE='terminal'
+# END CONFIG
+
+print_status() {
+    ESCAD_PS=$(ps hax)
+    ESCAD_TEST=$(echo ${ESCAD_PS} | grep "${ESCAD}")
+    if [[ "${ESCAD_TEST}" != "" ]]
+    then
+	echo "ESCAD is running!"
+    else
+	echo "No ESCAD is running!"
+    fi
+}
+
+print_usage() {
+    echo "Usage: $0 [start [terminal | net-lisp | net-rest] | status |stop]"
+}
+
+
+start_configuration() {
+case "$MODE" in
+  'terminal')
+        ${CLISP_BIN} -i ${ESCAD} # -i ${ESCAD_INIT_FILE}
+	;;
+  'net-lisp')
+	echo "Starting escad accepting common lisp over network socket (e.g. with telnet)..."
+	#nohup ${CLISP_BIN} -i ${ESCAD_INIT_FILE} "${ESCAD_ROOT_DIR}${ESCAD}" ${MODE} >${ESCAD_LOG_FILE} &
+	#nohup ${CLISP_BIN} "${ESCAD_ROOT_DIR}${ESCAD}" ${MODE} >${ESCAD_LOG_FILE} &
+	#nohup ${CLISP_BIN} "${ESCAD_ROOT_DIR}${ESCAD}" ${MODE} &
+        #nohup ${CLISP_BIN} "${ESCAD_ROOT_DIR}${ESCAD}" ${MODE}
+	${CLISP_BIN} "${ESCAD_ROOT_DIR}${ESCAD}" net-lisp
+	;;
+  'net-rest')
+	echo "Starting escad accepting REST based http network-connection (e.g. with web-browser)..."
+        #nohup ${CLISP_BIN} -i ${ESCAD_INIT_FILE} "${ESCAD_ROOT_DIR}${ESCAD}" ${MODE} >${ESCAD_LOG_FILE} 2>${ESCAD_LOG_FILE} &
+	#nohup ${CLISP_BIN} "${ESCAD_ROOT_DIR}${ESCAD}" ${MODE} >${ESCAD_LOG_FILE} &
+	#nohup ${CLISP_BIN} "${ESCAD_ROOT_DIR}${ESCAD}" net-json_rpc &
+	${CLISP_BIN} "${ESCAD_ROOT_DIR}${ESCAD}" net-json_rpc >${ESCAD_LOG_FILE} 2>${ESCAD_LOG_FILE} &
+	sleep 2
+	node ${ESCAD_REST_SERVER}
+	;;
+    *)
+	echo "ERROR: unknown mode <${MODE}>!"
+	print_usage
+	;;
+esac
+}
+
+stop_configuration() {
+    killall node
+    kill $(ps aux | grep -e ${ESCAD} | grep -v grep | awk '{print $2}')
+}
+
+# Make prerequsite test and setting:
+test_environment() {
+    if [[ -z ${CLISP_BIN} ]]
+	then
+	echo "ERROR: No gnu common lisp (clisp) executable!"
+	exit
+    fi
+    if [[ -z ${DOT_BIN} ]]
+	then
+	echo "WARNING: No <dot> executable (graphivz)! <exv> command will not work!"
+    fi
+    test -r ~/.escad && ${ESCAD_DEFAULT_USER_INIT_FILE}="~/.escad"
+}
+
+
+## MAIN
+test "${2}" != "" && MODE=$2
+
+case "$1" in
+  'start')
+        # Load escad as in clisp:
+	test_environment
+	start_configuration
+	;;
+  'status')
+	print_status
+	;;
+  'stop')
+	stop_configuration
+	;;
+    *)
+	print_usage
+	;;
+esac
+
+exit 0

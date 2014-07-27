@@ -46,7 +46,7 @@ Do this if symbol will be activated!"
 		       (princ (concatenate 'string name ";") out)
 		       (write-char #\newline out))
 		     (dolist (name (lr))
-		       (with-slots (comment ref_from ref_to taxonomy) (gethash name *relations*)
+		       (with-slots (comment ref_from ref_to taxonomy) (gethash name escad::*relations*)
 				   (loop for i from 0 to (- (length ref_from) 1) do
 					 (princ (concatenate 'string (string (nth i ref_from))
 							     " -> "

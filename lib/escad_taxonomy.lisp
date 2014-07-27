@@ -34,8 +34,7 @@
 (:doc "Standard taxonomy for escad. Note that if you create or use your own, you may not easily interchange data.
 Doc-strings of the taxonomies begin with [] field, which tells - if necessary, separated with comma - following things:
 E -> means a expansion is using this symbol by activation with as-command.
-S -> means this symbol/relation is only allowed to insert singely (one time) in the schematic.
-")
+S -> means this symbol/relation is only allowed to insert singely (one time) in the schematic.")
 (:license "GNU GPL 3")
 (:version 1))
 (
@@ -45,7 +44,6 @@ S -> means this symbol/relation is only allowed to insert singely (one time) in 
 (:taxonomy "escad.attribute.default_weight" :doc "" :type "STRING")
 (:taxonomy "escad.attribute.excluded_symbols" :doc "List with symbols which should not be used by a expansion." :type "SYMBOL_LIST")
 (:taxonomy "escad.attribute.subtopic_relation" :doc "Defines which relation-taxonomy will be interpreted as subtopic indicator" :type "STRING")
-
 (:taxonomy "escad.relation" :doc "Root, universal relation.")
 (:taxonomy "escad.relation.has_child" :doc "A human (man or woman) has genetic child.")
 (:taxonomy "escad.relation.has_subtopic" :doc "subtopic.")
@@ -60,7 +58,7 @@ S -> means this symbol/relation is only allowed to insert singely (one time) in 
 (:taxonomy "escad.symbol._escad.export.svg" :doc "[E] exports view to a SVG graphic, viewable in internetbrowser."
 	   :expansion "export_expansion.lisp" :package :de.markus-herbert-kollmar.escad.export :function "export2svg"
 	   :license "GNU GPL 3")
-(:taxonomy "escad.symbol._escad.report" :doc "[S,E] General settings for report symbols."
+(:taxonomy "escad.symbol._escad.report" :doc "[S,E] General settings for report symbols.")
 (:taxonomy "escad.symbol._escad.report.html" :doc "[E] Tries to extract the basic information of view (handy for learning)."
 	   :expansion "report_expansion.lisp" :package :de.markus-herbert-kollmar.escad.report :function "report2html"
 	   :license "GNU GPL 3")

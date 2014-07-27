@@ -31,11 +31,20 @@
 
 
 ;; USER CONFIG START
-(defparameter *escad-view-dir* "./" "This directory will be used to save and load view's if no directory is specified.")
+(defparameter *escad-view-dir* "./public/" "This directory will be used to save and load view's if no directory is specified.")
 (defparameter *escad-lib-dir* "./lib/" "This directory will be used to look for expansions and the standard escad-taxonomy.")
+(defparameter *escad-external-lib-dir* "./external_helpers/" "This directory will be used to look for code written from others.")
+(defparameter *escad-server-host* "127.0.0.1" "Host name")
+(defparameter *escad-server-port* 3000 "Port number (5000)")
 (defparameter *escad-taxonomy-file* "./lib/escad_taxonomy.lisp" "Actual valid taxonomy-tree for whole insertable symbols and relations.")
 (defparameter *escad_tmp_file* "./escad4567.tmp" "Temporary file used mostly for export-functions.")
 ;; USER CONFIG END
+
+
+;; Load external code
+(load (concatenate 'string *escad-external-lib-dir* "ST-JSON-master/st-json.lisp"))
+(use-package :st-json)
+;; End loading external code
 
 
 (defclass obj ()
@@ -152,6 +161,8 @@ read all contents of file into a string"
 (defun init-escad ()
   (init-views)
   (load-taxonomy)
+  (cond ((string= (car ext::*args*) "net-lisp") (lisp_over_network))
+	((string= (car ext::*args*) "net-json_rpc") (json-rpc_over_network)))
   (pprint "Welcome and thanks for using escad (version gamma-2014)!  :-)")
   (pprint "If you are new to escad and need help:")
   (pprint "Type now '(in-package :escad)' to get into escad namespace.")
@@ -781,6 +792,81 @@ get <s>ymbol <p>roperty as result."
 	(setf *relations* *relations1*)
 	(setf *current_symbol* *current_symbol1*)
 	1)))
+
+;; network
+(defun make-rpc-json-success-response (id type data &optional (rpc-version "2.0"))
+  "request-id expected-escad-return-type return-element escad-return-data [rpc-version] -> json-string"
+  (let ((stream (make-string-output-stream)))
+    (if (string= rpc-version "2.0") ; true if version > 1.0, else version = 1.0
+      (st-json:write-json-element (st-json:jso "jsonrpc" "2.0" "result" data "id" id) stream)
+      (st-json:write-json-element (st-json:jso "result" data "error" nil "id" id) stream))
+    ;(format T "JSON: ~a" (get-output-stream-string stream))
+    (get-output-stream-string stream)))
+
+(defun process-rpc-call (rpc-call)
+  "st-json:JSO_request-object -> json-string"
+  (let ((method (st-json:getjso "method" rpc-call)) (params (st-json:getjso "params" rpc-call)) (id (st-json:getjso "id" rpc-call))
+	(jsonrpc (st-json:getjso "jsonrpc" rpc-call)) (result '()))
+    (cond ((string= method "ls")
+	   (setq result (eval (cons 'ls params))))
+	  ((string= method "lr")
+	   (setq result (eval (cons 'lr params))))
+	  (t nil))
+    (make-rpc-json-success-response id :symbol-list result "2.0")))
+
+(defun eval-json_rpc (json-string)
+  "json-string -> json-string"
+  (format T "JSON-Input: ~a" json-string)
+  (let ((input (st-json:read-json-from-string json-string)))
+    (if (eq (type-of input) 'JSO)
+      (process-rpc-call input)
+      (error "No bulk call via RPC-JSON supported yet!"))))
+
+(defun json-rpc_over_network ()
+  "Process client requests forever. If one client exits connection, open another waiting. Connection is persistent."
+  (let ((server (socket:socket-server *escad-server-port* :interface *escad-server-host*)))
+    (format t "~&Waiting for a JSON-RPC connection on ~S:~D~%"
+	    (socket:socket-server-host server) (socket:socket-server-port server))
+    (unwind-protect
+      ;; infinite loop, terminate with Control+C
+      (loop (with-open-stream (socket (socket:socket-accept server))
+	(multiple-value-bind (local-host local-port) (socket:socket-stream-local socket)
+			     (multiple-value-bind (remote-host remote-port)
+						  (socket:socket-stream-peer socket)
+						  (format T "~&Connection: ~S:~D -- ~S:~D~%"
+							  remote-host remote-port local-host
+							  local-port)))
+	;; loop is terminated when the remote host closes the connection or on EXT:EXIT
+	(loop (when (eq :eof (socket:socket-status (cons socket :input))) (return))
+	      (princ (eval-json_rpc (read-line socket)) socket)
+	      ;; flush everything left in socket
+	      (loop :for c = (read-char-no-hang socket nil nil) :while c)
+	      (terpri socket))))
+      ;; make sure server is closed
+      (socket:socket-server-close server))))
+
+(defun lisp_over_network ()
+  "Process client requests forever. If one client exits connection, open another waiting. Connection is persistent."
+  (let ((server (socket:socket-server *escad-server-port* :interface *escad-server-host*)))
+    (format t "~&Waiting for a lisp-code connection on ~S:~D~%"
+	    (socket:socket-server-host server) (socket:socket-server-port server))
+    (unwind-protect
+      ;; infinite loop, terminate with Control+C
+      (loop (with-open-stream (socket (socket:socket-accept server))
+	(multiple-value-bind (local-host local-port) (socket:socket-stream-local socket)
+			     (multiple-value-bind (remote-host remote-port)
+						  (socket:socket-stream-peer socket)
+						  (format T "~&Connection: ~S:~D -- ~S:~D~%"
+							  remote-host remote-port local-host
+							  local-port)))
+	;; loop is terminated when the remote host closes the connection or on EXT:EXIT
+	(loop (when (eq :eof (socket:socket-status (cons socket :input))) (return))
+	      (print (eval (read socket)) socket)
+	      ;; flush everything left in socket
+	      (loop :for c = (read-char-no-hang socket nil nil) :while c)
+	      (terpri socket))))
+      ;; make sure server is closed
+      (socket:socket-server-close server))))
 
 ;;;;;;;
 ; MAIN
