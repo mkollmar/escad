@@ -20,6 +20,8 @@ Symbols represent things or processes in the real world. For example a "man" cou
 Relations represent relations between the symbols. For example "is_friend_of" could be a relation between to "man"-symbols.
 The whole system is extendable through expansions.
 
+ESCAD comes with two user-interfaces: Text based command line and graphical Web-interface.
+
 Watch video about escad on it's project page "https://code.google.com/p/escad/wiki/Overview" to get a feeling what is possible
 with escad.
 
@@ -28,16 +30,24 @@ with escad.
 2. USAGE
 ********
 
-Quickstart
-----------
-In order to use escad, just load the file "escad.lisp" into your common-lisp system. Keep all the directories
-at their place, so that escad can find the libaries.
+Command-line-client
+-------------------
+  * Start the system in the escad directory with: ./escad_server start terminal
+  * Execute "(help)" in escad to get the newest information about escad. There is also a built in tutorial, so you can
+    interactively learn how to use escad.
+  * Stop the system in the escad directory with: ./escad_server stop
 
+Web-interface-client
+--------------------
+  * Start the server in the escad directory with: ./escad_server start net-rest
+  * Open Web-Browser and type: http://127.0.0.1:4000
+  * Stop the system in the escad directory with: ./escad_server stop
 
-Help to help
-------------
-Execute "(help)" in escad to get the newest information about escad. There is also a built in tutorial, so you can
-interactively learn how to use escad.
+Net-Interface-API (for programms to use)
+----------------------------------------
+  * Start the server in the escad directory with: ./escad_server start net-lisp
+  * Open Web-Browser and type: http://127.0.0.1:4000
+  * Stop the system in the escad directory with: ./escad_server stop
 
 
 
@@ -47,10 +57,10 @@ interactively learn how to use escad.
 What i am allowed to do?
 ------------------------
 COPYRIGHT on ESCAD has Markus Kollmar <markuskollmar@onlinehome.de>.
-ESCAD is licensed under: GNU AFFERO GENERAL PUBLIC LICENSE Version 3, 19 November 2007.
-If you want a other license (like for commercial purposes), please contact Markus Kollmar <markuskollmar@onlinehome.de>.
+ESCAD is licensed for no commercial use under: GNU AFFERO GENERAL PUBLIC LICENSE Version 3, 19 November 2007.
+If you need a other license (like for commercial purposes), please contact Markus Kollmar <markuskollmar@onlinehome.de>.
 
-;; Copyright (C) 2013 Markus Kollmar
+;; Copyright (C) 2013, 2014 Markus Kollmar
 ;;
 ;; This file is part of ESCAD.
 ;;

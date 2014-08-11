@@ -1,24 +1,27 @@
+// Copyright (C) 2011, 2012, 2013, 2014 Markus Kollmar (email: markuskollmar@onlinehome.de)
 // Connection to ESCAD
 var net = require('net');
 var escad = new net.Socket();  // to write to escad
-var message = "";  // data recieved from escad
 
 // Connection to BROWSER
 var express = require('express');
 var server = express();
-var nextResponse;
+var ResponsesToBrowser = {};
 
 // ********************************************************************
-// ESCAD SIDE
+// COMMUNICATION WITH ESCAD
 escad.connect(3000, '127.0.0.1', function() {
     console.log('Connect to escad via JSON-RPC locally at port 3000...');
 });
 
 // Listen to 'data' event, which comes when data from escad is recieved at socket
 escad.on('data', function(data) {
-    console.log('[REST-SRV] DATA from escad: ' + escad.remoteAddress + ': ' + data.toString());
-    nextResponse.status(200).send(data);
-    message=data;
+    var id = data.toString().match(/\"id\":(.*)}.*/);
+    if (id) {
+	console.log('[REST-SRV] DATA from escad: ' + id[1] + data.toString());
+	ResponsesToBrowser["id"].status(200).send(data);
+	delete ResponsesToBrowser["id"];
+    }
 });
 
 // Listen to 'close' event, which comes when escad closes socket
@@ -37,14 +40,22 @@ escad.on('drain', function(data) {
     console.log('all data sent to escad!');
 });
 
+function sendRequest2escad(cmd, args, response, request) {
+    console.log("[REST-SRV]" + request.method + " -> " + request.url);
+    var id = "ESCAD" + JSON.stringify(Date.now());
+    ResponsesToBrowser["id"] = response;
+    console.log("::" + ResponsesToBrowser["id"]);
+    escad.write(make_JSON_RPC_request_string("ls", [], id));
+}
+
 // { "jsonrpc": "2.0", "method": "gibAus", "params": ["Hallo JSON-RPC"], "id": 1 }
-function make_JSON_RPC_request_string(command, arg_array) {
+function make_JSON_RPC_request_string(command, arg_array, id) {
     var json_rpc;
     if (typeof(arg_array[0]) == 'undefined') {
-	json_rpc = "{\"jsonrpc\": \"2.0\", \"method\": \"" + command + "\", \"id\": " + JSON.stringify(Date.now()) + "}\n";
+	json_rpc = "{\"jsonrpc\":\"2.0\",\"method\":\"" + command + "\",\"id\":\"" + id + "\"}\n";
     } else {
-	json_rpc = "{\"jsonrpc\": \"2.0\", \"method\": \"" + command + "\", \"params\": " + JSON.stringify(arg_array) +
-	    ", \"id\": " + JSON.stringify(Date.now()) + "}\n";
+	json_rpc = "{\"jsonrpc\":\"2.0\",\"method\":\"" + command + "\", \"params\":" + JSON.stringify(arg_array) +
+	    ",\"id\":\"" + id + "\"}\n";
     }
 
     console.log("[REST-SRV] make_JSON_RPC_request_string:" + json_rpc);
@@ -54,8 +65,7 @@ function make_JSON_RPC_request_string(command, arg_array) {
 
 
 // ********************************************************************
-// BROWSER SIDE
-
+// COMMUNICATION WITH BROWSER (USER)
 
 server.use(express.static(__dirname + '/public')); // set the static files location /public/img will be /img for users
 //server.use(express.logger('dev')); // log every request to the console
@@ -69,32 +79,31 @@ server.get('/escad', function(request, response) {
  
 
 // routes:
-server.get('/symbols', function (request, response) {
-    console.log("[REST-SRV]" + request.method + " -> " + request.url);
-    nextResponse = response;
-    escad.write(make_JSON_RPC_request_string("ls", []));
-//    response.status(200).send(["kl", "lllll"]);
+server.get('/symbols', function (request, response, next) {
+    sendRequest2escad("ls", [], response, request);
 });
 
 server.get('/relations', function (request, response) {
-    console.log("[REST-SRV]" + request.method + " -> " + request.url);
-    nextResponse = response;
-    escad.write(make_JSON_RPC_request_string("lr", []));
+    sendRequest2escad("lr", [], response, request);
+});
+
+server.get('/semantics/symbol', function (request, response) {
+    sendRequest2escad("lr", [], response, request);
 });
  
-server.get('/symbols/:id', function (request, response) {
+server.get('/symbol/:id', function (request, response) {
     console.log(request.method + " -> " + request.url + request.params.id);
 });
  
-server.post('/symbols', function (request, response) {
+server.post('/symbol', function (request, response) {
     console.log(request.method + " -> " + request.url);
 });
 
-server.put('/symbols/:id', function (request, response) {
+server.put('/symbol/:id', function (request, response) {
     console.log(request.method + " -> " + request.url);
 });
  
-server.delete('/symbols/:id', function (request, response) {
+server.delete('/symbol/:id', function (request, response) {
     console.log(request.method + " -> " + request.url);
 });
  
