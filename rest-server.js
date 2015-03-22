@@ -17,6 +17,7 @@ escad.connect(3000, '127.0.0.1', function() {
 // Listen to 'data' event, which comes when data from escad is recieved at socket
 escad.on('data', function(data) {
     var id = data.toString().match(/\"id\":(.*)}.*/);
+    console.log('[REST-SRV] Got DATA from escad: ' + data.toString());
     if (id) {
 	console.log('[REST-SRV] DATA from escad: ' + id[1] + data.toString());
 	ResponsesToBrowser["id"].status(200).send(data);
@@ -41,11 +42,11 @@ escad.on('drain', function(data) {
 });
 
 function sendRequest2escad(cmd, args, response, request) {
-    console.log("[REST-SRV]" + request.method + " -> " + request.url);
+    console.log("[REST-SRV] Got HTTP request from client: " + request.method + " " + request.url);
     var id = "ESCAD" + JSON.stringify(Date.now());
     ResponsesToBrowser["id"] = response;
-    console.log("::" + ResponsesToBrowser["id"]);
-    escad.write(make_JSON_RPC_request_string("ls", [], id));
+//    console.log("::" + ResponsesToBrowser["id"]);
+    escad.write(make_JSON_RPC_request_string(cmd, args, id));
 }
 
 // { "jsonrpc": "2.0", "method": "gibAus", "params": ["Hallo JSON-RPC"], "id": 1 }
@@ -58,7 +59,7 @@ function make_JSON_RPC_request_string(command, arg_array, id) {
 	    ",\"id\":\"" + id + "\"}\n";
     }
 
-    console.log("[REST-SRV] make_JSON_RPC_request_string:" + json_rpc);
+    console.log("[REST-SRV] Sending JSON-RPC request to escad: " + json_rpc);
     return json_rpc;
 }
 
@@ -73,14 +74,20 @@ server.use(express.static(__dirname + '/public')); // set the static files locat
 
 // Upon first load of homepage send static template-HTML file. All access after that will done via AJAX (Angular)
 server.get('/escad', function(request, response) {
-    console.log("[REST-SRV] INITIAL SERVE:" + request.method + " -> " + request.url);
+    console.log("[REST-SRV] Got HTTP request to load escad-browser-client-application: " + request.method + " " + request.url);
     response.sendfile('./public/index.html');
 });
  
 
 // routes:
+// IN:
+// OUT: [symbol-name1, symbol-name2, ...]
 server.get('/symbols', function (request, response, next) {
     sendRequest2escad("ls", [], response, request);
+});
+
+server.get('/symbols/with-full-info', function (request, response, next) {
+    sendRequest2escad("gsdump", [], response, request);
 });
 
 server.get('/relations', function (request, response) {

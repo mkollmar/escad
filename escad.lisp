@@ -84,6 +84,11 @@
     :initarg :ref_from
     :documentation "List with one symbol-name that indicate from which symbol the relation starts.")))
 
+(define-condition escad-internal-error (error)
+  ((error-text
+    :initarg :error-text
+    :reader error-text)))
+
 (defmethod print-object ((object obj) *current-stream*)
   (print-unreadable-object (object *current-stream* :type t)
 			   (with-slots (comment weight) object
@@ -158,11 +163,15 @@ read all contents of file into a string"
       (getf item property)
       nil)))
 
+(defun skip-json_rpc-request (condittion)
+  (invoke-restart 'skip-json_rpc-request))
+
 (defun init-escad ()
   (init-views)
   (load-taxonomy)
   (cond ((string= (car ext::*args*) "net-lisp") (lisp_over_network))
-	((string= (car ext::*args*) "net-json_rpc") (json-rpc_over_network)))
+	((string= (car ext::*args*) "net-json_rpc") (handler-bind ((escad-internal-error #'skip-json_rpc-request))
+								  (json-rpc_over_network))))
   (pprint "Welcome and thanks for using escad (version gamma-2014)!  :-)")
   (pprint "If you are new to escad and need help:")
   (pprint "Type now '(in-package :escad)' to get into escad namespace.")
@@ -379,6 +388,27 @@ Set <c>urrent <s>ymbol in current view."
 COPYRIGHT on ESCAD has Markus Kollmar <markuskollmar@onlinehome.de>.
 ESCAD is licensed under: GNU AFFERO GENERAL PUBLIC LICENSE Version 3, 19 November 2007.
 If you want a other license (like for commercial purposes), please contact Markus Kollmar <markuskollmar@onlinehome.de>."))
+
+(defgeneric gobj (obj))
+
+(defmethod gobj ((symbol sym))
+  "symbol-object -> property-list
+<G>et all data of symbol <o>bjekt."
+  (with-slots ((attributes1 attributes) (comment1 comment) (taxonomy1 taxonomy)
+	       (ref_to1 ref_to) (ref_from1 ref_from) (weight1 weight)) symbol
+	       (list :attributes attributes1 :comment comment1 :ref_to ref_to1 :ref_from ref_from1 :taxonomy taxonomy1 :weight weight1)))
+
+(defun gsdump ()
+  "-> property-list
+<G>et all data of <s>ymbols in current schematic <dump>ed."
+  (let ((result '()))
+    (dolist (symbol-name (ls))
+      (push (with-slots ((attributes1 attributes) (comment1 comment) (taxonomy1 taxonomy)
+			 (ref_to1 ref_to) (ref_from1 ref_from) (weight1 weight)) (gethash symbol-name *symbols*)
+			 (list :name symbol-name :attributes attributes1 :comment comment1 :ref_to ref_to1 :ref_from ref_from1
+			       :taxonomy taxonomy1 :weight weight1))
+	    result))
+    result))
 
 (defun gra (relation-name attribute-taxonomy)
   "relation-name ->
@@ -766,7 +796,7 @@ get <s>ymbol <p>roperty as result."
 
 (defun ssel (symbols &key (name nil name-p) (comment nil comment-p) (ref_from nil ref_from-p) (ref_to nil ref_to-p)
 		     (taxonomy nil taxonomy-p))
-  "symbol-name [name comment ref_from ref_to taxonomy] -> (symbol-names)
+  "symbol-names-list [name comment ref_from ref_to taxonomy] -> (symbol-names)
 <s>ymbol <sel>ector: create list of symbols out from given symbol-list which match all given conditions."
   (let ((sym_set '()))
     (dolist (sname symbols)
@@ -794,25 +824,63 @@ get <s>ymbol <p>roperty as result."
 	1)))
 
 ;; network
-(defun make-rpc-json-success-response (id type data &optional (rpc-version "2.0"))
-  "request-id expected-escad-return-type return-element escad-return-data [rpc-version] -> json-string"
+(defun make-rpc-json-success-response (id data &optional (rpc-version "2.0"))
+  "request-id  escad-return-data  [rpc-version] -> RPC-JSON-result-string
+Make a JSON-RPC sucess response as string.
+* request-id: must be same string which the request had.
+* data: data encoded as JSON-string."
+  (let ((result ""))
+    (if (string= rpc-version "2.0") ; true if version > 1.0, else version = 1.0
+      (setq result (st-json:write-json-to-string (st-json:jso "jsonrpc" "2.0" "result" data "id" id)))
+      (setq result (st-json:write-json-to-string (st-json:jso "result" data "error" nil "id" id))))
+    result))
+
+(defun make-rpc-json-error-response (id error-code error-message &optional (rpc-version "2.0"))
+  "request-id  JSON-RPC-error-code  JSON-RPC-error-message  [rpc-version] -> RPC-JSON-result-string
+Make a JSON-RPC error response as string.
+* request-id: must be same string which the request had, nil if there was none (in case of bad request).
+* JSON-RPC-error-code: See JSON-RPC specification! E.g.: -32700 (Parse error), -32603 (Internal error).
+* JSON-RPC-error-message: See JSON-RPC specification! It should be a single sentence (string)."
   (let ((stream (make-string-output-stream)))
     (if (string= rpc-version "2.0") ; true if version > 1.0, else version = 1.0
-      (st-json:write-json-element (st-json:jso "jsonrpc" "2.0" "result" data "id" id) stream)
-      (st-json:write-json-element (st-json:jso "result" data "error" nil "id" id) stream))
-    ;(format T "JSON: ~a" (get-output-stream-string stream))
+      (st-json:write-json-element (st-json:jso "jsonrpc" "2.0" "error" (st-json:jso "code" error-code "message" error-message) "id" id) stream)
+      (st-json:write-json-element (st-json:jso "result" nil "error" error-message "id" id) stream))
     (get-output-stream-string stream)))
+
+;; ((key1 "value1" key2 "value2") (key1 "value1" key2 "value2")) -> "[{\"key1\": "value1" ...} {...}]"
+(defun lopl2ajo (list-of-propertylists)
+  "list-of-propertylists -> JSON-string
+<l>ist <o>f <p>roperty <l>ists to(<2>) <a>rray of <j>son <o>bjects."
+  (let ((stream (make-string-output-stream)))
+    (write-string "[" stream)
+    (dolist (plist list-of-propertylists)
+      (st-json:write-json-element (st-json:jso `(,@(loop :for (key val)
+							:on plist
+							:by #'cddr
+							:nconc (list (string key) val))))
+				  stream))rite-string "]" stream)
+    (get-output-stream-string stream))
+
+(defmethod st-json:write-json-element ((element symbol) stream)
+  (case element
+    ((nil) (write-string "[]" stream))
+    ((t :true) (write-string "true" stream))
+    (:false (write-string "false" stream))
+    ((:null :undefined) (write-string "null" stream))
+    (otherwise (write-string (string element) stream))))
 
 (defun process-rpc-call (rpc-call)
   "st-json:JSO_request-object -> json-string"
   (let ((method (st-json:getjso "method" rpc-call)) (params (st-json:getjso "params" rpc-call)) (id (st-json:getjso "id" rpc-call))
 	(jsonrpc (st-json:getjso "jsonrpc" rpc-call)) (result '()))
-    (cond ((string= method "ls")
-	   (setq result (eval (cons 'ls params))))
+    (cond ((string= method "gsdump")
+	   (setq result (lopl2ajo (gsdump))))
+	  ((string= method "ls")
+	   (setq result (st-json:write-json-to-string (eval (cons 'ls params)))))
 	  ((string= method "lr")
-	   (setq result (eval (cons 'lr params))))
-	  (t nil))
-    (make-rpc-json-success-response id :symbol-list result "2.0")))
+	   (setq result (st-json:write-json-to-string (eval (cons 'lr params)))))
+	  (t (error 'escad-internal-error "Sooooo error ")))
+    (make-rpc-json-success-response id result "2.0")))
 
 (defun eval-json_rpc (json-string)
   "json-string -> json-string"

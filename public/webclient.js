@@ -14,8 +14,19 @@ function GetRelations(scope, http) {
     http.get('/symbols')
 	.success(function(data) {
 	    for (var i = 0; i < data.result.length; i++) {
-		scope.relations.push({name: data.result[i], semantic: "von get relations! :-)"});
+		scope.relations.push({name: data.result[i], semantic: "is_part_of"});
 	    }
+	    console.log(data);
+	})
+	.error(function(data) {
+	    console.log('Error: ' + data);
+	});
+}
+
+function GetSymbols(scope, http) {
+    http.get('/symbols/with-full-info')
+	.success(function(data) {
+	    scope.symbols = data;
 	    console.log(data);
 	})
 	.error(function(data) {
@@ -26,7 +37,7 @@ function GetRelations(scope, http) {
 
 function mainController($scope, $http,  $modal, $log) {
     $scope.formData = {};
-    $scope.Messages = ["ghgh", "lllllllllllllllllll"];
+    $scope.Messages = "Loaded";
     $scope.relations = [];
     $scope.symbols = [];
     $scope.radioModel = 'BrowseSymbolSemantic';
@@ -38,7 +49,7 @@ function mainController($scope, $http,  $modal, $log) {
 	$event.stopPropagation();
 	$scope.status.isopen = !$scope.status.isopen;
     };
-    $scope.states = ['Alabama', 'Alaska', 'Arizona', 'Arkansas', 'California', 'Colorado', 'Connecticut', 'Delaware', 'Florida', 'Georgia', 'Hawaii', 'Idaho', 'Illinois', 'Indiana', 'Iowa', 'Kansas', 'Kentucky', 'Louisiana', 'Maine', 'Maryland', 'Massachusetts', 'Michigan', 'Minnesota', 'Mississippi', 'Missouri', 'Montana', 'Nebraska', 'Nevada', 'New Hampshire', 'New Jersey', 'New Mexico', 'New York', 'North Dakota', 'North Carolina', 'Ohio', 'Oklahoma', 'Oregon', 'Pennsylvania', 'Rhode Island', 'South Carolina', 'South Dakota', 'Tennessee', 'Texas', 'Utah', 'Vermont', 'Virginia', 'Washington', 'West Virginia', 'Wisconsin', 'Wyoming'];
+    $scope.states = ['person', 'thing', 'country'];
     $scope.symbolGrid = { data: 'symbols',
 			  multiSelect: true,
 			  showColumnMenu: true,
@@ -56,7 +67,7 @@ function mainController($scope, $http,  $modal, $log) {
     $http.get('/symbols')
 	.success(function(data) {
 	    for (var i = 0; i < data.result.length; i++) {
-		$scope.symbols.push({name: data.result[i], semantic: "df"});
+		$scope.symbols.push({name: data.result[i], semantic: "escad.setting"});
 	    }
 	    console.log(data);
 	})
@@ -65,6 +76,7 @@ function mainController($scope, $http,  $modal, $log) {
 	});
 
     GetRelations($scope, $http);
+    GetSymbols($scope, $http);
 
     $scope.refreshSymbols = function() {
 	$http.get('/symbolss')
