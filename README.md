@@ -1,14 +1,17 @@
 # Welcome to ESCAD.
 
 ESCAD stands for **E**xpandable **S**ymbolic **C**omputer **A**ided **D**escription.
-It is a tool which allows you to model parts of the real world in symbolic form.
+It is a tool which allows you to model parts of the real world in symbolic form with defined taxonomy.
 Therefore it uses 2 objects:
  - Symbols
  - Relations.
 
 Symbols represent things or processes in the real world. For example a "man" could be a symbol.
 Relations represent relations between the symbols. For example "is_friend_of" could be a relation between to
-"man"-symbols. The whole system is extendable through expansions.
+"man"-symbols.
+
+After modeling the desired topics, you can generate views, reports or other things.
+The whole system is extendable through expansions, so you are not limited to the predefined general expansions.
 
 ESCAD is usable through some user-interfaces or API.
 
