@@ -1,2 +1,5 @@
 *~
 *.log
+
+# we ignore output of a expansion in this directory:
+public/view/

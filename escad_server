@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright (C) 2011, 2014 Markus Kollmar
+# Copyright (C) 2011, 2014, 2019 Markus Kollmar
 #
 # This file is part of ESCAD.
 #
@@ -23,7 +23,8 @@ ESCAD_ROOT_DIR="./"
 ESCAD='escad.lisp'
 ESCAD_REST_SERVER='rest-server.js'
 ESCAD_INIT_FILE="${ESCAD_ROOT_DIR}escad_init.lisp"
-ESCAD_LOG_FILE="${ESCAD_ROOT_DIR}escad.log"
+ESCAD_LOGFILE="${ESCAD_ROOT_DIR}escad.log"
+ESCAD_ERROR_LOGFILE="${ESCAD_ROOT_DIR}escad_error.log"
 CLISP_BIN=$(which clisp)
 DOT_BIN=$(which dot)
 MODE='terminal'
@@ -52,18 +53,11 @@ case "$MODE" in
 	;;
   'net-lisp')
 	echo "Starting escad accepting common lisp over network socket (e.g. with telnet)..."
-	#nohup ${CLISP_BIN} -i ${ESCAD_INIT_FILE} "${ESCAD_ROOT_DIR}${ESCAD}" ${MODE} >${ESCAD_LOG_FILE} &
-	#nohup ${CLISP_BIN} "${ESCAD_ROOT_DIR}${ESCAD}" ${MODE} >${ESCAD_LOG_FILE} &
-	#nohup ${CLISP_BIN} "${ESCAD_ROOT_DIR}${ESCAD}" ${MODE} &
-        #nohup ${CLISP_BIN} "${ESCAD_ROOT_DIR}${ESCAD}" ${MODE}
 	${CLISP_BIN} "${ESCAD_ROOT_DIR}${ESCAD}" net-lisp
 	;;
   'net-rest')
-	echo "Starting escad accepting REST based http network-connection (e.g. with web-browser)..."
-        #nohup ${CLISP_BIN} -i ${ESCAD_INIT_FILE} "${ESCAD_ROOT_DIR}${ESCAD}" ${MODE} >${ESCAD_LOG_FILE} 2>${ESCAD_LOG_FILE} &
-	#nohup ${CLISP_BIN} "${ESCAD_ROOT_DIR}${ESCAD}" ${MODE} >${ESCAD_LOG_FILE} &
-	#nohup ${CLISP_BIN} "${ESCAD_ROOT_DIR}${ESCAD}" net-json_rpc &
-	${CLISP_BIN} "${ESCAD_ROOT_DIR}${ESCAD}" net-json_rpc >${ESCAD_LOG_FILE} 2>${ESCAD_LOG_FILE} &
+	echo "Starting escad accepting REST (via nodejs) based http network-connection (e.g. with web-browser)..."
+	${CLISP_BIN} "${ESCAD_ROOT_DIR}${ESCAD}" net-lisp >${ESCAD_LOGFILE} 2>${ESCAD_ERROR_LOGFILE} &
 	sleep 2
 	node ${ESCAD_REST_SERVER}
 	;;

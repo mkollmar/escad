@@ -1,4 +1,4 @@
-;; Copyright (C) 2011, 2012, 2013, 2014 Markus Kollmar (email: markuskollmar@onlinehome.de)
+;; Copyright (C) 2011, 2012, 2013, 2014, 2019 Markus Kollmar (email: markuskollmar@onlinehome.de)
 ;;
 ;; This file is part of ESCAD.
 ;;
@@ -50,7 +50,7 @@
 (defclass obj ()
   ((attributes
     :initarg :attributes
-    :documentation "Association list with attributes, which specify things of object nearer as: (KEY VALUE). Some attributes control data-slot."
+    :documentation "Association list like '((KEY . VALUE) (KEY2 . VALUE2)) with attributes, which specify things of object nearer in a KEY-VALUE way. Some attributes control data-slot."
     :initform '()
     :reader attributes)
    (comment
@@ -63,7 +63,7 @@
     :reader taxonomy)
    (weight
     :initarg :weight
-    :documentation "Number from -100 to 100 that indicates the rated weight/importance of object."
+    :documentation "Number from -1 to 1 that indicates the rated weight/importance of object. 1 means the object is 100% that weight, whereby -1 means the opposite. 0 is neutral."
     :initform '())))
 
 (defclass sym (obj)
@@ -111,12 +111,12 @@
 					       attributes comment taxonomy ref_to ref_from weight))))
 
 (defparameter *current-stream* *STANDARD-OUTPUT*)
-(defparameter *symbols1* (make-hash-table :test 'equal))
-(defparameter *symbols2* (make-hash-table :test 'equal))
-(defparameter *symbols* *symbols1*)
+(defparameter *symbols1* (make-hash-table :test 'equal) "Symbols for first view.")
+(defparameter *symbols2* (make-hash-table :test 'equal) "Symbols for second view.")
+(defparameter *symbols* *symbols1* "Pointer to current symbol-hash.")
 (defparameter *relations1* (make-hash-table :test 'equal))
 (defparameter *relations2* (make-hash-table :test 'equal))
-(defparameter *relations* *relations1*)
+(defparameter *relations* *relations1* "Pointer to current relation-hash.")
 (defvar *current_symbol1* nil)
 (defvar *current_symbol2* nil)
 (defvar *current_symbol* *current_symbol1*)
@@ -329,7 +329,7 @@ Symbols which represent expansions will execute the configured function of the e
      (t (pprint taxonomy-documentation)))))
 
 (defun asa (symbol-name attribute-taxonomy value)
-  "symbol-name ->
+  "symbol-name attrib-taxonomy attrib-val ->
 <A>dd <s>ymbol <a>ttributes depending of key."
   (multiple-value-bind (sym sym-exists) (gethash symbol-name *symbols*)
 		       (if sym-exists
@@ -399,7 +399,7 @@ If you want a other license (like for commercial purposes), please contact Marku
 	       (list :attributes attributes1 :comment comment1 :ref_to ref_to1 :ref_from ref_from1 :taxonomy taxonomy1 :weight weight1)))
 
 (defun gsdump ()
-  "-> property-list
+  "-> list of property-lists
 <G>et all data of <s>ymbols in current schematic <dump>ed."
   (let ((result '()))
     (dolist (symbol-name (ls))
@@ -411,8 +411,8 @@ If you want a other license (like for commercial purposes), please contact Marku
     result))
 
 (defun gra (relation-name attribute-taxonomy)
-  "relation-name ->
-<G>et <r>elation <a>ttributes depending of key."
+  "relation-name attriute-key ->
+<G>et <r>elation <a>ttributes depending of given attribute-key."
   (multiple-value-bind (rel rel-exists) (gethash relation-name *relations*)
 		       (if rel-exists
 			 (with-slots ((a attributes)) (gethash relation-name *relations*)
@@ -429,9 +429,9 @@ If you want a other license (like for commercial purposes), please contact Marku
 			 :ref_from ref_from1 :ref_to ref_to1))
     nil))
 
-(defun gsa (symbol-name attribute-taxonomy)
-  "symbol-name ->
-<G>et <s>ymbol <a>ttributes depending of key."
+(defun gsa (symbol-name attribute-key)
+  "symbol-name attribute-key ->
+<G>et <s>ymbol <a>ttributes depending of given attribute-key."
   (multiple-value-bind (sym sym-exists) (gethash symbol-name *symbols*)
 		       (if sym-exists
 			 (with-slots ((a attributes)) (gethash symbol-name *symbols*)
@@ -475,10 +475,23 @@ Definitions of terms:
 
 Commands grouped depending on function:
 
- * INSERT objects: nr, ns
- * REMOVE objects: rr, rs
- * EDIT   objects: r, s
- * SAVE schematic: sav
+ * SHOW   attributes: gra, gsa
+ * EDIT   attributes: ara, asa, r, s
+ * REMOVE attributes: rra, rsa
+ * SHOW      context: lr, ls, sc, ssel
+ * EDIT      context: as, cs
+ * INSERT    objects: nr, ns
+ * REMOVE    objects: rr, rs
+ * SHOW      objects: r, s, rp, sp
+ * EDIT      objects: r, s
+ * RENAME    objects: mr, ms
+ * SHOW   properties: grp, gsp
+ * SHOW     taxonomy: lta
+ * LOAD         view: los, lov
+ * SAVE         view: sav
+ * CHANGE       view: tv
+ * CLEAR        view: cls
+ * ANALYSE      view: aap, ad, adp, apc, asp
 Following commands (collected in a list) are currently available:")
 `(let ((lst ()))
   (do-external-symbols (s (find-package :escad)) (push s lst))
@@ -650,7 +663,7 @@ Thanks. :-)
   (gethash new_name *symbols*))
 
 (defun nr (name ref_from ref_to &key attributes comment (taxonomy "escad.relation") weight)
-  "relation-name ref_from ref_to [comment data taxonomy weight] -> relation-object
+  "relation-name ref_from ref_to [comment taxonomy weight] -> relation-object
 Create <n>ew directed (default) <r>elation with given name and possible additional values in schematic.
 To make this relation undirected or bidirected, set the correct taxonomy."
   (multiple-value-bind (rel rel-exists) (gethash name *relations*)
@@ -739,7 +752,7 @@ Get <r>elation <p>roperty as result."
 
 (defun s (name &key attributes comment taxonomy)
   "symbol-name ->
-Sets <s>ymbol comment or taxonomy depending of key - if any given - and returns symbol, or 'nil' if not existent."
+Sets <s>ymbol attributes, comment or taxonomy depending of key - if any given - and returns symbol, or 'nil' if not existent."
   (multiple-value-bind (sym sym-exists) (gethash name *symbols*)
 		       (if sym-exists
 			 (with-slots ((attributes1 attributes) (comment1 comment) (taxonomy1 taxonomy)) (gethash name *symbols*)
@@ -751,7 +764,7 @@ Sets <s>ymbol comment or taxonomy depending of key - if any given - and returns 
 
 (defun sav (&optional (file_name "view.escad"))
   "[file-name] ->
-<sa>ve current <v>iew in a specified file in a user-dir which is defined by escad-admin."
+<sa>ve current <v>iew in a specified file in a user-dir (which is predefined by escad-admin)."
   (let ((output (make-array 3 :fill-pointer 0)) (symbols '()) (relations '()))
     (vector-push (list (cons 'escad_version *escad_version*) (cons 'escad_file_format *escad_file_format*)) output)
     (dolist (name (ls))
@@ -823,7 +836,8 @@ get <s>ymbol <p>roperty as result."
 	(setf *current_symbol* *current_symbol1*)
 	1)))
 
-;; network
+;;;;;;;;;;;;;;;;;;;;;
+;; Network connection
 (defun make-rpc-json-success-response (id data &optional (rpc-version "2.0"))
   "request-id  escad-return-data  [rpc-version] -> RPC-JSON-result-string
 Make a JSON-RPC sucess response as string.
@@ -833,6 +847,7 @@ Make a JSON-RPC sucess response as string.
     (if (string= rpc-version "2.0") ; true if version > 1.0, else version = 1.0
       (setq result (st-json:write-json-to-string (st-json:jso "jsonrpc" "2.0" "result" data "id" id)))
       (setq result (st-json:write-json-to-string (st-json:jso "result" data "error" nil "id" id))))
+    (format t "make-rpc-json-success-response: ~a //" result)
     result))
 
 (defun make-rpc-json-error-response (id error-code error-message &optional (rpc-version "2.0"))
@@ -847,40 +862,44 @@ Make a JSON-RPC error response as string.
       (st-json:write-json-element (st-json:jso "result" nil "error" error-message "id" id) stream))
     (get-output-stream-string stream)))
 
-;; ((key1 "value1" key2 "value2") (key1 "value1" key2 "value2")) -> "[{\"key1\": "value1" ...} {...}]"
-(defun lopl2ajo (list-of-propertylists)
-  "list-of-propertylists -> JSON-string
-<l>ist <o>f <p>roperty <l>ists to(<2>) <a>rray of <j>son <o>bjects."
-  (let ((stream (make-string-output-stream)))
-    (write-string "[" stream)
-    (dolist (plist list-of-propertylists)
-      (st-json:write-json-element (st-json:jso `(,@(loop :for (key val)
-							:on plist
-							:by #'cddr
-							:nconc (list (string key) val))))
-				  stream))rite-string "]" stream)
-    (get-output-stream-string stream))
-
-(defmethod st-json:write-json-element ((element symbol) stream)
-  (case element
-    ((nil) (write-string "[]" stream))
-    ((t :true) (write-string "true" stream))
-    (:false (write-string "false" stream))
-    ((:null :undefined) (write-string "null" stream))
-    (otherwise (write-string (string element) stream))))
+;(defmethod st-json:write-json-element ((element symbol) stream)
+;  (case element
+;    ((nil) (write-string "[]" stream))
+;    ((t :true) (write-string "true" stream))
+;    (:false (write-string "false" stream))
+;    ((:null :undefined) (write-string "null" stream))
+;    (otherwise (write-string (string element) stream))))
 
 (defun process-rpc-call (rpc-call)
   "st-json:JSO_request-object -> json-string"
   (let ((method (st-json:getjso "method" rpc-call)) (params (st-json:getjso "params" rpc-call)) (id (st-json:getjso "id" rpc-call))
 	(jsonrpc (st-json:getjso "jsonrpc" rpc-call)) (result '()))
     (cond ((string= method "gsdump")
-	   (setq result (lopl2ajo (gsdump))))
-	  ((string= method "ls")
-	   (setq result (st-json:write-json-to-string (eval (cons 'ls params)))))
+	   (setq result (json-sdump)))
+	  ((string= method "as")
+	   (setq result (eval (cons 'as params))))
+	  ((string= method "nr")
+	   (setq result (eval (cons 'nr params))))
+	  ((string= method "ns")
+	   (setq result (eval (cons 'ns params))))
+	  ((string= method "r")
+	   (setq result (eval (cons 'r params))))
+	  ((string= method "s")
+	   (setq result (eval (cons 's params))))
+	  ((string= method "rr")
+	   (setq result (eval (cons 'rr params))))
+	  ((string= method "rs")
+	   (setq result (eval (cons 'rs params))))
 	  ((string= method "lr")
-	   (setq result (st-json:write-json-to-string (eval (cons 'lr params)))))
-	  (t (error 'escad-internal-error "Sooooo error ")))
+	   (setq result (eval (cons 'lr params))))
+	  ((string= method "ls")
+	   (setq result (eval (cons 'ls params))))
+	  ((string= method "lta")
+	   (setq result (eval (cons 'lta params))))
+	  (t (error 'escad-internal-error "error: requested method not supported! ")))
+    (format t "process-rpc-call: ~a //" result)
     (make-rpc-json-success-response id result "2.0")))
+
 
 (defun eval-json_rpc (json-string)
   "json-string -> json-string"
@@ -890,8 +909,9 @@ Make a JSON-RPC error response as string.
       (process-rpc-call input)
       (error "No bulk call via RPC-JSON supported yet!"))))
 
+
 (defun json-rpc_over_network ()
-  "Process client requests forever. If one client exits connection, open another waiting. Connection is persistent."
+  "Process client requests forever. If one client exits connection, open another waiting. Connection is persistent. Just use locally or in a trusted network, not over internet (code injection alert)!"
   (let ((server (socket:socket-server *escad-server-port* :interface *escad-server-host*)))
     (format t "~&Waiting for a JSON-RPC connection on ~S:~D~%"
 	    (socket:socket-server-host server) (socket:socket-server-port server))
