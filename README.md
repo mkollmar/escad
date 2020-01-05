@@ -7,7 +7,7 @@ Therefore it only uses two objects: symbols and relations, which are combined to
 After modeling the graph, you can generate content, reports or other things from teh graph.
 The whole system is extendable through domain specific (self-writeable or existing) expansions, so you are not limited to the predefined shipped expansions.
 
-# Competitors
+# (Not really) competitors
 
 * Gephi can provide you with much more data analysis and a nice graphical user interface. Escad is more focused to be a practical working horse, and not to be a analysis tool. Instead of java, escad is built on common-lisp.
 

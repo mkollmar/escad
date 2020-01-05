@@ -172,15 +172,15 @@ read all contents of file into a string"
   (cond ((string= (car ext::*args*) "net-lisp") (lisp_over_network))
 	((string= (car ext::*args*) "net-json_rpc") (handler-bind ((escad-internal-error #'skip-json_rpc-request))
 								  (json-rpc_over_network))))
-  (pprint "Welcome and thanks for using escad (version gamma-2014)!  :-)")
+  (pprint "Welcome and thanks for using escad!  :-)")
   (pprint "If you are new to escad and need help:")
   (pprint "Type now '(in-package :escad)' to get into escad namespace.")
   (pprint "Then type '(help)' to get further info about your escad, and what you can do with it."))
 
 (defun init-views ()
   "Initialize escad view."
-  (ns "_escad") (s "_escad" :taxonomy "escad.symbol._escad") (ns "_view") (s "_view" :taxonomy "escad.symbol._thisView") (tv)
-  (ns "_escad") (s "_escad" :taxonomy "escad.symbol._escad") (ns "_view") (s "_view" :taxonomy "escad.symbol._thisView")
+  (ns "_escad" :attributes '((url . "testurl")) :comment "default symbol" :weight 0 :taxonomy "escad.symbol._escad") (ns "_view") (s "_view" :taxonomy "escad.symbol._thisView") (tv)
+  (ns "_escad" :attributes '((url . "testurl")) :comment "default symbol" :weight 0 :taxonomy "escad.symbol._escad") (ns "_view") (s "_view" :taxonomy "escad.symbol._thisView")
   (cs "_escad"))
 
 (defun join-string-list (string-list)
@@ -399,14 +399,13 @@ If you want a other license (like for commercial purposes), please contact Marku
 	       (list :attributes attributes1 :comment comment1 :ref_to ref_to1 :ref_from ref_from1 :taxonomy taxonomy1 :weight weight1)))
 
 (defun gsdump ()
-  "-> list of property-lists
+  "-> list of data-lists without keys just values in following order: name attributes comment taxonomy ref_to ref_from weight.
 <G>et all data of <s>ymbols in current schematic <dump>ed."
   (let ((result '()))
     (dolist (symbol-name (ls))
       (push (with-slots ((attributes1 attributes) (comment1 comment) (taxonomy1 taxonomy)
 			 (ref_to1 ref_to) (ref_from1 ref_from) (weight1 weight)) (gethash symbol-name *symbols*)
-			 (list :name symbol-name :attributes attributes1 :comment comment1 :ref_to ref_to1 :ref_from ref_from1
-			       :taxonomy taxonomy1 :weight weight1))
+			 (list symbol-name attributes1 comment1 taxonomy1 ref_to1 ref_from1 weight1))
 	    result))
     result))
 
@@ -838,101 +837,6 @@ get <s>ymbol <p>roperty as result."
 
 ;;;;;;;;;;;;;;;;;;;;;
 ;; Network connection
-(defun make-rpc-json-success-response (id data &optional (rpc-version "2.0"))
-  "request-id  escad-return-data  [rpc-version] -> RPC-JSON-result-string
-Make a JSON-RPC sucess response as string.
-* request-id: must be same string which the request had.
-* data: data encoded as JSON-string."
-  (let ((result ""))
-    (if (string= rpc-version "2.0") ; true if version > 1.0, else version = 1.0
-      (setq result (st-json:write-json-to-string (st-json:jso "jsonrpc" "2.0" "result" data "id" id)))
-      (setq result (st-json:write-json-to-string (st-json:jso "result" data "error" nil "id" id))))
-    (format t "make-rpc-json-success-response: ~a //" result)
-    result))
-
-(defun make-rpc-json-error-response (id error-code error-message &optional (rpc-version "2.0"))
-  "request-id  JSON-RPC-error-code  JSON-RPC-error-message  [rpc-version] -> RPC-JSON-result-string
-Make a JSON-RPC error response as string.
-* request-id: must be same string which the request had, nil if there was none (in case of bad request).
-* JSON-RPC-error-code: See JSON-RPC specification! E.g.: -32700 (Parse error), -32603 (Internal error).
-* JSON-RPC-error-message: See JSON-RPC specification! It should be a single sentence (string)."
-  (let ((stream (make-string-output-stream)))
-    (if (string= rpc-version "2.0") ; true if version > 1.0, else version = 1.0
-      (st-json:write-json-element (st-json:jso "jsonrpc" "2.0" "error" (st-json:jso "code" error-code "message" error-message) "id" id) stream)
-      (st-json:write-json-element (st-json:jso "result" nil "error" error-message "id" id) stream))
-    (get-output-stream-string stream)))
-
-;(defmethod st-json:write-json-element ((element symbol) stream)
-;  (case element
-;    ((nil) (write-string "[]" stream))
-;    ((t :true) (write-string "true" stream))
-;    (:false (write-string "false" stream))
-;    ((:null :undefined) (write-string "null" stream))
-;    (otherwise (write-string (string element) stream))))
-
-(defun process-rpc-call (rpc-call)
-  "st-json:JSO_request-object -> json-string"
-  (let ((method (st-json:getjso "method" rpc-call)) (params (st-json:getjso "params" rpc-call)) (id (st-json:getjso "id" rpc-call))
-	(jsonrpc (st-json:getjso "jsonrpc" rpc-call)) (result '()))
-    (cond ((string= method "gsdump")
-	   (setq result (json-sdump)))
-	  ((string= method "as")
-	   (setq result (eval (cons 'as params))))
-	  ((string= method "nr")
-	   (setq result (eval (cons 'nr params))))
-	  ((string= method "ns")
-	   (setq result (eval (cons 'ns params))))
-	  ((string= method "r")
-	   (setq result (eval (cons 'r params))))
-	  ((string= method "s")
-	   (setq result (eval (cons 's params))))
-	  ((string= method "rr")
-	   (setq result (eval (cons 'rr params))))
-	  ((string= method "rs")
-	   (setq result (eval (cons 'rs params))))
-	  ((string= method "lr")
-	   (setq result (eval (cons 'lr params))))
-	  ((string= method "ls")
-	   (setq result (eval (cons 'ls params))))
-	  ((string= method "lta")
-	   (setq result (eval (cons 'lta params))))
-	  (t (error 'escad-internal-error "error: requested method not supported! ")))
-    (format t "process-rpc-call: ~a //" result)
-    (make-rpc-json-success-response id result "2.0")))
-
-
-(defun eval-json_rpc (json-string)
-  "json-string -> json-string"
-  (format T "JSON-Input: ~a" json-string)
-  (let ((input (st-json:read-json-from-string json-string)))
-    (if (eq (type-of input) 'JSO)
-      (process-rpc-call input)
-      (error "No bulk call via RPC-JSON supported yet!"))))
-
-
-(defun json-rpc_over_network ()
-  "Process client requests forever. If one client exits connection, open another waiting. Connection is persistent. Just use locally or in a trusted network, not over internet (code injection alert)!"
-  (let ((server (socket:socket-server *escad-server-port* :interface *escad-server-host*)))
-    (format t "~&Waiting for a JSON-RPC connection on ~S:~D~%"
-	    (socket:socket-server-host server) (socket:socket-server-port server))
-    (unwind-protect
-      ;; infinite loop, terminate with Control+C
-      (loop (with-open-stream (socket (socket:socket-accept server))
-	(multiple-value-bind (local-host local-port) (socket:socket-stream-local socket)
-			     (multiple-value-bind (remote-host remote-port)
-						  (socket:socket-stream-peer socket)
-						  (format T "~&Connection: ~S:~D -- ~S:~D~%"
-							  remote-host remote-port local-host
-							  local-port)))
-	;; loop is terminated when the remote host closes the connection or on EXT:EXIT
-	(loop (when (eq :eof (socket:socket-status (cons socket :input))) (return))
-	      (princ (eval-json_rpc (read-line socket)) socket)
-	      ;; flush everything left in socket
-	      (loop :for c = (read-char-no-hang socket nil nil) :while c)
-	      (terpri socket))))
-      ;; make sure server is closed
-      (socket:socket-server-close server))))
-
 (defun lisp_over_network ()
   "Process client requests forever. If one client exits connection, open another waiting. Connection is persistent."
   (let ((server (socket:socket-server *escad-server-port* :interface *escad-server-host*)))
