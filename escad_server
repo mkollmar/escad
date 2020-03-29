@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright (C) 2011, 2014, 2019 Markus Kollmar
+# Copyright (C) 2011, 2014, 2019, 2020 Markus Kollmar
 #
 # This file is part of ESCAD.
 #
@@ -20,7 +20,7 @@
 
 # CONFIG:
 ESCAD_ROOT_DIR="./"
-ESCAD='escad.lisp'
+ESCAD='package.lisp'
 ESCAD_REST_SERVER='rest-server.js'
 ESCAD_INIT_FILE="${ESCAD_ROOT_DIR}escad_init.lisp"
 ESCAD_LOGFILE="${ESCAD_ROOT_DIR}escad.log"

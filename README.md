@@ -17,8 +17,7 @@ The whole system is extendable through domain specific (self-writeable or existi
 
 ## Command-line-client
   * Start the system in the escad directory with: ./escad_server start terminal
-  * Execute "(help)" in escad to get the newest information about escad. There is also a built in tutorial, so you can
-    interactively learn how to use escad.
+  * Follow the hints on the screen. There is also a built in tutorial, so you can interactively learn how to use escad.
   * Stop the system in the escad directory with: ./escad_server stop
 
 ## Web-interface-client
@@ -28,7 +27,7 @@ The whole system is extendable through domain specific (self-writeable or existi
 
 ## Net-Interface-API (for programms to use)
   * Start the server in the escad directory with: ./escad_server start net-lisp
-  * Open Web-Browser and type: http://127.0.0.1:4000
+  * Acess the system via a terminal connected to the server and follow the hints on the screen.
   * Stop the system in the escad directory with: ./escad_server stop
 
 Check the expansions for what you can do with your graph modelled in escad.
@@ -39,19 +38,16 @@ COPYRIGHT on ESCAD has Markus Kollmar <markuskollmar@onlinehome.de>.
 ESCAD is licensed for no commercial use under: GNU AFFERO GENERAL PUBLIC LICENSE Version 3, 19 November 2007.
 If you need a other license (like for commercial purposes), please contact Markus Kollmar <markuskollmar@onlinehome.de>.
 
-;; Copyright (C) 2013, 2014, 2019 Markus Kollmar
-;;
-;; This file is part of ESCAD.
-;;
-;; ESCAD is free software: you can redistribute it and/or modify
-;; it under the terms of the GNU Affero General Public License as published by
-;; the Free Software Foundation, either version 3 of the License, or
-;; (at your option) any later version.
-;;
-;; ESCAD is distributed in the hope that it will be useful,
-;; but WITHOUT ANY WARRANTY; without even the implied warranty of
-;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-;; GNU Affero General Public License for more details.
-;;
-;; You should have received a copy of the GNU Affero General Public License
-;; along with ESCAD.  If not, see <http://www.gnu.org/licenses/>.
+Copyright (C) 2013, 2014, 2019 Markus Kollmar
+
+This file is part of ESCAD.
+
+ESCAD is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+
+ESCAD is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with ESCAD.  If not, see <http://www.gnu.org/licenses/>.
