@@ -47,10 +47,11 @@ E -> <E>xpansion is using this symbol by symbol-activation with as-command to ex
 S -> Symbol/relation should be insert only one time (<s>ingle) in the schematic."
 )
 (:license "GNU Affero GPL")
-(:version 1))
+(:version 2020apr03))
 (
 (:taxonomy "escad.attribute.author" :doc "Name of author." :type "STRING")
 (:taxonomy "escad.attribute.copyright" :doc "Copyright." :type "STRING")
+(:taxonomy "escad.attribute.string-rep" :doc "[S] Explicit <rep>resentation of object as <string>. When printing the symbol this value will be used instead symbol-comment." :type "STRING")
 (:taxonomy "escad.attribute.label" :doc "Text as a (nicer) second name for the symbol which don't need to be uniq (not used to reference symbol!)." :type "STRING")
 (:taxonomy "escad.attribute.url" :doc "Link (URL) to a information source." :type "STRING")
 (:taxonomy "escad.attribute.2d-polar-coords" :doc "Polar coords like 45@10 (means 45 degrees and length 10%) for diagramms etc.." :type "STRING")
@@ -58,6 +59,7 @@ S -> Symbol/relation should be insert only one time (<s>ingle) in the schematic.
 (:taxonomy "escad.attribute.y-coord%" :doc "[F] y coordinate like 50 which means 50% from possible maximum for diagramms etc.." :type "FLOAT")
 
 (:taxonomy "escad.relation" :doc "[U] Root, universal relation (lowest fallback).")
+(:taxonomy "escad.relation.is_answer" :doc "[D] Answer of a flow-question (decission-tree).")
 (:taxonomy "escad.relation.has_child" :doc "[D] Person has genetic/law child.")
 (:taxonomy "escad.relation.has_subtopic" :doc "[D] Topic has a subtopic.")
 (:taxonomy "escad.relation.related" :doc "[B] Universal bidirected relation.")
@@ -81,7 +83,12 @@ S -> Symbol/relation should be insert only one time (<s>ingle) in the schematic.
 (:taxonomy "escad.symbol._escad.export.svg" :doc "[E] exports view to a SVG graphic (viewable in a viewer or some internet-browsers)." :expansion "export_expansion.lisp" :package :de.markus-herbert-kollmar.escad.export :function "export2svg" :license "GNU GPL 3")
 (:taxonomy "escad.symbol._escad.export.pedigree.svg" :doc "[E] exports view, interpreted as pedigree, to a SVG graphic (viewable in a viewer or some internet-browsers)." :expansion "export_expansion.lisp" :package :de.markus-herbert-kollmar.escad.export :function "export-pedigree2svg" :license "GNU GPL 3")
 (:taxonomy "escad.symbol._escad.export.mindmap.svg" :doc "[E] exports view, interpreted as mindmap, to a SVG graphic (viewable in a viewer or some internet-browsers)." :expansion "export_expansion.lisp" :package :de.markus-herbert-kollmar.escad.export :function "export-mindmap2svg" :license "GNU GPL 3")
+(:taxonomy "escad.symbol._escad.flow.answer" :doc "Give input as flow-answer." :expansion "flow_expansion.lisp" :package :de.markus-herbert-kollmar.escad.flow :function "check-answer" :license "GNU GPL 3")
+(:taxonomy "escad.symbol._escad.flow.end" :doc "end of flow (results), activate to see results." :expansion "flow_expansion.lisp" :package :de.markus-herbert-kollmar.escad.flow :function "do-finish" :license "GNU GPL 3")
+(:taxonomy "escad.symbol._escad.flow.question" :doc "[E] flow-question. Activate this to see question." :expansion "flow_expansion.lisp" :package :de.markus-herbert-kollmar.escad.flow :function "do-ask" :license "GNU GPL 3")
+(:taxonomy "escad.symbol._escad.flow.start" :doc "[E,S] flow-start. Activate this symbol to start flow or to reset existing flow-state (delete all results)." :expansion "flow_expansion.lisp" :package :de.markus-herbert-kollmar.escad.flow :function "make-statement" :license "GNU GPL 3")
 (:taxonomy "escad.symbol._escad.group" :doc "groups other symbols. mathematically it is a aequivalenz-relation.")
+(:taxonomy "escad.symbol._escad.import.dot" :doc "[E] imports graphviz dot format to escad." :expansion "import_expansion.lisp" :package :de.markus-herbert-kollmar.escad.import :function "import-dot" :license "GNU GPL 3")
 (:taxonomy "escad.symbol._escad.report" :doc "[S,E] General settings for report symbols.")
 (:taxonomy "escad.symbol._escad.report.html" :doc "[E] Tries to extract the basic information of view (handy for learning)." :expansion "report_expansion.lisp" :package :de.markus-herbert-kollmar.escad.report :function "report2html" :license "GNU GPL 3")
 (:taxonomy "escad.symbol._escad.report.txt" :doc "[E] Tries to extract the basic information of view (handy for learning)." :expansion "report_expansion.lisp" :package :de.markus-herbert-kollmar.escad.report :function "report2txt" :license "GNU GPL 3")
