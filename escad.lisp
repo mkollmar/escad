@@ -219,7 +219,7 @@ read all contents of file into a string"
   (ns "Q1" :comment "activate to get question and possible answers" :attributes '("escad.attribute.string-rep" "5 + 6 * 7 = ?") :taxonomy "escad.symbol._escad.flow.question")
   (ns "A1" :comment "activate to select that answer as correct" :attributes '("escad.attribute.string-rep" "47" "flow-counter" :correct) :taxonomy "escad.symbol._escad.flow.answer")
   (ns "A2" :comment "activate to select that answer as correct" :attributes '("escad.attribute.string-rep" "77" "flow-counter" :wrong) :taxonomy "escad.symbol._escad.flow.answer")
-  (ns "result" :comment "activate to get result of mathematic test" :taxonomy "escad.symbol._escad.flow.end")
+  (ns "Result" :comment "activate to get result of mathematic test" :taxonomy "escad.symbol._escad.flow.end")
   (nr nil "Start flow!" "Q1")
   (nr nil "Q1" "A1")
   (nr nil "Q1" "A2")
@@ -418,16 +418,6 @@ COPYRIGHT on ESCAD has Markus Kollmar <markuskollmar@onlinehome.de>.
 ESCAD is licensed under: GNU AFFERO GENERAL PUBLIC LICENSE Version 3, 19 November 2007.
 If you want a other license (like for commercial purposes), please contact Markus Kollmar <markuskollmar@onlinehome.de>."))
 
-(defgeneric o (obj)
-  (:documentation "Creates a list of all <o>bject properties."))
-
-(defmethod o ((symbol sym))
-  "symbol-object -> property-list
-Get all data of symbol <o>bjekt."
-  (with-slots ((attributes1 attributes) (comment1 comment) (taxonomy1 taxonomy)
-	       (ref_to1 ref_to) (ref_from1 ref_from) (weight1 weight)) symbol
-	       (list :attributes attributes1 :comment comment1 :ref_to ref_to1 :ref_from ref_from1 :taxonomy taxonomy1 :weight weight1)))
-
 (defun gsdump ()
   "-> list of data-lists without keys just values in following order: name attributes comment taxonomy ref_to ref_from weight.
 <G>et all data of <s>ymbols in current schematic <dump>ed."
@@ -618,8 +608,16 @@ Thanks. :-)
 
 (defun lov (file_name)
   "file-name -> T
-<lo>ad <v>iew from file into current view. All existing symbols and relations will be deleted!"
+<lo>ad <v>iew from file into current view. All existing symbols and relations will be deleted! Note that the file can be a fast loading default escad save format or with key :as_escad_commands saved file. In the last case standard escad commands will be executed, so that this can take some time. Escad recognizes the different files automatically, you not need to specify anything."
   (let ((input '()) header symbols relations)
+    ; test for :as_escad_commands saved file, and load it if it is such file (slower):
+    (with-open-file (stream (concatenate 'string *escad-view-dir* file_name)
+			    :direction :input)
+      (if (string= ";;" (subseq (format nil "~a" (read-line stream)) 0 2))
+	  (load (concatenate 'string *escad-view-dir* file_name)))
+      (return-from lov "Executed file with escad-commands (slow format)."))
+    
+    ; load in default file-format (may be faster):
     (with-open-file (in (concatenate 'string *escad-view-dir* file_name))
 		    (with-standard-io-syntax
 		     (setf input (read in))))
@@ -642,7 +640,7 @@ Thanks. :-)
 	    (make-instance 'sym :comment (cdr (assoc 'comment x)) :attributes (cdr (assoc 'attributes x))
 			   :ref_from (cdr (assoc 'ref_from x)) :ref_to (cdr (assoc 'ref_to x))
 			   :taxonomy (cdr (assoc 'taxonomy x))))))
-  T)
+  "Loaded standard file data into view (fast format).")
 
 (defun lr (&key (filter nil filter-p) (exclude-taxonomy nil exclude-p))
 "[:FILTER filter] [:EXCLUDE-TAXONOMY exclude-taxonomy_string-list] -> symbol-list
@@ -764,6 +762,22 @@ if the symbol-name already exists do nothing and return nil."
 	      name) ; sym with requested name created
 	    nil))))) ; sym exists already
 
+
+(defgeneric o (obj)
+  (:documentation "object -> property-list
+Creates a list of all <o>bject (symbol or relation) data with references (in/out)."))
+
+(defmethod o ((obj sym))
+  (with-slots ((attributes1 attributes) (comment1 comment) (taxonomy1 taxonomy)
+	       (ref_to1 ref_to) (ref_from1 ref_from) (weight1 weight)) obj
+    (list :attributes attributes1 :comment comment1 :ref_to ref_to1 :ref_from ref_from1 :taxonomy taxonomy1 :weight weight1)))
+
+(defmethod o ((obj rel))
+  (with-slots ((attributes1 attributes) (comment1 comment) (taxonomy1 taxonomy)
+	       (ref_to1 ref_to) (ref_from1 ref_from) (weight1 weight)) obj
+    (list :attributes attributes1 :comment comment1 :ref_to ref_to1 :ref_from ref_from1 :taxonomy taxonomy1 :weight weight1)))
+
+
 (defun r (name &key comment ref_from ref_to taxonomy weight)
   "relation-name [comment ref_from ref_to taxonomy weight] -> rel-obj | nil
 Sets <r>elation properties (slots) given by key - if any given - and returns relation, or 'nil' if not existent."
@@ -853,26 +867,44 @@ Sets <s>ymbol comment, taxonomy or weight depending of key - if any given - and 
 	  (gethash name *symbols*))
 	nil)))
 
-(defun sav (&optional (file_name "view.escad"))
-  "[file-name] ->
-<sa>ve current <v>iew in a specified file in a user-dir (which is predefined by escad-admin)."
-  (let ((output (make-array 3 :fill-pointer 0)) (symbols '()) (relations '()))
-    (vector-push (list (cons 'escad_version *escad_version*) (cons 'escad_file_format *escad_file_format*)) output)
-    (dolist (name (ls))
-      (with-slots (attributes comment ref_from ref_to taxonomy weight) (gethash name *symbols*)
-		  (push (list (cons 'attributes attributes) (cons 'name name) (cons 'comment comment) (cons 'taxonomy taxonomy)
-			      (cons 'ref_from ref_from) (cons 'ref_to ref_to) (cons 'weight weight)) symbols)))
-    (vector-push symbols output)
-    (dolist (name (lr))
-      (with-slots (attributes comment ref_from ref_to taxonomy weight) (gethash name *relations*)
-		  (push (list (cons 'attributes attributes) (cons 'name name) (cons 'comment comment) (cons 'taxonomy taxonomy)
-			      (cons 'ref_from ref_from) (cons 'ref_to ref_to) (cons 'weight weight)) relations)))
-    (vector-push relations output)
-    (with-open-file (out (concatenate 'string *escad-view-dir* file_name)
-			 :direction :output
-			 :if-exists :supersede)
-		    (with-standard-io-syntax
-		     (print output out)))))
+(defun sav (file_name &key as_escad_commands)
+  "file-name [:as_escad_commands] -> file_contents
+<sa>ve current <v>iew in a specified file in a user-dir (which is predefined by escad-admin). Default is the fast loading format.
+However you can specify ::as_escad_commands key, which generates a file with escad-commands (usefull the edit view in a editor) producing the current view."
+  (if as_escad_commands
+      (let ((escad-commands "")) ;; save in slow user friendly file format
+	(dolist (name (ls))
+	  (with-slots (attributes comment ref_from ref_to taxonomy weight) (gethash name *symbols*)
+	    (setq escad-commands (concatenate 'string escad-commands
+					      (format nil "(ns ~S :attributes '~S :comment ~S :taxonomy ~S :weight ~S)~%" name attributes comment taxonomy weight)))))
+	(setq escad-commands (concatenate 'string escad-commands
+					  (format nil ";; relations:~%")))
+	(dolist (name (lr))
+	  (with-slots (attributes comment ref_from ref_to taxonomy weight) (gethash name *relations*)
+	    (setq escad-commands (concatenate 'string escad-commands
+					      (format nil "(nr ~S :attributes '~S :comment ~S :taxonomy ~S :weight ~S)~%" name attributes comment taxonomy weight)))))	
+	(with-open-file (cmd-stream (concatenate 'string *escad-view-dir* file_name)
+				    :direction :output
+				    :if-exists :supersede
+				    :if-does-not-exist :create)
+	  (format cmd-stream ";; File format version <0>.~%;; Saved by escad command sav with key :as_escad_commands. Load this file in escad with command lov.~%~%;; symbols:~%~a" escad-commands)))
+      (let ((output (make-array 3 :fill-pointer 0)) (symbols '()) (relations '()))
+	(vector-push (list (cons 'escad_version *escad_version*) (cons 'escad_file_format *escad_file_format*)) output) ; save in fast file format
+	(dolist (name (ls))
+	  (with-slots (attributes comment ref_from ref_to taxonomy weight) (gethash name *symbols*)
+	    (push (list (cons 'attributes attributes) (cons 'name name) (cons 'comment comment) (cons 'taxonomy taxonomy)
+			(cons 'ref_from ref_from) (cons 'ref_to ref_to) (cons 'weight weight)) symbols)))
+	(vector-push symbols output)
+	(dolist (name (lr))
+	  (with-slots (attributes comment ref_from ref_to taxonomy weight) (gethash name *relations*)
+	    (push (list (cons 'attributes attributes) (cons 'name name) (cons 'comment comment) (cons 'taxonomy taxonomy)
+			(cons 'ref_from ref_from) (cons 'ref_to ref_to) (cons 'weight weight)) relations)))
+	(vector-push relations output)
+	(with-open-file (out (concatenate 'string *escad-view-dir* file_name)
+			     :direction :output
+			     :if-exists :supersede)
+	  (with-standard-io-syntax
+	    (print output out))))))
 
 
 (defun sp (symbol-name property-name)
@@ -929,10 +961,10 @@ get <s>ymbol <p>roperty as result."
 							  local-port)))
 	;; loop is terminated when the remote host closes the connection or on EXT:EXIT
 	(loop (when (eq :eof (socket:socket-status (cons socket :input))) (return))
-	      (print (eval (read socket)) socket)
-	      ;; flush everything left in socket
-	      (loop :for c = (read-char-no-hang socket nil nil) :while c)
-	      (terpri socket))))
+	   (print (eval (read socket)) socket)
+	   ;; flush everything left in socket
+	   (loop :for c = (read-char-no-hang socket nil nil) :while c)
+	   (terpri socket))))
       ;; make sure server is closed
       (socket:socket-server-close server))))
 

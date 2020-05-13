@@ -55,8 +55,8 @@ S -> Symbol/relation should be insert only one time (<s>ingle) in the schematic.
 (:taxonomy "escad.attribute.label" :doc "Text as a (nicer) second name for the symbol which don't need to be uniq (not used to reference symbol!)." :type "STRING")
 (:taxonomy "escad.attribute.url" :doc "Link (URL) to a information source." :type "STRING")
 (:taxonomy "escad.attribute.2d-polar-coords" :doc "Polar coords like 45@10 (means 45 degrees and length 10%) for diagramms etc.." :type "STRING")
-(:taxonomy "escad.attribute.x-coord%" :doc "[F] x coordinate like 50 which means 50% from possible maximum for diagramms etc.." :type "FLOAT")
-(:taxonomy "escad.attribute.y-coord%" :doc "[F] y coordinate like 50 which means 50% from possible maximum for diagramms etc.." :type "FLOAT")
+(:taxonomy "escad.attribute.x-coord" :doc "[S] x coordinate with unit." :type "STRING")
+(:taxonomy "escad.attribute.y-coord" :doc "[S] y coordinate with unit." :type "STRING")
 
 (:taxonomy "escad.relation" :doc "[U] Root, universal relation (lowest fallback).")
 (:taxonomy "escad.relation.is_answer" :doc "[D] Answer of a flow-question (decission-tree).")
@@ -92,5 +92,5 @@ S -> Symbol/relation should be insert only one time (<s>ingle) in the schematic.
 (:taxonomy "escad.symbol._escad.report" :doc "[S,E] General settings for report symbols.")
 (:taxonomy "escad.symbol._escad.report.html" :doc "[E] Tries to extract the basic information of view (handy for learning)." :expansion "report_expansion.lisp" :package :de.markus-herbert-kollmar.escad.report :function "report2html" :license "GNU GPL 3")
 (:taxonomy "escad.symbol._escad.report.txt" :doc "[E] Tries to extract the basic information of view (handy for learning)." :expansion "report_expansion.lisp" :package :de.markus-herbert-kollmar.escad.report :function "report2txt" :license "GNU GPL 3")
-(:taxonomy "escad.symbol._view" :doc "[S] Related things to current view (name, author,...).")
+(:taxonomy "escad.symbol._view" :doc "[S,E] Related things to current view (name, author,...). By activation export view to format for browserclient." :expansion "export_expansion.lisp" :package :de.markus-herbert-kollmar.escad.export :function "export2svg4browserclient" :license "GNU GPL 3")
 ))

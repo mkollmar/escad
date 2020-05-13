@@ -8,7 +8,7 @@
 
   <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
   <link rel="stylesheet" href="//cdn.jsdelivr.net/angular.ng-grid/2.0.7/ng-grid.min.css">
-  <link rel="stylesheet" href="http://www.x3dom.org/release/x3dom.css">
+  <!-- <link rel="stylesheet" href="http://www.x3dom.org/release/x3dom.css"> -->
   <link rel="stylesheet" href="./escad.css">
 
   <link rel="icon" type="image/x-icon" href="./favicon.ico">
@@ -19,65 +19,53 @@
   <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.21/angular.min.js"></script>
   <script src="//cdn.jsdelivr.net/angular.ng-grid/2.0.7/ng-grid.js"></script>
   <script src="//angular-ui.github.io/bootstrap/ui-bootstrap-tpls-0.11.0.js"></script>
-  <script src="http://www.x3dom.org/release/x3dom.js"></script>
+  <!-- <script src="http://www.x3dom.org/release/x3dom.js"></script> -->
   <script src="./webclient.js"></script>
 </head>
 
 <body ng-controller="mainController">
-
-  <div class="global_menue">
-    
-    <div>
-      <button type="button" class="btn btn-primary btn-lg" ng-click="syncWithEscad()">Sync</button>
-      <button type="button" class="btn btn-primary btn-lg" ng-click="newView()">New</button>
-      <button type="button" class="btn btn-primary btn-lg" ng-click="exportView()">Export</button>
-      <button type="button" class="btn btn-primary btn-lg" ng-click="loadView()">Load</button>
-      <div class="btn-group">
-        <label class="btn btn-primary btn-lg" ng-model="selectedView" btn-radio="'View1'">View1</label>
-        <label class="btn btn-primary btn-lg" ng-model="selectedView" btn-radio="'View2'">View2</label>
-      </div>
-      <div class="btn btn-primary btn-lg">
-	<label class="TextArea">TEXT:</label>
-	<input ng-model="TEXT" typeahead="state for state in states | filter:$viewValue | limitTo:8" class="form-control TextArea">
-      </div>
-    </div>
-  </div>
-
-  <div class="data-area">
-<tabset>
-    <tab heading="Tabular view">
-  
   <div>
-    <div class="symbol-area">
-      <h1>{{selectedView}}:Symbols({{mySymbolSelections.length}})</h1>
-      <div class="symbol-menue container-fluid">
-	<button type="button" class="btn btn-primary" ng-click="createSymbol()">New(TEXT)</button>
-	<button type="button" class="btn btn-primary" ng-click="deleteSymbol()">Delete</button>
-	<button type="button" class="btn btn-primary" ng-click="editSymbol()">Edit</button>
-	<button type="button" class="btn btn-primary" ng-click="activateSymbol()">Activate</button>
+    <h1>Escad</h1>
+    <pre style="width: 600px;">{{Escad.charSet}} # {{Escad.selectedSymbol}} % {{Escad.message}}</pre>
+  </div>
+  <div class="data-area">
+   <tabset>
+    <tab heading="Tabular view">
+
+     <div class="object-area">
+      <div class="object-menue container-fluid">
+	<button type="button" class="btn btn-primary" ng-click="reloadEscad()">Load</button>
+	<!-- <button type="button" class="btn btn-primary" ng-click="save2Escad()">Save</button> -->
+	<button type="button" class="btn btn-primary" ng-click="createSymbol()">ns</button>
+	<button type="button" class="btn btn-primary" ng-click="createSymbol()">nr</button>
+	<button type="button" class="btn btn-primary" ng-click="deleteSymbol()">remove</button>
+	<button type="button" class="btn btn-primary" ng-click="activateSymbol()">activate</button>
+	<div class="object-list">
+          <div class="gridStyle" ng-grid="Escad.objectGrid"></div>
+	</div>
       </div>
-      <div class="symbol-list">
-        <div class="gridStyle" ng-grid="symbolGrid"></div>
+      <div class="svg-area" ng-repeat="url in Escad.svg_url" ng-include="url">
       </div>
-    </div>
-    
-    <div class="relation-area">
-      <h1>{{selectedView}}:Relations({{myRelationSelections.length}})</h1>
-      <div class="relation-menue container-fluid">
-	<button type="button" class="btn btn-primary" ng-click="createRelation()">New(TEXT)</button>
-	<button type="button" class="btn btn-primary" ng-click="deleteRelation()">Delete</button>
-	<button type="button" class="btn btn-primary" ng-click="editRelation()">Edit</button>
-      </div>
-      <div class="relation-list">
-	<div class="gridStyle" ng-grid="relationGrid"></div>
-      </div>
-    </div>
 
   </div>
     </tab>
 
-    <tab heading="Activation result">
-      <div id="graphic_view"><X3D width='800px' height='400px'><scene><transform translation=\"1 1 0\" rotation=\"0 0 0 0\" scale =\"1 1 1\"> {{activation_result}} <shape><box size='1 4 1'/><appearance> <material diffuseColor='0.6 0 0'/></appearance></shape></transform><shape><box size='1 4 1'/><appearance><material diffuseColor='0 1 0'/></appearance></shape></scene></X3D></div>
+    <tab heading="commandline/log">
+      <form name="myForm">
+	CMD: <input style="width: 80%;" ng-model="Escad.cmd" type="text" typeahead="state for state in Escad.states | filter:$viewValue | limitTo:8">
+	<button type="button" class="btn btn-primary" ng-click="sendCommand()">Send!</button>
+	<span class="error" ng-show="myForm.userName.$error.required">
+	  Required!</span><br>
+	<tt>Result: {{Escad.cmd_result}}</tt><br/>
+      </form>
+    </tab>
+    
+    <tab heading="file_viewer (svg, txt)">
+      SRC: <input style="width: 80%;" ng-model="Escad.file_input" type="text">
+	<button type="button" class="btn btn-primary" ng-click="viewFile()">view</button>
+      <div id="graphic_view" ng-include="Escad.view_file">
+	<!-- <X3D width='800px' height='400px'><scene><transform translation=\"1 1 0\" rotation=\"0 0 0 0\" scale =\"1 1 1\"> {{activation_result}} <shape><box size='1 4 1'/><appearance> <material diffuseColor='0.6 0 0'/></appearance></shape></transform><shape><box size='1 4 1'/><appearance><material diffuseColor='0 1 0'/></appearance></shape></scene></X3D> -->
+      </div>
     </tab>
   </tabset>
 

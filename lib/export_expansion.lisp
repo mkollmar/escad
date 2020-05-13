@@ -20,7 +20,7 @@
 (defpackage :de.markus-herbert-kollmar.escad.export
   (:use :common-lisp :escad)
   (:nicknames :escad.export)
-  (:export :export2dot :export2svg :export-pedigree2svg :export-mindmap2svg)
+  (:export :export2dot :export2svg :export2svg4browserclient :export-pedigree2svg :export-mindmap2svg)
   (:shadow #:cos)
   (:documentation "Export current view to dot format (graphviz) and svg (XML/HTML)."))
 
@@ -42,7 +42,7 @@ Do this if symbol will be activated!"
       (with-standard-io-syntax
 	(princ *dot-header* out) (write-char #\newline out)
 	(princ "digraph schematic {" out) (write-char #\newline out)
-	(dolist (name (ls :exclude-taxonomy '("escad.symbol._escad" "escad.symbol._thisView")))
+	(dolist (name (ls :exclude-taxonomy '("escad.symbol._escad" "escad.symbol._view")))
 	  (princ (concatenate 'string name ";") out)
 	  (write-char #\newline out))
 	(dolist (name (lr))
@@ -63,33 +63,43 @@ Export view to a svg (xml) graphical file with name <escad_export.svg>, which is
     #-clisp '("Sorry, function not available. Please type 'dot -Tsvg -o outputfile.svg inputfile.dot' in your shell manually." '(1 "GPL3"))
     absolut-output-filename))
 
-(defun draw-mindmap-sym (x y name weight)
-  "Generate svg-string symbolizing mindmap-symbol with name in it."
+(defun make-pedigree-tree (root-sym-name)
+  ""
+  (let ((result '(("Vater" "Mutter")("Ich")("Kind"))))
+    ;(with-slots ((ref_to-s ref_to) (tax taxonomy)) (gethash root-sym-name *symbols*)
+     ; (
+  result))
+
+(defun svg-sym (x y name weight &key onclick ng-click)
+  "x y name weight &key[onclick ng-click] -> string-with-svg
+Generate svg-string symbolizing mindmap-symbol with name in it."
   (let ((result "") (width "1"))
-    (if (> weight 0.75)
-	(setq width "3" color "white")
-	(setq width "1" color "orange"))
+    (if (> (if weight weight 0) 0.75)
+	(setq width "3" color "yellow")
+	(setq width "1" color "yellow"))
+    (setq result (concatenate 'string result (format nil "<g~@[ onclick=\"~a\"~]~@[ ng-click=\"~a\"~]>~%" onclick ng-click)))
     (setq result (concatenate 'string result (svg-ellipse x y "2cm" "0.7cm" color width)))
     (setq result (concatenate 'string result (svg-text x y name)))
+    (setq result (concatenate 'string result (format nil "</g>~%")))
     ))
 
 (defun svg-ellipse (x y rx ry (color "orange") (width "2"))
   "Print ellipse at pos x, y."
   (let ((result ""))
-    (setq result (concatenate 'string result (format nil "<ellipse cx=\"~a%\" cy=\"~a%\" rx=\"~a\" ry=\"~a\" fill=\"~a\" stroke=\"blue\" stroke-width=\"~a\" />" x y rx ry color width)))))
+    (setq result (concatenate 'string result (format nil "<ellipse cx=\"~a\" cy=\"~a\" rx=\"~a\" ry=\"~a\" fill=\"~a\" stroke=\"blue\" stroke-width=\"~a\" />~%" x y rx ry color width)))))
     
 (defun svg-text (x y name)
   "Print text at pos."
   (let ((result ""))
-    (setq result (concatenate 'string result (format nil "<text x=\"~a%\" y=\"~a%\" fill=\"blue\" style=\"font-size: 0.35cm; text-anchor: middle\" dominant-baseline=\"middle\">" x y)))
+    (setq result (concatenate 'string result (format nil "<text x=\"~a\" y=\"~a\" fill=\"blue\" style=\"font-size: 0.35cm; text-anchor: middle\" dominant-baseline=\"middle\">" x y)))
     (setq result (concatenate 'string result (format nil "~a" name)))
     (setq result (concatenate 'string result (format nil "</text>~%")))))
 
-(defun svg-line (x1 y1 x2 y2 &key (color "white"))
+(defun svg-line (x1 y1 x2 y2 &key (color "black"))
   "Draw line at pos."
   (let ((result ""))
     (setq result (concatenate 'string result
-      (format nil "<line x1=\"~a%\" y1=\"~a%\" x2=\"~a%\" y2=\"~a%\" stroke=\"~a\" stroke-width=\"1\" />~%" x1 y1 x2 y2 color)))))
+      (format nil "<line x1=\"~a\" y1=\"~a\" x2=\"~a\" y2=\"~a\" stroke=\"~a\" stroke-width=\"1\" />~%" x1 y1 x2 y2 color)))))
 
 ;; (defun draw-mindmap-relations-svg (layout)
 ;;   "layout-assoc-list ->"
@@ -125,6 +135,33 @@ Export view to a svg (xml) graphical file with name <escad_export.svg>, which is
 ;;     (princ (draw-mindmap-relations-svg layout) out)
 ;;     (princ (draw-mindmap-symbols-svg layout) out)))
 
+(defun export2svg4browserclient (activated-symbol-name &optional (filename "escad_view.svg"))
+  "symbol-name [relative-file-name] -> absolut-file-name
+Export view to a svg file, which is viewable by some internet-browsers especially the escad-browserclient. Do this by symbol-activation!"
+  (let ((absolute-filename (concatenate 'string *escad-view-dir* filename))
+	(weights (asw)) (symbols '()))
+    (with-open-file (out absolute-filename :direction :output :if-exists :supersede)
+      (with-standard-io-syntax
+	(princ "<?xml version=\"1.0\" standalone=\"no\"?>" out) (write-char #\newline out)
+	(princ "<svg width=\"1200px\" height=\"500px\" viewBox=\"0 0 1200 500\"" out) (write-char #\newline out)
+	(princ "     xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\">" out) (write-char #\newline out)(write-char #\newline out)
+	(princ "  <rect width=\"100%\" height=\"100%\" fill=\"orange\" stroke=\"black\" />" out)
+	(write-char #\newline out)
+	(dolist (name (ls))
+	  (let ((x (gsa name "x-coord")) (y (gsa name "y-coord")))
+	    (setq symbols (acons name (list (if x x "150") (if y y "100")) symbols))))
+	(dolist (name (lr))
+	  (with-slots ((from ref_from) (to ref_to)) (gethash name escad::*relations*)
+	    (princ (svg-line (cadr (assoc (car from) symbols :test #'string=)) (caddr (assoc (car from) symbols :test #'string=))
+			     (cadr (assoc (car to) symbols :test #'string=)) (caddr (assoc (car to) symbols :test #'string=))) out)))
+	(dolist (sym symbols)
+	  (princ (svg-sym (cadr sym) (caddr sym) (car sym)
+			  (escad::sp (car sym) 'escad::weight)
+			  :ng-click (format nil "selectSymbol('~a')" (car sym))) out))
+	(write-char #\newline out)
+	(princ "</svg>" out)))
+    absolute-filename))
+
 (defun export-mindmap2svg (activated-symbol-name &optional (filename "escad_mindmap_export.svg"))
   "symbol-name [relative-file-name] -> absolut-file-name
 Export view to a svg file, which is viewable by some internet-browsers (e.g. firefox).
@@ -140,14 +177,14 @@ Relations with highest weight are placed nearer at source-symbol."
 	(princ "  <rect width=\"100%\" height=\"100%\" fill=\"black\" />" out)
 	(dolist (name (ls :exclude-taxonomy '("escad.symbol._escad" "escad.symbol._view" "escad.symbol._escad.export.mindmap.svg")))
 	  ;(format t "<~S>  " (gsa "Projekt" 'x))
-	  (setq symbols (acons name (list (gsa name "x-coord%") (gsa name "y-coord%")) symbols)))
+	  (setq symbols (acons name (list (gsa name "x-coord") (gsa name "y-coord")) symbols)))
 	(dolist (name (lr))
 	  (with-slots ((from ref_from) (to ref_to)) (gethash name escad::*relations*)
 	    (princ (svg-line (cadr (assoc (car from) symbols :test #'string=)) (caddr (assoc (car from) symbols :test #'string=))
 			     (cadr (assoc (car to) symbols :test #'string=)) (caddr (assoc (car to) symbols :test #'string=))) out)))
 	(dolist (sym symbols)
-	  (princ (draw-mindmap-sym (cadr sym) (caddr sym) (car sym)
-				   (getf (escad::gobj (s (car sym))) :weight)) out))
+	  (princ (svg-sym (cadr sym) (caddr sym) (car sym)
+			  (escad::sp (car sym) 'escad::weight) out)))
 	(write-char #\newline out)
 	(princ "</svg>" out)))
     absolute-filename))

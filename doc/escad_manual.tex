@@ -1,0 +1,153 @@
+%% Editiert mit emacs (set-keyboard-coding-system 'utf-8)
+%% Emacs-modes: latex-mode, outline-minor-mode
+%% Emacs-commands: M-x outline-toggle-children
+%% M-x pdf-tools-install
+%% M-x customize apropos TeX-source-correlate-method -> synctex
+%% M-x TeX-source-correlate-mode
+\documentclass[a4paper, 12pt]{scrbook}
+\usepackage[T1]{fontenc}  % grafische Darstellung der Zeichen
+\usepackage{lmodern,textcomp} % Euro
+\usepackage[utf8]{inputenc}  % Umlaute direkt eingeben (ohne \"a)
+% \usepackage[ngerman]{babel}  % neue Rechtschreibung für automatisch erzeugte Dokumentelemente
+\usepackage[UKenglish]{babel}  % english for toc...
+\usepackage[paper=a4paper, left=2cm, top=20mm, bottom=15mm, right=15mm, includefoot, foot=\baselineskip, footskip=10mm]{geometry}  %für Raender
+\usepackage[headsepline,footsepline]{scrpage2}  % für Header
+\usepackage{longtable}
+\usepackage[table]{xcolor}
+\usepackage{amsmath}
+%\usepackage{polynom} % Ausführung und Darstellung von Polynomdivision
+\usepackage{rotating} % Dinge rotieren
+\DeclareMathOperator\sign{sign}
+\usepackage{listings}
+\usepackage[autostyle]{csquotes} % Anführungszeichen mit \enquote{Anführungszeichen}
+%\usepackage{tikz-timing}[2009/05/15]
+%\lstset{basicstyle=\scriptsize} 
+\lstset{basicstyle=\footnotesize} 
+%\lstset{basicstyle=\small} 
+\lstset{literate=%
+    {Ö}{{\"O}}1
+    {Ä}{{\"A}}1
+    {Ü}{{\"U}}1
+    {ß}{{\ss}}1
+    {ü}{{\"u}}1
+    {ä}{{\"a}}1
+    {ö}{{\"o}}1
+    {~}{{\textasciitilde}}1
+    {°}{{\textdegree}}1
+}
+%\lstloadlanguages{MATLAB\textsuperscript{\textregistered}}%
+\lstset{language=MATLAB,                        % Use MATLAB
+        keywordstyle=[1]\color{black}\bfseries,  % MATLAB functions bold and blue
+        keywordstyle=[2]\color{purple},         % MATLAB function arguments purple
+        keywordstyle=[3]\color{blue}\underbar,  % User functions underlined and blue
+        identifierstyle=,                       % Nothing special about identifiers
+                                                % Comments small dark green courier
+        commentstyle=\usefont{T1}{pcr}{m}{sl}\color{green}\small,
+        stringstyle=\color{purple},             % Strings are purple
+        showstringspaces=false,                 % Don't put marks in string spaces
+        basicstyle=\footnotesize\ttfamily,
+        tabsize=5,                              % 5 spaces per tab
+        %
+        %%% Put standard MATLAB functions not included in the default
+        %%% language here
+        morekeywords={alpha,factorial,getoptions,margin,normpdf,normcdf,nyquist,nyquistplot,open_system,poissrnd,set_param,setoptions,sim,tf,var,xlim,ylim},
+        %
+        %%% Put MATLAB function parameters here
+        morekeywords=[2]{on, off, interp},
+        %
+        %%% Put user defined functions here
+        morekeywords=[3]{FindESS, homework_example, get_param},
+        %
+        morecomment=[l][\color{blue}]{...},     % Line continuation (...) like blue comment
+        numbers=left,                           % Line numbers on left
+        firstnumber=1,                          % Line numbers start with line 1
+        numberstyle=\tiny\color{blue},          % Line numbers are blue
+        %frame=single
+}
+\usepackage{upgreek} % für aufrechtes pi im mathe-modus
+\usepackage[locale=DE,per=frac]{siunitx}
+\usepackage{amssymb} %für Mathesymbole wie Menge der natürlichen Zahlen
+%\usepackage{color} % farbiger Texthintergrund
+\usepackage{xcolor} % Textfarbe
+%\usepackage{pdfpages}
+%\usepackage[abs]{overpic}
+%\usepackage{lastpage} % für gesamtseitenzahl
+\usepackage{tikz} % für grafikzeichnen
+\usepackage{pgfplots}
+%\usetikzlibrary{positioning}
+\usetikzlibrary{matrix, positioning, shapes}
+\usetikzlibrary{arrows, automata, shadows, patterns}
+% \usepackage{circuitikz} % für Schaltpläne
+\usepackage{index}
+\makeindex
+\pagestyle{scrheadings}
+
+\clearscrheadings
+\clearscrheadfoot
+\newcommand{\MyVorname}{Markus}
+\newcommand{\MyNachname}{Kollmar}
+\newcommand{\MyTitel}{ESCAD manual}
+\ohead{Seite: \pagemark}
+%\chead{Lösung}
+\ihead{\MyTitel}
+\ofoot{\MyVorname\, \MyNachname}
+%\cfoot{}
+%\ifoot{}
+
+\usepackage[pdftex,
+            pdfauthor={Markus Kollmar},
+            pdftitle={\MyTitel},
+            pdfsubject={\MyTitel},
+            pdfkeywords={manual},
+%            pdfproducer={Latex with hyperref},
+%            pdfcreator={pdflatex}
+]{hyperref}  % Metadaten in PDF
+
+\author{\MyVorname \quad \MyNachname}
+\title{\MyTitel}
+
+\input{kvmacros}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{document}
+
+%\maketitle
+%\pagebreak
+%\cleardoublepage
+\tableofcontents
+\pagebreak
+
+\chapter{Overview and philosophy for motivation}
+Living in todays world is getting more and more complex. There are laws made by human which you have to obey. Additionally mother nature has their ever-lasting rules, overwriting all human rules, and which we should obey to keep the envrionment healthy for future mankind. Thus people may have the need to get information about this \index{complexity}complex system and tools to make this understandable.
+
+However mankind have produced a lot of tools to get managed this complexity.
+\chapter{Basics}
+\section{Symbols}
+\section{Relations}
+\section{Taxonomy}
+\section{Importing graphs}
+\subsection{graphviz dot}
+\section{Exporting graphs}
+\subsection{graphviz dot}
+\subsection{SVG}
+\section{Reporting graphs}
+\section{Expansion - do more with your graph}
+\subsection{Mindmap}
+\subsection{Flow}
+\chapter{Usage}
+\section{LISP at commandline}
+\section{LISP via TCP-Socket}
+\section{REST-API}
+\section{Webbrowser-client}
+\chapter{Specific domains}
+
+\clearpage % newpage allows to let appear figures after creating new page.
+%\newpage
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%% BIBLIOGRAPHY
+% \bibliographystyle{plain}
+\printindex
+\bibliographystyle{alpha}
+\bibliography{wbh-bibliography}
+
+\end{document}
