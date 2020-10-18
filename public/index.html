@@ -26,7 +26,7 @@
 <body ng-controller="mainController">
   <div>
     <h1>Escad</h1>
-    <pre style="width: 600px;">{{Escad.charSet}} # {{Escad.selectedSymbol}} % {{Escad.message}}</pre>
+    <pre style="width: 600px;">{{Escad.charSet}} # {{Escad.changesMade}} % {{Escad.message}}</pre>
   </div>
   <div class="data-area">
    <tabset>
@@ -34,12 +34,12 @@
 
      <div class="object-area">
       <div class="object-menue container-fluid">
-	<button type="button" class="btn btn-primary" ng-click="reloadEscad()">Load</button>
-	<!-- <button type="button" class="btn btn-primary" ng-click="save2Escad()">Save</button> -->
+	<button type="button" class="btn btn-primary" ng-click="reloadEscad()">download</button>
+	<button type="button" class="btn btn-primary" ng-click="saveObject()">upload</button>
 	<button type="button" class="btn btn-primary" ng-click="createSymbol()">ns</button>
-	<button type="button" class="btn btn-primary" ng-click="createSymbol()">nr</button>
-	<button type="button" class="btn btn-primary" ng-click="deleteSymbol()">remove</button>
-	<button type="button" class="btn btn-primary" ng-click="activateSymbol()">activate</button>
+	<button type="button" class="btn btn-primary" ng-click="createRelation()">nr</button>
+	<button type="button" class="btn btn-primary" ng-click="deleteObject()">remove</button>
+	<button type="button" class="btn btn-primary" ng-click="activateObject()">activate</button>
 	<div class="object-list">
           <div class="gridStyle" ng-grid="Escad.objectGrid"></div>
 	</div>

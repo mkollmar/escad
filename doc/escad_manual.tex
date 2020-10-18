@@ -4,7 +4,7 @@
 %% M-x pdf-tools-install
 %% M-x customize apropos TeX-source-correlate-method -> synctex
 %% M-x TeX-source-correlate-mode
-\documentclass[a4paper, 12pt]{scrbook}
+\documentclass[a4paper, 12pt, openany]{scrbook}
 \usepackage[T1]{fontenc}  % grafische Darstellung der Zeichen
 \usepackage{lmodern,textcomp} % Euro
 \usepackage[utf8]{inputenc}  % Umlaute direkt eingeben (ohne \"a)
@@ -86,13 +86,14 @@
 \clearscrheadfoot
 \newcommand{\MyVorname}{Markus}
 \newcommand{\MyNachname}{Kollmar}
-\newcommand{\MyTitel}{ESCAD manual}
+\newcommand{\MyTitel}{ESCAD MANUAL}
+\newcommand{\MyDate}{\today}
 \ohead{Seite: \pagemark}
 %\chead{Lösung}
 \ihead{\MyTitel}
 \ofoot{\MyVorname\, \MyNachname}
 %\cfoot{}
-%\ifoot{}
+\ifoot{\MyDate}
 
 \usepackage[pdftex,
             pdfauthor={Markus Kollmar},
@@ -106,40 +107,143 @@
 \author{\MyVorname \quad \MyNachname}
 \title{\MyTitel}
 
+
 \input{kvmacros}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{document}
 
+\begin{titlepage}
+   \begin{center}
+
+     %\vspace*{1cm}
+     
+     {\huge \MyTitel \ - \MyDate}
+
+     \vspace{0.5cm}
+
+     {\small by:\ \MyVorname\ \MyNachname}
+
+     \vspace{0.5cm}
+     
+     \begin{tikzpicture}
+       \coordinate(front)at(0,0);
+       \coordinate(horizon)at(0,.41\paperheight);
+       \coordinate(bottom)at(0,-.6\paperheight);
+       \coordinate(sky)at(0,.47\paperheight);
+       \coordinate(left)at(-.41\paperwidth,0);
+       \coordinate(right)at(.41\paperwidth,0);
+       \shade[bottom color=white,top color=blue!40!black!50]([yshift=-120mm]horizon-|left)rectangle(sky-|right);
+       \node[circle, fill=orange!30] (user) at (0,12) {USER};
+       \node[circle, fill=green!20] (escad) at (0,0) {ESCAD};
+       \node[circle, fill=green!20] (world) at (-4,7) {WORLD};
+       \node[circle, fill=green!20] (model) at (3,5) {MODEL};
+       %\draw [thin, gray,-latex] (escad) -- (user);
+       \draw [gray] (escad) to [out=50,in=195] (user);
+       \draw [red] (escad) to [out=-120,in=165] (world);
+       \draw [yellow] (escad) to [out=-60,in=20,looseness=2.2] (model);
+     \end{tikzpicture}
+
+     
+     \vfill
+            
+      Alles hängt mit allem zusammen. Wir haben nur nicht das ganze Bild...
+            
+       \vspace{0.8cm}
+
+     \end{center}
+\end{titlepage}
+
+
 %\maketitle
 %\pagebreak
 %\cleardoublepage
 \tableofcontents
-\pagebreak
+%\pagebreak
 
-\chapter{Overview and philosophy for motivation}
-Living in todays world is getting more and more complex. There are laws made by human which you have to obey. Additionally mother nature has their ever-lasting rules, overwriting all human rules, and which we should obey to keep the envrionment healthy for future mankind. Thus people may have the need to get information about this \index{complexity}complex system and tools to make this understandable.
+\chapter{Motivation}
+History tells us about separation. Separation between different professions was and is common. People have different interests and different knowledge. So this seems natural. Is this a problem? No. And yes. Nowadays science goes into a direction where interdisciplinarity seems more useful. The bounds of our disciplines are drawn by human but it not need to reflect the reality in nature. Real problems are mostly system-problems. Systems are combined of different disciplines. But do the (software) tools support this fact? Some may but many do not. This seems not a big problem in many cases. But when it comes to documentation or knowledge transfer tasks, this can be a big problem. The tools often do not interact with each other, and if so they often feel not integrated well. This problem increases when different manufacturers have tools which interact not or very bad.
 
-However mankind have produced a lot of tools to get managed this complexity.
-\chapter{Basics}
+Escad strictly wants to be open source, use open interfaces and provide a wide variety of different domain tools. And if there is (yet) not the thing you need, you can customize Escad with common-lisp code.
+\section{Philosophy}
+Living in todays world is getting more and more complex. There are laws made by human which you have to obey. Additionally mother nature has their ever-lasting rules, overwriting all human rules, and which we should obey to keep the envrionment healthy for future mankind. Thus people may have the need to get information about this \index{complexity}complex system and tools to make this understandable. Escad is really not good in many things. It is no unversial software. In fact it is really not yet a graph analysis tool (however one could update that functionality). Escad is a worker: get something out of your graph model, make PDF, 3D models, music or other documents which is boring to create by hand.
+\section{State}
+Currently escad is in development, but only usable for experts in some areas.
+\section{Plans}
+\begin{enumerate}
+\item Increase domain functionality with practic use.
+\item Create good and clear documentation with examples.
+\end{enumerate}
+\chapter{Installation}
+Currently there are no preconfigured packages for convenient installation of escad. However installation should not be to difficult, since escad-development tries to minimize not shipped dependencies.
+\section{Linux or other unix-like systems}
+\begin{enumerate}
+\item Install a common lisp system (tested with CLISP).
+\item Copy escad directories.
+\item Done.
+\end{enumerate}
+\section{Windows}
+This is currently not tested, but may be possible. Take similar steps as described in the previous section.
+\chapter{Theory}
+To understand a software-system it is often easier to understand the theory behind. In escad this is quite simple, since it is practical use of graphs (in informatically or mathematically means). Graphs consist only of symbols and relations (edges). Whenever needed you can add classification info (taxonomy) or functionality (expansion).
 \section{Symbols}
+In many papers symbols are also called \index{node}node. However escad has the aim to model things into software. Thus a node is a \emph{variable} for something in our thoughts. A symbol can represent a house, a number, a theory, a joke or whatever you want. This shows the great flexibility of escad.
 \section{Relations}
+Relation or in computer science called \index{edge}edge creates relations between symbols.
 \section{Taxonomy}
-\section{Importing graphs}
+With taxonomy you can create a \index{ontology} for the model. This is a domain classification which allows you to describe your symbols and relations in more detail. Depending of the taxonomy there may result different (graphical) output or behaviour (functionality).
+\section{Expansion}
+Expansions, nowadays it may be called \index{app}\emph{apps}, are programms who can do various things with your graph. This ranges from graphic output to new generated graph-elements. There are many possibilities and you can even write your own expansion(s). Those programms live in the escad environment and can use the provided feature, even of other expansions. However currently there is only a limited set of expansion, but this could increase in time. Feel free to write a expansion for your domain specific needs.
+\chapter{User stories}
+Here we assume it is easier to get what escad can do for you, by telling the user stories we think in which escad is currently usefull. This can increase in the future.
+\section{Input}
+Because interoperability is important in todays heterogenic software world, there should be a way to get graphs from other software.
 \subsection{graphviz dot}
-\section{Exporting graphs}
+Graphviz is powerful in graphically drawing of graphs. You can import those graphs with .dot extension. However only basic functionality of dot is currently supported.
+\section{Create things}
+In case you can not do some things in escad yet or other tools may do better, you can export your graph.
 \subsection{graphviz dot}
+Graphviz is powerful in graphically layout and drawing of graphs.
 \subsection{SVG}
-\section{Reporting graphs}
-\section{Expansion - do more with your graph}
+SVG is a vector graphic-format viewable through most modern webbrowsers.
+\section{Output}
+\subsection{Reporting}
+Reporting here means to get some basic statistically information about the graph. Additionally some expansions may allow you to dive deeper in the graph and provide some semantic informations too.
 \subsection{Mindmap}
+This creates mindmaps in SVG format. Very usefull to view in a browser and to make your graph visible.
 \subsection{Flow}
-\chapter{Usage}
-\section{LISP at commandline}
-\section{LISP via TCP-Socket}
-\section{REST-API}
-\section{Webbrowser-client}
-\chapter{Specific domains}
+A flow is a graph wich models a process. You can use escad to analyse a flow or to create a process a user should go through (e.g. a question+answer quiz).
+\subsection{Creating (technical) documentation}
+Documentation in the daily practise is often ignored, or - not really better - done worse. You may ask why. Maybe one answer is, people use existing tools which not support very well heterogenic documentation situations.
+\chapter{Reference}
+\section{Interface}
+\subsection{escad via commandline}
+\subsection{escad via TCP-Socket}
+\subsection{escad via REST-API}
+\subsection{escad as library}
+\subsection{escad via browser-client}
+\section{Functionality by domain}
+\subsection{ESCAD}
+\section{Functionality by concept}
+\subsection{Import}
+\subsection{Report}
+\subsection{Export}
+\section{Expansion programming}
+\chapter{Questions}
+Sometimes questions lead to a fast recognition of a problem or help to understand things better. So lets start asking...
+\section{Development}
+\begin{description}
+\item[Can i help develop escad?] Of course. Just contact the developer in github.
+\end{description}
+\section{Usage}
+\begin{description}
+\item[Is there a difference in the power of the different escad interfaces?] Yes. The most powerful is currently the command line interface. New commands appear first there. However this is no rule. The aim is to keep the functionality equal across the interfaces in a later step.
+\item[Why you have choosen common-lisp as the language for escad?] That is a good question. Why not javascript or another more popular language? Well may i ask why not lisp? In fact lisp has a very easy synthax, looks very nice in source code ;-) and for many tasks you need not more than three nested parentheses.
+\end{description}
+\section{Other}
+\begin{description}
+\item[Is there support for other languages as english?]  No not currently. If you want contribute feel welcome.
+\end{description}
 
 \clearpage % newpage allows to let appear figures after creating new page.
 %\newpage

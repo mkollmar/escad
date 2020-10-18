@@ -150,9 +150,7 @@ read all contents of file into a string"
 	 (handler-bind ((escad-internal-error #'skip-json_rpc-request))
 	   (json-rpc_over_network))))
   (pprint "Welcome and thanks for using escad!  :-)")
-  (pprint "If you are new to escad and need help:")
-  (pprint "Type now '(in-package :escad)' to get into escad namespace.")
-  (pprint "Then type '(help)' to get further info about your escad, and what you can do with it."))
+  (pprint "Type '(in-package :escad)' to start. Type '(help)' for usage."))
 
 (defun init-views ()
   "Initialize the two escad views."
@@ -190,43 +188,6 @@ read all contents of file into a string"
   (with-open-file (in taxonomy-filename)
     (with-standard-io-syntax
       (setf *taxonomy* (read in)))))
-
-(defun make-test-pedigree ()
-  "Test commands."
-  (ns "Vater") (ns "Ich") (ns "Kind") (ns "Mutter")
-  (ns "report-expansion" :comment "generate text output of view" :taxonomy "escad.symbol._escad.report.txt")
-  (ns "export-pedigree-expansion" :attributes '("root" "Mutter") :comment "generate svg output of view interpreted as pedigree." :taxonomy "escad.symbol._escad.export.pedigree.svg")
-  (nr "hatKind1" "Vater" "Ich" :taxonomy "escad.relation.has_child")
-  (nr "hatKind2" "Ich" "Kind" :taxonomy "escad.relation.has_child")
-  (nr "hatKind3" "Mutter" "Ich" :taxonomy "escad.relation.has_child")
-  (nr "hatEnkel" "Mutter" "Kind")
-  (nr "hatOma" "Kind" "Mutter"))
-
-(defun make-test-mindmap ()
-  "Create schematic to test svg-mindmap export-expansion."
-  (ns "Projektmanagement" :attributes '("x-coord%" 50 "y-coord%" 50) :weight 1)
-  (ns "Psychologie" :attributes '("x-coord%" 30 "y-coord%" 60) :weight 0.5)
-  (ns "Projekt" :attributes '("x-coord%" 70 "y-coord%" 60) :weight 0.5)
-  (ns "Beziehung" :attributes '("x-coord%" 50 "y-coord%" 70) :weight 0.7)
-  (ns "make_mindmap!" :taxonomy "escad.symbol._escad.export.mindmap.svg")
-  (nr "1" "Projektmanagement" "Projekt" :taxonomy "escad.relation.has_subtopic")
-  (nr "2" "Projektmanagement" "Psychologie")
-  (nr "3" "Projektmanagement" "Beziehung"))
-
-(defun make-test-flow ()
-  "Create schematic to test flow-expansion."
-  (ns "Start flow!" :comment "To start this mathematic test flow activate this symbol." :attributes '("escad.attribute.string-rep" "Start of a mathematic test." "flow-input-type" :counting) :taxonomy "escad.symbol._escad.flow.start")
-  (ns "Q1" :comment "activate to get question and possible answers" :attributes '("escad.attribute.string-rep" "5 + 6 * 7 = ?") :taxonomy "escad.symbol._escad.flow.question")
-  (ns "A1" :comment "activate to select that answer as correct" :attributes '("escad.attribute.string-rep" "47" "flow-counter" :correct) :taxonomy "escad.symbol._escad.flow.answer")
-  (ns "A2" :comment "activate to select that answer as correct" :attributes '("escad.attribute.string-rep" "77" "flow-counter" :wrong) :taxonomy "escad.symbol._escad.flow.answer")
-  (ns "Result" :comment "activate to get result of mathematic test" :taxonomy "escad.symbol._escad.flow.end")
-  (nr nil "Start flow!" "Q1")
-  (nr nil "Q1" "A1")
-  (nr nil "Q1" "A2")
-  (nr nil "A1" "Result")
-  (nr nil "A2" "Result")
-  (cs "Start flow!")
-  )
 
 (defun make-test-dot-import ()
   "Create schematic to test svg-mindmap export-expansion."
@@ -316,7 +277,7 @@ multiple values: the diameter of longest path and the path itself."
     (path path-list)))
 
 (defun apc (path symbol-list)
-  "path symbol-name-list -> t/nil
+  "path symbol-name-list -> t | nil
 <A>nalyze whether <p>ath <c>ontains all the given symbols."
   (dolist (symbol symbol-list)
     (if (not (member symbol path :test #'string=))
@@ -369,7 +330,7 @@ Symbols which represent expansions will execute the configured function of the e
 
 (defun asp (symbol1 symbol2)
   "symbol-name1 symbol-name2 -> path-list
-<a>nalyze <s>hortest <p>ath between 2 given symbols."
+<a>nalyze <s>hortest <p>ath between 2 given symbols whereby ignoring possible weights."
   (let ((path-list (path (list (list symbol1)))) (symbols (list symbol1 symbol2)) (result '()) (shortest-length nil) (shortest '()))
     (dolist (path path-list)
       (if (apc path symbols)
@@ -469,7 +430,7 @@ If you want a other license (like for commercial purposes), please contact Marku
 Print overview of escad, meaning of terms and all available commands."
 (pprint
 "escad allows you to create, edit, use, analyze and view graphs. There can be expansions for all domains you want model as graph.
-Type (help-command 'command-name) or (help) for more help about escad.
+Type (help-command 'command-name) for command help.
 Type (help-tutorial <step>) where step is a number starting from 0 (beginnging) to get a interactive tutorial for a feeling of escad's basics.
 
 COPYRIGHT on ESCAD has Markus Kollmar <markuskollmar@onlinehome.de>.
@@ -509,11 +470,11 @@ Commands grouped depending on function:
  * SHOW         view: aap, lr, ls, rsel, ssel
  * CHANGE       view: tv
  * CLEAR        view: cls
- * ANALYSE      view: aap, ad, adp, apc, asp, asw
-Following commands (collected in a list) are currently available:")
-`(let ((lst ()))
-  (do-external-symbols (s (find-package :escad)) (push s lst))
-  (sort lst (lambda (x y) (string< (symbol-name x) (symbol-name y))))))
+ * ANALYSE      view: aap, ad, adp, apc, asp, asw")
+;`(let ((lst ()))
+;  (do-external-symbols (s (find-package :escad)) (push s lst))
+;  (sort lst (lambda (x y) (string< (symbol-name x) (symbol-name y)))))
+)
 
 (defmacro help-command (&optional name)
   "Prints help for given command (macro/function)."
@@ -607,40 +568,37 @@ Thanks. :-)
     (t (princ "Type (help-tutorial N) where N is a number beginning with 0, to describe which tutorial step you want see."))))
 
 (defun lov (file_name)
-  "file-name -> T
-<lo>ad <v>iew from file into current view. All existing symbols and relations will be deleted! Note that the file can be a fast loading default escad save format or with key :as_escad_commands saved file. In the last case standard escad commands will be executed, so that this can take some time. Escad recognizes the different files automatically, you not need to specify anything."
-  (let ((input '()) header symbols relations)
-    ; test for :as_escad_commands saved file, and load it if it is such file (slower):
-    (with-open-file (stream (concatenate 'string *escad-view-dir* file_name)
-			    :direction :input)
-      (if (string= ";;" (subseq (format nil "~a" (read-line stream)) 0 2))
-	  (load (concatenate 'string *escad-view-dir* file_name)))
-      (return-from lov "Executed file with escad-commands (slow format)."))
-    
-    ; load in default file-format (may be faster):
-    (with-open-file (in (concatenate 'string *escad-view-dir* file_name))
-		    (with-standard-io-syntax
-		     (setf input (read in))))
-    (setf header (elt input 0))
-    (setf symbols (elt input 1))
-    (setf relations (elt input 2))
-    (if (= (cdr (assoc 'escad_version header)) 0)
-      (unless (= (cdr (assoc 'escad_file_format header)) 0)
-	(error "Wrong file format!"))
-      (error "The escad version, that wrotes the file, has no load-support in this escad version!"))
-    (clrhash *symbols*)
-    (clrhash *relations*)
-    (dolist (x symbols)
-      (setf (gethash (cdr (assoc 'name x)) *symbols*)
-	    (make-instance 'sym :comment (cdr (assoc 'comment x)) :attributes (cdr (assoc 'attributes x))
-			   :ref_from (cdr (assoc 'ref_from x)) :ref_to (cdr (assoc 'ref_to x))
-			   :taxonomy (cdr (assoc 'taxonomy x)))))
-    (dolist (x relations)
-      (setf (gethash (cdr (assoc 'name x)) *relations*)
-	    (make-instance 'sym :comment (cdr (assoc 'comment x)) :attributes (cdr (assoc 'attributes x))
-			   :ref_from (cdr (assoc 'ref_from x)) :ref_to (cdr (assoc 'ref_to x))
-			   :taxonomy (cdr (assoc 'taxonomy x))))))
-  "Loaded standard file data into view (fast format).")
+  "file-name-relative_to_view_dir -> result_status_string
+<lo>ad <v>iew from file into current view. All existing symbols and relations will be deleted! Note that the file can be a fast loading default escad save format or with key :as_escad_commands saved file. In the last case standard escad commands will be executed, so that this can take some time.
+Escad recognizes the different files automatically, you not need to specify anything."
+  (with-open-file (stream (concatenate 'string *escad-view-dir* file_name)
+			  :direction :input)
+    (if (string= ";" (subseq (format nil "~a" (read-line stream)) 0 1)) ; if file starts with comment
+	(progn (load (concatenate 'string *escad-view-dir* file_name)) (return-from lov "Executed file with escad-commands (slow format)."))
+	(with-open-file (in (concatenate 'string *escad-view-dir* file_name)) ; load in default file-format (may be faster):
+	  (with-standard-io-syntax
+	    (let ((input '()) header symbols relations)
+	      (setf input (read in))
+	      (setf header (elt input 0))
+	      (setf symbols (elt input 1))
+	      (setf relations (elt input 2))
+	      (if (= (cdr (assoc 'escad_version header)) 0)
+		  (unless (= (cdr (assoc 'escad_file_format header)) 0)
+		    (error "Wrong file format!"))
+		  (error "The escad version, that wrotes the file, has no load-support in this escad version!"))
+	      (clrhash *symbols*)
+	      (clrhash *relations*)
+	      (dolist (x symbols)
+		(setf (gethash (cdr (assoc 'name x)) *symbols*)
+		      (make-instance 'sym :comment (cdr (assoc 'comment x)) :attributes (cdr (assoc 'attributes x))
+				     :ref_from (cdr (assoc 'ref_from x)) :ref_to (cdr (assoc 'ref_to x))
+				     :taxonomy (cdr (assoc 'taxonomy x)))))
+	      (dolist (x relations)
+		(setf (gethash (cdr (assoc 'name x)) *relations*)
+		      (make-instance 'sym :comment (cdr (assoc 'comment x)) :attributes (cdr (assoc 'attributes x))
+				     :ref_from (cdr (assoc 'ref_from x)) :ref_to (cdr (assoc 'ref_to x))
+				     :taxonomy (cdr (assoc 'taxonomy x)))))))
+	  "Loaded standard file data into view (fast format)."))))
 
 (defun lr (&key (filter nil filter-p) (exclude-taxonomy nil exclude-p))
 "[:FILTER filter] [:EXCLUDE-TAXONOMY exclude-taxonomy_string-list] -> symbol-list
