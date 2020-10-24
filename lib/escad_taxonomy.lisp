@@ -58,7 +58,7 @@ S -> Symbol/relation should be insert only one time (<s>ingle) in the schematic.
 (:taxonomy "escad.attribute.x-coord" :doc "[S] x coordinate with unit." :type "STRING")
 (:taxonomy "escad.attribute.y-coord" :doc "[S] y coordinate with unit." :type "STRING")
 
-(:taxonomy "escad.relation" :doc "[U] Root, universal relation (lowest fallback).")
+(:taxonomy "escad.relation" :doc "[U] Undirected universal relation (lowest fallback).")
 (:taxonomy "escad.relation.is_answer" :doc "[D] Answer of a flow-question (decission-tree).")
 (:taxonomy "escad.relation.has_child" :doc "[D] Person has genetic/law child.")
 (:taxonomy "escad.relation.has_subtopic" :doc "[D] Topic has a subtopic.")
@@ -79,7 +79,8 @@ S -> Symbol/relation should be insert only one time (<s>ingle) in the schematic.
 (:taxonomy "escad.symbol.3d.generate.x3d" :doc "[E] Generates 3D File in liberate X3D-Format (XML based, can viewed with mordern browser)." :expansion "3d_expansion.lisp" :package :de.markus-herbert-kollmar.escad.3d :function "generate_x3d" :license "GNU GPL 3")
 (:taxonomy "escad.symbol.3d.piece" :doc "2D or 3D object in 3D space.")
 (:taxonomy "escad.symbol._escad" :doc "[S] Escad related things (settings,...).")
-(:taxonomy "escad.symbol._escad.export.dot" :doc "[E] exports view to graphviz dot format, viewable in internetbrowser." :expansion "export_expansion.lisp" :package :de.markus-herbert-kollmar.escad.export :function "export2dot" :license "GNU GPL 3")
+(:taxonomy "escad.symbol._escad.export.dot" :doc "[E] exports view to graphviz dot format." :expansion "export_expansion.lisp" :package :de.markus-herbert-kollmar.escad.export :function "export2dot" :license "GNU GPL 3")
+(:taxonomy "escad.symbol._escad.export.pdf" :doc "[E] exports view to a PDF." :expansion "export_expansion.lisp" :package :de.markus-herbert-kollmar.escad.export :function "export2pdf" :license "GNU GPL 3")
 (:taxonomy "escad.symbol._escad.export.svg" :doc "[E] exports view to a SVG graphic (viewable in a viewer or some internet-browsers)." :expansion "export_expansion.lisp" :package :de.markus-herbert-kollmar.escad.export :function "export2svg" :license "GNU GPL 3")
 (:taxonomy "escad.symbol._escad.export.pedigree.svg" :doc "[E] exports view, interpreted as pedigree, to a SVG graphic (viewable in a viewer or some internet-browsers)." :expansion "export_expansion.lisp" :package :de.markus-herbert-kollmar.escad.export :function "export-pedigree2svg" :license "GNU GPL 3")
 (:taxonomy "escad.symbol._escad.export.mindmap.svg" :doc "[E] exports view, interpreted as mindmap, to a SVG graphic (viewable in a viewer or some internet-browsers)." :expansion "export_expansion.lisp" :package :de.markus-herbert-kollmar.escad.export :function "export-mindmap2svg" :license "GNU GPL 3")

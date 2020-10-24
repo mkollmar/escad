@@ -8,7 +8,7 @@
   (:nicknames :escad)
   (:shadow #:cos :exp)
   (:export :attributes :comment :taxonomy :rel :ref_from :ref_to
-	   :ad :adp :apc :ara :as :asa :asp :asw :aup :cs :cls :cos :get-copyright-info :gra :grp :gsa :gsp :help :help-command :help-tutorial
+	   :ad :adp :apc :ara :as :asa :asp :asw :aup :cs :cls :cos :get-copyright-info :gra :grp :gsa :gsp :gtd :help :help-command :help-tutorial
 	   :le :los :lov :lr :ls :lsc :lta :mr :ms :nr :ns :r :rp :rr :rra :rs :rsa :s :sc :sp :ss :sav :tv
 	   :call-expansion-function :file-data2string
 	   :*escad-lib-dir* :*escad-view-dir* :*escad_tmp_file*)

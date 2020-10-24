@@ -20,7 +20,7 @@
 (defpackage :de.markus-herbert-kollmar.escad.export
   (:use :common-lisp :escad)
   (:nicknames :escad.export)
-  (:export :export2dot :export2svg :export2svg4browserclient :export-pedigree2svg :export-mindmap2svg)
+  (:export :export2dot :export2pdf :export2svg :export2svg4browserclient :export-pedigree2svg :export-mindmap2svg)
   (:shadow #:cos)
   (:documentation "Export current view to dot format (graphviz) and svg (XML/HTML)."))
 
@@ -54,12 +54,21 @@ Do this if symbol will be activated!"
 	(princ "}" out)))
     absolute-filename))
 
+(defun export2pdf (expansion-symbol-name &optional (filename "escad_export.pdf"))
+  "expansion-symbol-name [relative-file-name] -> filename
+Export view to a PDF file with name <escad_export.pdf>."
+  (let ((absolut-output-filename (concatenate 'string *escad-view-dir* filename)))
+    (export2dot expansion-symbol-name *escad_tmp_file*)
+    #+clisp (sys::shell (concatenate 'string "dot -Tpdf -o " absolut-output-filename " " (concatenate 'string *escad-view-dir* *escad_tmp_file*)))
+    #-clisp '("Sorry, function not available. Please type 'dot -Tpdf -o outputfile.pdf inputfile.dot' in your shell manually." '(1 "GPL3"))
+    absolut-output-filename))
+
 (defun export2svg (expansion-symbol-name &optional (filename "escad_export.svg"))
   "expansion-symbol-name [relative-file-name] -> filename
 Export view to a svg (xml) graphical file with name <escad_export.svg>, which is viewable e.g. by the browser firefox."
   (let ((absolut-output-filename (concatenate 'string *escad-view-dir* filename)))
     (export2dot expansion-symbol-name *escad_tmp_file*)
-    #+clisp (sys::shell (concatenate 'string "dot -Tsvg -o " absolut-output-filename " " *escad_tmp_file*))
+    #+clisp (sys::shell (concatenate 'string "dot -Tsvg -o " absolut-output-filename " " (concatenate 'string *escad-view-dir* *escad_tmp_file*)))
     #-clisp '("Sorry, function not available. Please type 'dot -Tsvg -o outputfile.svg inputfile.dot' in your shell manually." '(1 "GPL3"))
     absolut-output-filename))
 

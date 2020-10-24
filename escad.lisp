@@ -26,7 +26,7 @@
 (defparameter *escad-server-host* "127.0.0.1" "Host name")
 (defparameter *escad-server-port* 3000 "Port number (5000)")
 (defparameter *escad-taxonomy-file* "./lib/escad_taxonomy.lisp" "Actual valid escad taxonomy-tree for whole insertable symbols and relations.")
-(defparameter *escad_tmp_file* "./escad4567.tmp" "Temporary file used mostly for export-functions.")
+(defparameter *escad_tmp_file* "escad4567.tmp" "Temporary file used mostly for export-functions.")
 ;; USER CONFIG END
 
 
@@ -425,13 +425,24 @@ If you want a other license (like for commercial purposes), please contact Marku
 	       (weight1 weight)) (s symbol-name)
     (list :comment comment1 :taxonomy taxonomy1 :weight weight1)))
 
+(defun gtd (&optional taxonomy)
+  "[taxonomy-string] -> taxonomy-doc-string | nil
+<G>et <t>axonomy <d>ocumentation. If there is no argument then print global documentation of taxonomy. If there is a argument then print documentation of the specified taxonomy. Return nil if doc or taxonomy not exists."
+  (let ((result-string nil))
+    (if taxonomy
+	(dolist (taxonomy-item (cadr *taxonomy*))
+	  (when (string= taxonomy (getf taxonomy-item :taxonomy))
+	    (setq result-string (getf taxonomy-item :doc))))
+	(setq result-string (getf (nth 1 (cdar *taxonomy*)) :doc)))
+    result-string))
+
 (defmacro help ()
   "-> command-list
 Print overview of escad, meaning of terms and all available commands."
 (pprint
 "escad allows you to create, edit, use, analyze and view graphs. There can be expansions for all domains you want model as graph.
-Type (help-command 'command-name) for command help.
-Type (help-tutorial <step>) where step is a number starting from 0 (beginnging) to get a interactive tutorial for a feeling of escad's basics.
+Type (help-command '<command-name>) for the help of command <command-name>.
+Type (help-tutorial <step>) where <step> is a number starting from 0 (beginnging) to get a interactive tutorial for a feeling of escad's basics.
 
 COPYRIGHT on ESCAD has Markus Kollmar <markuskollmar@onlinehome.de>.
 ESCAD is licensed under: GNU AFFERO GENERAL PUBLIC LICENSE Version 3, 19 November 2007.
@@ -440,23 +451,22 @@ Definitions of terms used in escad:
  * ATTRIBUTES: universal usable property of a object additional to the standard attributes (optional).
  * CONTEXT: The set of symbols and relations which are directly related to and from a symbol.
  * EXPANSION: Concept to adapt escad for a special domain-specific purpose/funtionality (like a app).
+ * GRAPH: combinations of connected symbols and relations in a view.
  * OBJECT-NAME: Is no property, it is it's idendity-string.
  * OBJECT: SYMBOL or RELATION in escad.
  * PATH-LIST: List with list(s) of symbol-relation-symbol-relation... names which are connected (at least a symbol must be given):
               '((Sym1 Rel2) (SymX)).
  * RELATION: object which represents/models a relationship between SYMBOLS.
  * SCHEMATIC: combinations of not necessarily connected symbols and relations (can also describe a graph) in a view.
- * GRAPH: combinations of connected symbols and relations in a view.
- * SYMBOL: object which represents something (state, thing, process,...) the editor want. 
- * URI (see rfc3986): specifies what kind of physic media the data (e.g. view) is stored.
- * VIEW: referable place (server, file, device, memory...) which contains SCHEMATIC data. the two escad view's at runtime are referenced as
-         escad:1 and escad:2. Schematics on http server is escad:http://www.domain.org/file, for local file escad:file://dir/file.
+ * SYMBOL: object which represents something (state, thing, process,...) the editor want.
+ * TAXONOMY: classification scheme which are defined names you can use to specify relations and symbols in order to define their semantic.
+ * VIEW: place (server, file, device, memory...) which contains SCHEMATIC data. There are two escad view's at runtime.
 
 Commands grouped depending on function:
  * SHOW   attributes: gra, gsa
  * SET    attributes: ara, asa
  * REMOVE attributes: rra, rsa
- * SHOW      context: cs, lc
+ * SHOW      context: cs, lsc
  * EDIT/ACT. context: as, cs
  * INSERT    objects: nr, ns
  * REMOVE    objects: rr, rs
@@ -464,7 +474,7 @@ Commands grouped depending on function:
  * EDIT      objects: r, s
  * RENAME    objects: mr, ms
  * SHOW   properties: grp, gsp
- * SHOW     taxonomy: lta
+ * SHOW     taxonomy: lta, gtd
  * LOAD         view: lov
  * SAVE         view: sav
  * SHOW         view: aap, lr, ls, rsel, ssel
@@ -574,7 +584,7 @@ Escad recognizes the different files automatically, you not need to specify anyt
   (with-open-file (stream (concatenate 'string *escad-view-dir* file_name)
 			  :direction :input)
     (if (string= ";" (subseq (format nil "~a" (read-line stream)) 0 1)) ; if file starts with comment
-	(progn (load (concatenate 'string *escad-view-dir* file_name)) (return-from lov "Executed file with escad-commands (slow format)."))
+	(progn (load (concatenate 'string *escad-view-dir* file_name) :verbose nil :print t) (return-from lov "Executed file with escad-commands (slow format)."))
 	(with-open-file (in (concatenate 'string *escad-view-dir* file_name)) ; load in default file-format (may be faster):
 	  (with-standard-io-syntax
 	    (let ((input '()) header symbols relations)
@@ -665,21 +675,21 @@ Additionally exclude symbols which match the exclude-taxonomy."
 
 (defun mr (name new_name)
   "relation-name -> relation-name
-<m>ove <r>elation - which means to change it's full-name, which can thus also change it's view)."
+<m>ove <r>elation - which means to change it's full-name."
   (setf (gethash new_name *relations*) (gethash name *relations*))
   (remhash name *relations*)
   new_name)
 
 (defun ms (name new_name)
   "name new-name -> symbol-object
-<m>ove <s>ymbol - which means to change it's full-name, which can thus also change it's view)."
+<m>ove <s>ymbol - which means to change it's name."
   (setf (gethash new_name *symbols*) (gethash name *symbols*))
   (remhash name *symbols*)
   (gethash new_name *symbols*))
 
 (defun nr (name ref_from ref_to &key attributes comment (taxonomy "escad.relation") weight)
   "relation-name-string | nil, ref_from, ref_to, [:attributes :comment :taxonomy :weight] -> relation-name
-Create <n>ew directed (default) <r>elation with given name and possible additional values in schematic. If the relation-name already exists do nothing and return nil. To make this relation undirected or bidirected, set the appropriate taxonomy (note that ref_from and ref_to are only technical terms meaning you first tie the relation from that symbol to another. it can mean that is directe, but it is not guaranted that the author means that unless he makes that explicit with a relation that declares that)."
+Create <n>ew <r>elation with given name and possible additional values in schematic. If the relation-name already exists do nothing and return nil. Default type is undirected relation. To make a directed or bidirected relation, set the appropriate taxonomy (note that ref_from and ref_to are only technical terms meaning you first tie the relation from that symbol to another. it can mean that is directe, but it is not guaranted that the author means that unless he makes that explicit with a relation that declares that)."
   (let* ((name name))
     (if (not (stringp name))
       (dotimes (i 200)
@@ -696,11 +706,12 @@ Create <n>ew directed (default) <r>elation with given name and possible addition
 	    (setf (gethash name *relations*)
 		  (make-instance 'rel :comment comment :ref_to (list ref_to)
 				 :ref_from (list ref_from) :taxonomy taxonomy :weight weight))
-	    (if attributes (ara name attributes)))))))
+	    (if attributes (ara name attributes))
+	    name)))))
 
 
 (defun ns (name &key attributes comment (taxonomy "escad.symbol") weight)
-  "symbol-name-string | nil, [:attributes :comment :taxonomy :weight] -> symbol-object | nil
+  "symbol-name-string | nil, [:attributes :comment :taxonomy :weight] -> symbol-name | nil
 Create a <n>ew <s>ymbol with given or generated name and possible additional values in schematic, or
 if the symbol-name already exists do nothing and return nil."
   (let ((name name))
