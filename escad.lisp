@@ -138,7 +138,7 @@ read all contents of file into a string"
       (getf item property)
       nil)))
 
-(defun skip-json_rpc-request (condittion)
+(defun skip-json_rpc-request (condition)
   (invoke-restart 'skip-json_rpc-request))
 
 (defun init-escad ()
@@ -201,8 +201,8 @@ read all contents of file into a string"
 
 (defun path (path-list &optional (max-depth 10))
   "path-list [depth] -> list of flat path(s)
-List all directed <path>s outgoing from given path-list with last retrieved (newest) symbol first.
-Makes a list of flat path ((A B C A) (C B)) - no nested structures. Optional give a maximum iteration depth."
+List all <path>s by moving in outgoing (ref_to) direction from given path-list/symbol(s), with last visited/retrieved (newest) symbol first.
+Makes a list of flat path ((A B C A) (C B)) - no nested structures. Optional give a maximum iteration depth (amount of visited relations)."
   (let ((start-sym '()) (result '()))
     (dolist (given-path path-list)  ; process all given paths
       (when (and (not result) (> (length given-path) 1))   ; if given path ends, save it and give it back again
@@ -235,6 +235,12 @@ Makes a list of flat path ((A B C A) (C B)) - no nested structures. Optional giv
   (force-output *query-io*)
   (read-line *query-io*))
 
+(defun system-shell (command_string)
+  "command_string -> T | nil
+Executes given command_string in a system shell. If command suceeds give back T, otherwise nil."
+  #+clisp (not (car (multiple-value-list (sys::shell command_string))))
+  #-clisp '("Sorry, the execution of commands in your system-shell is not implemented, yet!"))
+
 (defun TODO ()
   (error "Sorry, this function is not implemented yet, but will work in one of the next escad versions. :-("))
 
@@ -242,19 +248,34 @@ Makes a list of flat path ((A B C A) (C B)) - no nested structures. Optional giv
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; ESCAD USER-COMMANDS:
 (defun ad ()
-  "-> diameter  longest-path
-<a>nalyze <d>iameter (length of longest path) of current view and returns
-multiple values: the diameter of longest path and the path itself."
-  (let ((path-list '()) (longest-path '()))
+  "-> diameter  longest-path(s)-list
+<a>nalyze <d>iameter (length of longest path(s)) of current view and returns
+multiple values: the diameter of longest path(s) and the path(s) itself."
+  (let ((path-list '()) (longest-path '()) (path-length nil))
     (dolist (symbol (ls))
       (setq path-list (cons (list symbol) path-list)))
-    (setq longest-path (car (reverse (lsort (path path-list)))))
-    (values (list-length longest-path) longest-path)))
+    (setq path-length (list-length (car (reverse (lsort (path path-list))))))
+    (dolist (next-path (reverse (lsort (path path-list))))
+      (if (= path-length (length next-path)) ; if there are multiple path with same length
+	  (setq longest-path (concatenate 'list longest-path (list next-path)))
+	  (return)))
+    (values path-length longest-path)))
 
-(defun adp (&optional start)
-  "[start_symbol_name] -> list with paths
-<a>nalyze all <d>irected <p>aths from every symbol or from the given start symbol."
-  (path '(())))
+(defun adp (start-sym &optional (max-depth 10))
+  "start_symbol_name [depth] -> list with paths
+<a>nalyze all <d>irected <p>aths from start-symbol."
+  (path (list (list start-sym)) max-depth))
+
+(defun asr (sym_a sym_b)
+  "symbol_name_string1 symbol_name_string2 -> root_symbol_name_string
+<a>nalyze <s>ame <r>oot symbol (=root) from the given two symbols (=leaves)."
+  (if (string= sym_a sym_b)
+      (return-from asr sym_a)
+      (dolist (sym_x (nth 0 (lsc sym_a)))
+	(dolist (sym_y (nth 0 (lsc sym_b)))
+	  (when (asr sym_x sym_y)
+	    (return-from asr sym_x)))))
+  nil)
 
 (defun asw ()
   "-> assoc-list
@@ -278,7 +299,7 @@ multiple values: the diameter of longest path and the path itself."
 
 (defun apc (path symbol-list)
   "path symbol-name-list -> t | nil
-<A>nalyze whether <p>ath <c>ontains all the given symbols."
+<A>nalyze whether the given <p>ath (one!) <c>ontains all the given symbols."
   (dolist (symbol symbol-list)
     (if (not (member symbol path :test #'string=))
 	(return-from apc nil)))
@@ -316,7 +337,7 @@ Symbols which represent expansions will execute the configured function of the e
      (t (pprint taxonomy-documentation)))))
 
 (defun asa (symbol-name attr-tax-val-list)
-  "symbol-name attrib-taxonomies-values-list ->
+  "symbol-name-string '(attrib-taxonomie-key value) -> nil / symbol-name
 <A>dd/edit <s>ymbol <a>ttributes depending of key."
   (multiple-value-bind (sym sym-exists) (gethash symbol-name *symbols*)
     (if sym-exists
@@ -326,7 +347,8 @@ Symbols which represent expansions will execute the configured function of the e
 	       (setf a (remove given-key a :key #'car :test #'string=))  ; remove some possibly existing key
 	       (setf a (acons given-key given-val a))
 	       a))
-	nil)))
+	nil))
+  symbol-name)
 
 (defun asp (symbol1 symbol2)
   "symbol-name1 symbol-name2 -> path-list
@@ -477,10 +499,11 @@ Commands grouped depending on function:
  * SHOW     taxonomy: lta, gtd
  * LOAD         view: lov
  * SAVE         view: sav
- * SHOW         view: aap, lr, ls, rsel, ssel
+ * SHOW         view: aap, lr, ls, rsel, ssel, vs
  * CHANGE       view: tv
  * CLEAR        view: cls
- * ANALYSE      view: aap, ad, adp, apc, asp, asw")
+ * COPY         view: cpv
+ * ANALYSE      view: aap, ad, adp, apc, asp, asr, asw")
 ;`(let ((lst ()))
 ;  (do-external-symbols (s (find-package :escad)) (push s lst))
 ;  (sort lst (lambda (x y) (string< (symbol-name x) (symbol-name y)))))
@@ -882,23 +905,40 @@ get <s>ymbol <p>roperty as result."
   (slot-value (s symbol-name) property-name))
 
 
-(defun ssel (symbols &key (name nil name-p) (comment nil comment-p) (ref_from nil ref_from-p) (ref_to nil ref_to-p)
-		     (taxonomy nil taxonomy-p))
-  "TODO! symbol-names-list [name comment ref_from ref_to taxonomy] -> (symbol-names)
+(defun ssel (symbols &key (name nil name-p) (comment nil comment-p) (ref_from nil ref_from-p) (ref_to nil ref_to-p) (taxonomy nil taxonomy-p))
+  "symbol-names-list [name comment ref_from ref_to taxonomy] -> (symbol-names)
 <s>ymbol <sel>ector: create list of symbols out from given symbol-list which match all given conditions."
   (let ((sym_set '()))
     (dolist (sname symbols)
-      (with-slots ((comment_ comment) (ref_from_ ref_from) (ref_to_ ref_to) (taxonomy_ taxonomy)) (gethash sname *symbols*)
-		  (if (and (if name-p     (string-equal name sname) t)
-			   (if comment-p  (string-equal comment comment_) t)
-			   (if ref_from-p (not (set-exclusive-or ref_from ref_from_)) t)
-			   (if ref_to-p   (not (set-exclusive-or ref_to ref_to_)) t)
-			   (if taxonomy-p (string-equal taxonomy taxonomy_) t))
-		      (push sname sym_set))))
+      (with-slots ((comment_ comment) (ref_from_ ref_from) (ref_to_ ref_to) (taxonomy_ taxonomy))
+	  (gethash sname *symbols*)
+	(when (and (if name-p     (string-equal name sname) t)
+		   (if comment-p  (string-equal comment comment_) t)
+		   (if ref_from-p (intersection ref_from ref_from_ :test 'equal) t)
+		   (if ref_to-p   (intersection ref_to ref_to_ :test 'equal) t)
+		   (if taxonomy-p (string-equal taxonomy taxonomy_) t))
+	  (push sname sym_set))))
     sym_set))
 
+(defun cpv (&optional src dest)
+  "[src dest] -> t/nil
+<c>o<p>y current active <v>iew in other view.
+TODO: currently only copying of whole views are supported. In future parts of view should be possible."
+  (tv)
+  (clrhash *symbols*)
+  (clrhash *relations*)
+  (if (eq *symbols* *symbols1*)
+      (progn ; cp 1 -> 2
+	(maphash #'(lambda(key value) (setf (gethash key *symbols2*) value)) *symbols1*)
+	(maphash #'(lambda(key value) (setf (gethash key *relations2*) value)) *relations1*))
+      (progn ; cp 2 -> 1
+	(maphash #'(lambda(key value) (setf (gethash key *symbols1*) value)) *symbols2*)
+	(maphash #'(lambda(key value) (setf (gethash key *relations1*) value)) *relations2*)))
+  t)
+
 (defun tv ()
-  "Escad has two views, each representing a own schematic, so <t>oggle from one <v>iew to the other."
+  "-> number_of_view
+Escad has two views, each representing a own schematic, so <t>oggle from one <v>iew to the other."
   (if (eq *symbols* *symbols1*)
       (progn
 	(setf *symbols* *symbols2*)
@@ -910,6 +950,17 @@ get <s>ymbol <p>roperty as result."
 	(setf *relations* *relations1*)
 	(setf *current_symbol* *current_symbol1*)
 	1)))
+
+(defun vs ()
+  " -> (ACTUAL_VIEW_NUMBER SYM_COUNT_VIEW1 REL_COUNT_VIEW1 SYM_COUNT_VIEW2 REL_COUNT_VIEW2)
+Gives <v>iew <s>tatus."
+  (let ((act_view nil) (sc1 nil) (rc1 nil) (sc2 nil) (rc2 nil))
+    (setq act_view (if (eq *symbols* *symbols1*) 0 1))
+    (setq sc1 (hash-table-count *symbols1*))
+    (setq rc1 (hash-table-count *relations1*))
+    (setq sc2 (hash-table-count *symbols2*))
+    (setq rc2 (hash-table-count *relations2*))
+    (list act_view sc1 rc1 sc2 rc2)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

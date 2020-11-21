@@ -3,3 +3,14 @@
 
 # we ignore output of a expansion in this directory:
 public/view/
+
+# ignore latex generation stuff:
+doc/escad_manual.aux
+doc/escad_manual.bbl
+doc/escad_manual.blg
+doc/escad_manual.idx
+doc/escad_manual.ilg
+doc/escad_manual.ind
+doc/escad_manual.log
+doc/escad_manual.out
+doc/escad_manual.toc

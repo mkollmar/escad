@@ -43,12 +43,13 @@ Do this if symbol will be activated!"
 	(princ *dot-header* out) (write-char #\newline out)
 	(princ "digraph schematic {" out) (write-char #\newline out)
 	(dolist (name (ls :exclude-taxonomy '("escad.symbol._escad" "escad.symbol._view")))
-	  (princ (concatenate 'string name ";") out)
+	  ;(princ (concatenate 'string name ";") out)
+	  (princ (concatenate 'string "\"" name "\";") out)
 	  (write-char #\newline out))
 	(dolist (name (lr))
 	  (with-slots (comment ref_from ref_to taxonomy) (gethash name escad::*relations*)
 	    (loop for i from 0 to (- (length ref_from) 1) do
-		 (princ (concatenate 'string (string (nth i ref_from)) " -> " (string (nth i ref_to)) ";") out)
+		 (princ (concatenate 'string "\"" (string (nth i ref_from)) "\" -> \"" (string (nth i ref_to)) "\";") out)
 		 (write-char #\newline out))))
 	(write-char #\newline out)
 	(princ "}" out)))
@@ -57,7 +58,9 @@ Do this if symbol will be activated!"
 (defun export2pdf (expansion-symbol-name &optional (filename "escad_export.pdf"))
   "expansion-symbol-name [relative-file-name] -> filename
 Export view to a PDF file with name <escad_export.pdf>."
-  (let ((absolut-output-filename (concatenate 'string *escad-view-dir* filename)))
+  (let ((absolut-output-filename (concatenate 'string *escad-view-dir*
+					      (or (gsa expansion-symbol-name "filename_relative")
+						  filename))))
     (export2dot expansion-symbol-name *escad_tmp_file*)
     #+clisp (sys::shell (concatenate 'string "dot -Tpdf -o " absolut-output-filename " " (concatenate 'string *escad-view-dir* *escad_tmp_file*)))
     #-clisp '("Sorry, function not available. Please type 'dot -Tpdf -o outputfile.pdf inputfile.dot' in your shell manually." '(1 "GPL3"))
