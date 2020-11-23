@@ -4,7 +4,7 @@
 
 
 (defpackage :de.markus-herbert-kollmar.escad
-  (:use :common-lisp :system)
+  (:use :common-lisp)
   (:nicknames :escad)
   (:shadow #:cos :exp)
   (:export :attributes :comment :taxonomy :rel :ref_from :ref_to

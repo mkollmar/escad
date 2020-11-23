@@ -92,7 +92,7 @@
 	      "attributes: ~s comment: ~s taxonomy: ~s ref_to: ~s ref_from: ~s weight: ~s"
 	      attributes comment taxonomy ref_to ref_from weight))))
 
-(defparameter *current-stream* *STANDARD-OUTPUT*)
+(defparameter *current-stream* *STANDARD-OUTPUT* "Output stream for some output commands.")
 (defparameter *symbols1* (make-hash-table :test 'equal) "Symbols for first view.")
 (defparameter *symbols2* (make-hash-table :test 'equal) "Symbols for second view.")
 (defparameter *symbols* *symbols1* "Pointer to current symbol-hash.")
@@ -141,12 +141,55 @@ read all contents of file into a string"
 (defun skip-json_rpc-request (condition)
   (invoke-restart 'skip-json_rpc-request))
 
+;; START LISP-implementation-specific-things
+(defun get-cmdline-args ()
+  (or 
+   #+CLISP ext:*args*
+   #+SBCL sb-ext:*posix-argv*
+   #+LISPWORKS system:*line-arguments-list*
+   #+CMU extensions:*command-line-words*
+   nil))
+
+(defun system-shell (command_string &optional arg_string_list)
+  "command_string [argument_string_list] -> T | nil
+Executes given command_string in a system shell. If command suceeds give back T, otherwise nil."
+  (or
+   #+clisp (not (car (multiple-value-list (sys::shell (concatenate 'string command_string (format nil "~{~A~}" arg_string_list))))))
+   #+SBCL (= 0 (sb-ext:process-exit-code (sb-ext:run-program command_string arg_string_list :search t :output *standard-output*)))
+
+(defun lisp_over_network ()
+  "Process client requests forever. If one client exits connection, open another waiting. Connection is persistent. TODO: currently only implemented for clisp, support sbcl."
+  (or
+   #+CLISP (let ((server (socket:socket-server *escad-server-port* :interface *escad-server-host*)))
+    (format t "~&Waiting for a lisp-code connection on ~S:~D~%"
+	    (socket:socket-server-host server) (socket:socket-server-port server))
+    (unwind-protect
+      ;; infinite loop, terminate with Control+C
+      (loop (with-open-stream (socket (socket:socket-accept server))
+	(multiple-value-bind (local-host local-port) (socket:socket-stream-local socket)
+			     (multiple-value-bind (remote-host remote-port)
+						  (socket:socket-stream-peer socket)
+						  (format T "~&Connection: ~S:~D -- ~S:~D~%"
+							  remote-host remote-port local-host
+							  local-port)))
+	;; loop is terminated when the remote host closes the connection or on EXT:EXIT
+	(loop (when (eq :eof (socket:socket-status (cons socket :input))) (return))
+	   (print (eval (read socket)) socket)
+	   ;; flush everything left in socket
+	   (loop :for c = (read-char-no-hang socket nil nil) :while c)
+	   (terpri socket))))
+      ;; make sure server is closed
+      (socket:socket-server-close server)))
+   #+SBCL nil
+   ))
+;; END  LISP-implementation-specific-things
+
 (defun init-escad ()
   (init-views)
   (load-taxonomy)
-  (cond ((string= (car ext::*args*) "net-lisp")
+  (cond ((string= (car (get-cmdline-args)) "net-lisp")
 	 (lisp_over_network))
-	((string= (car ext::*args*) "net-json_rpc")
+	((string= (car (get-cmdline-args)) "net-json_rpc")
 	 (handler-bind ((escad-internal-error #'skip-json_rpc-request))
 	   (json-rpc_over_network))))
   (pprint "Welcome and thanks for using escad!  :-)")
@@ -157,11 +200,13 @@ read all contents of file into a string"
   (ns "_escad" :attributes '("url" "https://github.com/mkollmar/escad") :taxonomy "escad.symbol._escad" :comment "Settings for escad belonging to this view.")
   (ns "_view")
   (s "_view" :taxonomy "escad.symbol._view" :comment "Settings for active view.")
+  (asa "_view" (list "filename_relative" (concatenate 'string (get-date-string) ".pdf")))
   (cs "_view")
   (tv)
   (ns "_escad" :attributes '("url" "https://github.com/mkollmar/escad") :comment "Settings for escad belonging to this view." :taxonomy "escad.symbol._escad")
-  (ns "_view" :comment "Settings for active view.")
-  (s "_view" :taxonomy "escad.symbol._view")
+  (ns "_view" :comment "Settings and a function for the current view.")
+  (s "_view" :taxonomy "escad.attribute.filename_relative")
+  (asa "_view" (list "filename_relative" (concatenate 'string (get-date-string) ".pdf")))
   (cs "_view"))
 
 (defun join-string-list (string-list)
@@ -182,6 +227,11 @@ read all contents of file into a string"
        (sort (map 'vector (lambda (list) (cons (length list) list)) llist)
              (function <)
 	     :key (function car))))
+
+(defun get-date-string ()
+  "-> ymd"
+  (multiple-value-bind (sec min hr d m y a b c) (get-decoded-time)
+    (return-from get-date-string (format nil "~a~a~a" y m d))))
 
 (defun load-taxonomy (&optional (taxonomy-filename *escad-taxonomy-file*))
   "Load in taxonomy-tree information (all supported domains)."
@@ -234,12 +284,6 @@ Makes a list of flat path ((A B C A) (C B)) - no nested structures. Optional giv
   (format *query-io* "~a: " prompt)
   (force-output *query-io*)
   (read-line *query-io*))
-
-(defun system-shell (command_string)
-  "command_string -> T | nil
-Executes given command_string in a system shell. If command suceeds give back T, otherwise nil."
-  #+clisp (not (car (multiple-value-list (sys::shell command_string))))
-  #-clisp '("Sorry, the execution of commands in your system-shell is not implemented, yet!"))
 
 (defun TODO ()
   (error "Sorry, this function is not implemented yet, but will work in one of the next escad versions. :-("))
@@ -399,7 +443,7 @@ Get/set <c>urrent <s>ymbol in current view."
 ------------------------
 COPYRIGHT on ESCAD has Markus Kollmar <markuskollmar@onlinehome.de>.
 ESCAD is licensed under: GNU AFFERO GENERAL PUBLIC LICENSE Version 3, 19 November 2007.
-If you want a other license (like for commercial purposes), please contact Markus Kollmar <markuskollmar@onlinehome.de>."))
+If you want a other license (like for commercial purposes), please contact Markus Kollmar <markuskollmar@onlinehome.de>." *current-stream*))
 
 (defun gsdump ()
   "-> list of data-lists without keys just values in following order: name attributes comment taxonomy ref_to ref_from weight.
@@ -503,7 +547,7 @@ Commands grouped depending on function:
  * CHANGE       view: tv
  * CLEAR        view: cls
  * COPY         view: cpv
- * ANALYSE      view: aap, ad, adp, apc, asp, asr, asw")
+ * ANALYSE      view: aap, ad, adp, apc, asp, asr, asw" *current-stream*)
 ;`(let ((lst ()))
 ;  (do-external-symbols (s (find-package :escad)) (push s lst))
 ;  (sort lst (lambda (x y) (string< (symbol-name x) (symbol-name y)))))
@@ -601,13 +645,12 @@ Thanks. :-)
     (t (princ "Type (help-tutorial N) where N is a number beginning with 0, to describe which tutorial step you want see."))))
 
 (defun lov (file_name)
-  "file-name-relative_to_view_dir -> result_status_string
+  "absolut-file-name -> result_status_string
 <lo>ad <v>iew from file into current view. All existing symbols and relations will be deleted! Note that the file can be a fast loading default escad save format or with key :as_escad_commands saved file. In the last case standard escad commands will be executed, so that this can take some time.
 Escad recognizes the different files automatically, you not need to specify anything."
-  (with-open-file (stream (concatenate 'string *escad-view-dir* file_name)
-			  :direction :input)
+  (with-open-file (stream file_name :direction :input)
     (if (string= ";" (subseq (format nil "~a" (read-line stream)) 0 1)) ; if file starts with comment
-	(progn (load (concatenate 'string *escad-view-dir* file_name) :verbose nil :print t) (return-from lov "Executed file with escad-commands (slow format)."))
+	(progn (load file_name :verbose nil :print t) (return-from lov "Executed file with escad-commands (slow format)."))
 	(with-open-file (in (concatenate 'string *escad-view-dir* file_name)) ; load in default file-format (may be faster):
 	  (with-standard-io-syntax
 	    (let ((input '()) header symbols relations)
@@ -961,33 +1004,6 @@ Gives <v>iew <s>tatus."
     (setq sc2 (hash-table-count *symbols2*))
     (setq rc2 (hash-table-count *relations2*))
     (list act_view sc1 rc1 sc2 rc2)))
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Network connection
-(defun lisp_over_network ()
-  "Process client requests forever. If one client exits connection, open another waiting. Connection is persistent."
-  (let ((server (socket:socket-server *escad-server-port* :interface *escad-server-host*)))
-    (format t "~&Waiting for a lisp-code connection on ~S:~D~%"
-	    (socket:socket-server-host server) (socket:socket-server-port server))
-    (unwind-protect
-      ;; infinite loop, terminate with Control+C
-      (loop (with-open-stream (socket (socket:socket-accept server))
-	(multiple-value-bind (local-host local-port) (socket:socket-stream-local socket)
-			     (multiple-value-bind (remote-host remote-port)
-						  (socket:socket-stream-peer socket)
-						  (format T "~&Connection: ~S:~D -- ~S:~D~%"
-							  remote-host remote-port local-host
-							  local-port)))
-	;; loop is terminated when the remote host closes the connection or on EXT:EXIT
-	(loop (when (eq :eof (socket:socket-status (cons socket :input))) (return))
-	   (print (eval (read socket)) socket)
-	   ;; flush everything left in socket
-	   (loop :for c = (read-char-no-hang socket nil nil) :while c)
-	   (terpri socket))))
-      ;; make sure server is closed
-      (socket:socket-server-close server))))
-
 ;;;;;;;
 ; MAIN
 (init-escad)

@@ -25,7 +25,8 @@ ESCAD_REST_SERVER='rest-server.js'
 ESCAD_INIT_FILE="${ESCAD_ROOT_DIR}escad_init.lisp"
 ESCAD_LOGFILE="${ESCAD_ROOT_DIR}escad.log"
 ESCAD_ERROR_LOGFILE="${ESCAD_ROOT_DIR}escad_error.log"
-CLISP_BIN=$(which clisp)
+CLISP_BIN=$(which sbcl) # for CLISP common-lisp
+#CLISP_BIN=$(which clisp) # for SBCL common-lisp
 DOT_BIN=$(which dot)
 MODE='terminal'
 # END CONFIG

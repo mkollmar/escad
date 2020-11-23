@@ -96,7 +96,7 @@ make pdf file of given latex_filename which have to be without directory path."
     (with-open-file (out latex_filename :direction :output :if-exists :supersede)
       (with-standard-io-syntax
 	(format out *latex-header* title author content)))
-    (when (escad::system-shell (concatenate 'string "pdflatex -output-directory " *escad-view-dir* " " latex_filename))
+    (when (escad::system-shell "pdflatex" (list "-output-directory" (concatenate 'string *escad-view-dir* latex_filename)))
       (return-from make-pdf-report (concatenate 'string filename ".pdf"))))
   nil)
 
