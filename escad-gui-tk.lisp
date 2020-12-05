@@ -435,4 +435,6 @@
   (values (format nil "The object is an ATOM:~%  ~W~%" object) nil nil))
 
 
-	  
+;; MAIN:
+
+(start-gui "Hello escad")

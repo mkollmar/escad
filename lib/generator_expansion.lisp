@@ -25,7 +25,7 @@
   (:documentation "Generate/edit objects in graph depending on requested function."))
 
 (in-package :de.markus-herbert-kollmar.escad.generator)
-(load :print nil "lib/pregexp-master/pregexp.lisp")
+(load "lib/pregexp-master/pregexp.lisp" :print nil)
 
 ;; USER CONFIG START
 ;(defparameter *default-parameter* "?")

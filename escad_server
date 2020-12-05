@@ -18,18 +18,24 @@
 # along with ESCAD.  If not, see <http://www.gnu.org/licenses/>.
 ##############################################################################
 
-# CONFIG:
+#### CONFIG:
 ESCAD_ROOT_DIR="./"
 ESCAD='package.lisp'
 ESCAD_REST_SERVER='rest-server.js'
 ESCAD_INIT_FILE="${ESCAD_ROOT_DIR}escad_init.lisp"
 ESCAD_LOGFILE="${ESCAD_ROOT_DIR}escad.log"
 ESCAD_ERROR_LOGFILE="${ESCAD_ROOT_DIR}escad_error.log"
-CLISP_BIN=$(which sbcl) # for CLISP common-lisp
-#CLISP_BIN=$(which clisp) # for SBCL common-lisp
+#LISP_BIN="$(which clisp)" # clisp
+#LISP_BIN_PRELOAD="$(which clisp) -i ${ESCAD_ROOT_DIR}${ESCAD}" # clisp
+#LISP_BIN_LOAD="$(which clisp) ${ESCAD_ROOT_DIR}${ESCAD}" # clisp
+LISP_BIN="$(which sbcl)" # sbcl
+LISP_BIN_PRELOAD="$(which sbcl) --load ${ESCAD_ROOT_DIR}${ESCAD}" # sbcl
+#LISP_BIN_PRELOAD="$(which sbcl) --eval '(setf sb-impl::*default-external-format* :UTF-8)' --load ${ESCAD_ROOT_DIR}${ESCAD}" # sbcl
+LISP_BIN_LOAD="$(which sbcl) --load ${ESCAD_ROOT_DIR}${ESCAD}" # sbcl
 DOT_BIN=$(which dot)
-MODE='terminal'
-# END CONFIG
+LATEX_BIN=$(which pdflatex)
+MODE='terminal' # default mode
+#### END CONFIG
 
 print_status() {
     ESCAD_PS=$(ps hax)
@@ -43,24 +49,32 @@ print_status() {
 }
 
 print_usage() {
-    echo "Usage: $0 [start [terminal | net-lisp | net-rest] | status |stop]"
+    echo "Usage: $0 [start [terminal | gui-tk | net-lisp | net-rest] | status |stop]"
+    echo "Terminal is the default mode."
 }
 
 
 start_configuration() {
 case "$MODE" in
-  'terminal')
-        ${CLISP_BIN} -i ${ESCAD} # -i ${ESCAD_INIT_FILE}
+  'terminal')  # default
+        ${LISP_BIN_PRELOAD}
+	;;
+  'gui-tk')
+	echo "Starting Tk gui client..."
+	${LISP_BIN_LOAD} gui-tk
 	;;
   'net-lisp')
-	echo "Starting escad accepting common lisp over network socket (e.g. with telnet)..."
-	${CLISP_BIN} "${ESCAD_ROOT_DIR}${ESCAD}" net-lisp
+      echo "Starting escad accepting common lisp over network socket (e.g. with telnet)..."
+        # TODO!
+        #${LISP_BIN_LOAD} net-lisp | nc -l 127.0.0.1 3000 # new
+	#${LISP_BIN_LOAD} net-lisp # old
 	;;
   'net-rest')
-	echo "Starting escad accepting REST (via nodejs) based http network-connection (e.g. with web-browser)..."
-	${CLISP_BIN} "${ESCAD_ROOT_DIR}${ESCAD}" net-lisp >${ESCAD_LOGFILE} 2>${ESCAD_ERROR_LOGFILE} &
-	sleep 2
-	node ${ESCAD_REST_SERVER}
+        echo "Starting escad accepting REST (via nodejs) based http network-connection (e.g. with web-browser)..."
+        # TODO!
+	#${LISP_BIN_LOAD} net-lisp >${ESCAD_LOGFILE} 2>${ESCAD_ERROR_LOGFILE} &
+	#sleep 2
+	#node ${ESCAD_REST_SERVER}
 	;;
     *)
 	echo "ERROR: unknown mode <${MODE}>!"
@@ -76,14 +90,18 @@ stop_configuration() {
 
 # Make prerequsite test and setting:
 test_environment() {
-    if [[ -z ${CLISP_BIN} ]]
+    if [[ -z ${LISP_BIN} ]]
 	then
-	echo "ERROR: No gnu common lisp (clisp) executable!"
+	echo "ERROR: No supported common-lisp implementation (clisp/sbcl) available!"
 	exit
     fi
     if [[ -z ${DOT_BIN} ]]
 	then
-	echo "WARNING: No <dot> executable (graphivz)! <exv> command will not work!"
+	echo "WARNING: Export to dot may not work! (missing ${DOT_BIN})"
+    fi
+    if [[ -z ${LATEX_BIN} ]]
+        then
+	echo "WARNING: Export to PDF may not work! (missing ${LATEX_BIN})"
     fi
     test -r ~/.escad && ${ESCAD_DEFAULT_USER_INIT_FILE}="~/.escad"
 }

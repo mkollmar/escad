@@ -23,8 +23,8 @@
 (defparameter *escad-view-dir* "./public/view/" "This directory will be used to save and load view's if no directory is specified.")
 (defparameter *escad-lib-dir* "./lib/" "This directory will be used to look for expansions and taxonomies.")
 (defparameter *escad-external-lib-dir* "./lib/" "This directory will be used to look for code written from others.")
-(defparameter *escad-server-host* "127.0.0.1" "Host name")
-(defparameter *escad-server-port* 3000 "Port number (5000)")
+;(defparameter *escad-server-host* "127.0.0.1" "Host name")
+;(defparameter *escad-server-port* 3000 "Port number (5000)")
 (defparameter *escad-taxonomy-file* "./lib/escad_taxonomy.lisp" "Actual valid escad taxonomy-tree for whole insertable symbols and relations.")
 (defparameter *escad_tmp_file* "escad4567.tmp" "Temporary file used mostly for export-functions.")
 ;; USER CONFIG END
@@ -155,11 +155,18 @@ read all contents of file into a string"
 Executes given command_string in a system shell. If command suceeds give back T, otherwise nil."
   (or
    #+clisp (not (car (multiple-value-list (sys::shell (concatenate 'string command_string (format nil "~{~A~}" arg_string_list))))))
-   #+SBCL (= 0 (sb-ext:process-exit-code (sb-ext:run-program command_string arg_string_list :search t :output *standard-output*)))
+   #+SBCL (sb-impl::process-exit-code
+     (sb-ext:run-program  
+      "/bin/sh"
+      (list  "-c" (concatenate 'string command_string " " (format nil "~{~a ~}" arg_string_list)))
+      :input nil :output *standard-output*))
+   
+   ;#+SBCL (= 0 (sb-ext:process-exit-code (sb-ext:run-program command_string arg_string_list :search t :output *standard-output*)))))
+   ))
 
-(defun lisp_over_network ()
-  "Process client requests forever. If one client exits connection, open another waiting. Connection is persistent. TODO: currently only implemented for clisp, support sbcl."
-  (or
+;(defun lisp_over_network ()
+;  "Process client requests forever. If one client exits connection, open another waiting. Connection is persistent. TODO: currently only implemented for clisp, support sbcl."
+;  (or
    #+CLISP (let ((server (socket:socket-server *escad-server-port* :interface *escad-server-host*)))
     (format t "~&Waiting for a lisp-code connection on ~S:~D~%"
 	    (socket:socket-server-host server) (socket:socket-server-port server))
@@ -180,34 +187,39 @@ Executes given command_string in a system shell. If command suceeds give back T,
 	   (terpri socket))))
       ;; make sure server is closed
       (socket:socket-server-close server)))
-   #+SBCL nil
-   ))
+;   #+SBCL nil
+;   ))
 ;; END  LISP-implementation-specific-things
 
 (defun init-escad ()
   (init-views)
   (load-taxonomy)
-  (cond ((string= (car (get-cmdline-args)) "net-lisp")
-	 (lisp_over_network))
-	((string= (car (get-cmdline-args)) "net-json_rpc")
-	 (handler-bind ((escad-internal-error #'skip-json_rpc-request))
-	   (json-rpc_over_network))))
+  (cond ;((string= (cadr (get-cmdline-args)) "net-lisp")
+	 ;(lisp_over_network))
+	((string= (cadr (get-cmdline-args)) "gui-tk")
+	 (load "./lib/ltk/ltk.lisp")
+	 (load "./escad-gui-tk.lisp"))
+	;((string= (cadr (get-cmdline-args)) "net-json_rpc")
+	 ;(handler-bind ((escad-internal-error #'skip-json_rpc-request))
+	  ;(json-rpc_over_network)))
+	 )
   (pprint "Welcome and thanks for using escad!  :-)")
   (pprint "Type '(in-package :escad)' to start. Type '(help)' for usage."))
 
 (defun init-views ()
   "Initialize the two escad views."
-  (ns "_escad" :attributes '("url" "https://github.com/mkollmar/escad") :taxonomy "escad.symbol._escad" :comment "Settings for escad belonging to this view.")
-  (ns "_view")
-  (s "_view" :taxonomy "escad.symbol._view" :comment "Settings for active view.")
-  (asa "_view" (list "filename_relative" (concatenate 'string (get-date-string) ".pdf")))
+  (ns "_escad" :attributes '("url" "https://github.com/mkollmar/escad" "encoding" "UTF-8") :taxonomy "escad.symbol._escad" :comment "Settings for escad belonging to this view.")
+  (ns "_view" :comment "Settings for active view.")
+  (s "_view" :taxonomy "escad.symbol._escad.export.pdf")
+  (asa "_view" (list "escad.attribute.filename_relative" "view-0.pdf"))
   (cs "_view")
   (tv)
-  (ns "_escad" :attributes '("url" "https://github.com/mkollmar/escad") :comment "Settings for escad belonging to this view." :taxonomy "escad.symbol._escad")
+  (ns "_escad" :attributes '("url" "https://github.com/mkollmar/escad" "encoding" "UTF-8") :comment "Settings for escad belonging to this view." :taxonomy "escad.symbol._escad")
   (ns "_view" :comment "Settings and a function for the current view.")
-  (s "_view" :taxonomy "escad.attribute.filename_relative")
-  (asa "_view" (list "filename_relative" (concatenate 'string (get-date-string) ".pdf")))
-  (cs "_view"))
+  (s "_view" :taxonomy "escad.symbol._escad.export.pdf")
+  (asa "_view" (list "escad.attribute.filename_relative" "view-1.pdf"))
+  (cs "_view")
+  (tv))
 
 (defun join-string-list (string-list)
     "Concatenates a list of strings and puts ', ' between the elements."
@@ -529,6 +541,7 @@ Definitions of terms used in escad:
  * VIEW: place (server, file, device, memory...) which contains SCHEMATIC data. There are two escad view's at runtime.
 
 Commands grouped depending on function:
+ * HELP        escad: help-command, help-tutorial
  * SHOW   attributes: gra, gsa
  * SET    attributes: ara, asa
  * REMOVE attributes: rra, rsa
@@ -963,10 +976,9 @@ get <s>ymbol <p>roperty as result."
 	  (push sname sym_set))))
     sym_set))
 
-(defun cpv (&optional src dest)
+(defun cpv ()
   "[src dest] -> t/nil
-<c>o<p>y current active <v>iew in other view.
-TODO: currently only copying of whole views are supported. In future parts of view should be possible."
+<c>o<p>y current active <v>iew in other view (all possible existing objects in destination will be deleted!)."
   (tv)
   (clrhash *symbols*)
   (clrhash *relations*)

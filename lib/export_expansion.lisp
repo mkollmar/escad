@@ -22,7 +22,7 @@
   (:nicknames :escad.export)
   (:export :export2dot :export2pdf :export2svg :export2svg4browserclient :export-pedigree2svg :export-mindmap2svg)
   (:shadow #:cos)
-  (:documentation "Export current view to dot format (graphviz) and svg (XML/HTML)."))
+  (:documentation "Export current view to various formats (dot, svg, pdf) in different ways depending of taxonomy."))
 
 (in-package :de.markus-herbert-kollmar.escad.export)
 
@@ -42,7 +42,7 @@ Do this if symbol will be activated!"
       (with-standard-io-syntax
 	(princ *dot-header* out) (write-char #\newline out)
 	(princ "digraph schematic {" out) (write-char #\newline out)
-	(dolist (name (ls :exclude-taxonomy '("escad.symbol._escad" "escad.symbol._view")))
+	(dolist (name (ls))
 	  ;(princ (concatenate 'string name ";") out)
 	  (princ (concatenate 'string "\"" name "\";") out)
 	  (write-char #\newline out))
@@ -59,11 +59,12 @@ Do this if symbol will be activated!"
   "expansion-symbol-name [relative-file-name] -> filename
 Export view to a PDF file with name <escad_export.pdf>."
   (let ((absolut-output-filename (concatenate 'string *escad-view-dir*
-					      (or (gsa expansion-symbol-name "filename_relative")
+					      (or (gsa expansion-symbol-name "escad.attribute.filename_relative")
 						  filename))))
     (export2dot expansion-symbol-name *escad_tmp_file*)
-    #+clisp (sys::shell (concatenate 'string "dot -Tpdf -o " absolut-output-filename " " (concatenate 'string *escad-view-dir* *escad_tmp_file*)))
-    #-clisp '("Sorry, function not available. Please type 'dot -Tpdf -o outputfile.pdf inputfile.dot' in your shell manually." '(1 "GPL3"))
+    (escad::system-shell "dot" (list "-Tpdf" "-o " absolut-output-filename (concatenate 'string *escad-view-dir* *escad_tmp_file*)))
+    ;#+clisp (sys::shell (concatenate 'string "dot -Tpdf -o " absolut-output-filename " " (concatenate 'string *escad-view-dir* *escad_tmp_file*)))
+    ;#-clisp '("Sorry, function not available. Please type 'dot -Tpdf -o outputfile.pdf inputfile.dot' in your shell manually." '(1 "GPL3"))
     absolut-output-filename))
 
 (defun export2svg (expansion-symbol-name &optional (filename "escad_export.svg"))
@@ -71,8 +72,9 @@ Export view to a PDF file with name <escad_export.pdf>."
 Export view to a svg (xml) graphical file with name <escad_export.svg>, which is viewable e.g. by the browser firefox."
   (let ((absolut-output-filename (concatenate 'string *escad-view-dir* filename)))
     (export2dot expansion-symbol-name *escad_tmp_file*)
-    #+clisp (sys::shell (concatenate 'string "dot -Tsvg -o " absolut-output-filename " " (concatenate 'string *escad-view-dir* *escad_tmp_file*)))
-    #-clisp '("Sorry, function not available. Please type 'dot -Tsvg -o outputfile.svg inputfile.dot' in your shell manually." '(1 "GPL3"))
+    (escad::system-shell "dot" (list "-Tsvg" "-o " absolut-output-filename (concatenate 'string *escad-view-dir* *escad_tmp_file*)))
+    ;#+clisp (sys::shell (concatenate 'string "dot -Tsvg -o " absolut-output-filename " " (concatenate 'string *escad-view-dir* *escad_tmp_file*)))
+    ;#-clisp '("Sorry, function not available. Please type 'dot -Tsvg -o outputfile.svg inputfile.dot' in your shell manually." '(1 "GPL3"))
     absolut-output-filename))
 
 (defun make-pedigree-tree (root-sym-name)
@@ -95,7 +97,7 @@ Generate svg-string symbolizing mindmap-symbol with name in it."
     (setq result (concatenate 'string result (format nil "</g>~%")))
     ))
 
-(defun svg-ellipse (x y rx ry (color "orange") (width "2"))
+(defun svg-ellipse (x y rx ry &key (color "orange") (width "2"))
   "Print ellipse at pos x, y."
   (let ((result ""))
     (setq result (concatenate 'string result (format nil "<ellipse cx=\"~a\" cy=\"~a\" rx=\"~a\" ry=\"~a\" fill=\"~a\" stroke=\"blue\" stroke-width=\"~a\" />~%" x y rx ry color width)))))
@@ -211,6 +213,26 @@ Relations with highest weight are placed nearer at source-symbol."
 (defun export-pedigree2svg (symbol-name &optional (filename "escad_pedigree_export.svg"))
   "symbol-name [relative-file-name] -> filename
 Export view to a svg file (default <escad_pedigree_export.svg>), which is viewable by some internet-browsers (e.g. firefox).
+Do this by symbol-activation!"
+  (let ((absolute-filename (concatenate 'string *escad-view-dir* filename))
+	(pos-of-symbols '()))
+    (with-open-file (out absolute-filename :direction :output :if-exists :supersede)
+      (with-standard-io-syntax
+	(princ "<?xml version=\"1.0\" standalone=\"no\"?>" out) (write-char #\newline out)
+	(princ "<svg width=\"10cm\" height=\"9cm\" viewBox=\"0 0 1000 900\"" out) (write-char #\newline out)
+	(princ "     xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\">" out) (write-char #\newline out)(write-char #\newline out)
+	(dolist (row print-table)
+	  (dolist (name row)
+	    (princ (svg-text x y name) out)
+	    (setq x (+ x 8)))
+	  (setq x 5 y (+ y 4)))
+	(write-char #\newline out)
+	(princ "</svg>" out)))
+    absolute-filename))
+
+(defun export-quiz2svg (symbol-name &optional (filename "escad_quiz_export.svg"))
+  "symbol-name [relative-file-name] -> filename
+Export view to a svg file (default <escad_quiz_export.svg>), which is viewable by some internet-browsers (e.g. firefox).
 Do this by symbol-activation!"
   (let ((absolute-filename (concatenate 'string *escad-view-dir* filename))
 	(pos-of-symbols '()))
