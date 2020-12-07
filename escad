@@ -49,8 +49,8 @@ print_status() {
 }
 
 print_usage() {
-    echo "Usage: $0 [start [terminal | gui-tk | net-lisp | net-rest] | status |stop]"
-    echo "Terminal is the default mode."
+    echo "Usage: $0 [start [terminal | emacs | gui-tk | net-lisp | net-rest] | status |stop]"
+    echo "<Terminal> is the default mode since it has little requirements. However <emacs> is currently recommended as good supported user-interface."
 }
 
 
@@ -59,9 +59,13 @@ case "$MODE" in
   'terminal')  # default
         ${LISP_BIN_PRELOAD}
 	;;
+  'emacs')
+	echo "Starting emacs client..."
+	emacs --load escad-mode.el --eval "(escad-make-layout)"
+	;;
   'gui-tk')
 	echo "Starting Tk gui client..."
-	${LISP_BIN_LOAD} gui-tk
+	${LISP_BIN_LOAD} gui-tk # TODO!
 	;;
   'net-lisp')
       echo "Starting escad accepting common lisp over network socket (e.g. with telnet)..."
