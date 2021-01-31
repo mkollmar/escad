@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright (C) 2011, 2014, 2019, 2020 Markus Kollmar
+# Copyright (C) 2011, 2014, 2019, 2020, 2021 Markus Kollmar
 #
 # This file is part of ESCAD.
 #
@@ -61,7 +61,7 @@ case "$MODE" in
 	;;
   'emacs')
 	echo "Starting emacs client..."
-	emacs --load escad-mode.el --eval "(escad-make-layout)"
+	emacs --load ./ui/escad-mode.el --eval "(escad-make-layout)"
 	;;
   'gui-tk')
 	echo "Starting Tk gui client..."
@@ -69,16 +69,18 @@ case "$MODE" in
 	;;
   'net-lisp')
       echo "Starting escad accepting common lisp over network socket (e.g. with telnet)..."
-        # TODO!
-        #${LISP_BIN_LOAD} net-lisp | nc -l 127.0.0.1 3000 # new
-	#${LISP_BIN_LOAD} net-lisp # old
-	;;
+      ${LISP_BIN_LOAD} net-lisp
+      ## alternativ:
+      #rm -f escad_fifo; mkfifo escad_fifo
+      #cat escad_fifo | ${LISP_BIN_PRELOAD} | nc -k -l 3000 > escad_fifo
+      ;;
   'net-rest')
-        echo "Starting escad accepting REST (via nodejs) based http network-connection (e.g. with web-browser)..."
-        # TODO!
-	#${LISP_BIN_LOAD} net-lisp >${ESCAD_LOGFILE} 2>${ESCAD_ERROR_LOGFILE} &
-	#sleep 2
-	#node ${ESCAD_REST_SERVER}
+      echo "Starting escad accepting REST (via nodejs) based http network-connection (e.g. with web-browser)..."
+      ${LISP_BIN_LOAD} net-lisp >${ESCAD_LOGFILE} 2>${ESCAD_ERROR_LOGFILE} &
+      #rm -f escad_fifo; mkfifo escad_fifo
+      #cat escad_fifo | ${LISP_BIN_PRELOAD} | nc -k -l 3000 > escad_fifo 2>${ESCAD_ERROR_LOGFILE}
+	sleep 2
+	node ${ESCAD_REST_SERVER}
 	;;
     *)
 	echo "ERROR: unknown mode <${MODE}>!"
@@ -90,6 +92,7 @@ esac
 stop_configuration() {
     killall node
     kill $(ps aux | grep -e ${ESCAD} | grep -v grep | awk '{print $2}')
+    rm -f escad_fifo
 }
 
 # Make prerequsite test and setting:

@@ -1,5 +1,5 @@
 ;;; escad-mode.el --- Escad mode
-;; Copyright (C) 2020 Markus Kollmar (email: markuskollmar@onlinehome.de)
+;; Copyright (C) 2020, 2021 Markus Kollmar (email: markuskollmar@onlinehome.de)
 ;;
 ;; This file is part of ESCAD.
 ;;
@@ -23,7 +23,32 @@
 ;; Step1: make buffer right, execute (pdf-tools-install), load view-0.pdf, (auto-revert-mode)
 ;; Step2: make buffer below, start slime, load escad, set repl-width to frame-width, hide headline
 ;; Step3: make buffer left, execute (escad-taxonomy-browser)
-
+;;
+;; Provide:
+;; - ido.mode for taxonomy-list fast selection:
+;;  (setq mylist (list "red" "blue" "yellow" "clear" "i-dont-know"))
+;;  (ido-completing-read "What, ... is your favorite color? " mylist)
+;; - drawing preview for 2d sketch preview
+;;(require 'dom)
+;;(require 'svg)
+;; (image-type-available-p 'imagemagick)
+;; image-types
+;; (setq svg (svg-create 50 50 :stroke "orange" :stroke-width 1))
+;; (svg-gradient svg "gradient" 'linear '(0 . "red") '(100 . "blue"))
+;; (save-excursion (goto-char (+ 2(point))) (svg-insert-image svg))
+;; (svg-rectangle svg 1 1 15 15 :gradient "gradient" :id "rec1")
+;; (svg-circle svg 5 5 10 :id "circle1")
+;; (svg-ellipse svg 100 100 50 90 :stroke "red" :id "ellipse1")
+;; (svg-line svg 100 190 50 100 :id "line1" :stroke "yellow")
+;; (svg-polyline svg '((200 . 100) (500 . 450) (80 . 100))
+;; 	      :stroke "green" :id "poly1")
+;; (svg-polygon svg '((100 . 100) (200 . 150) (150 . 90))
+;; 	     :stroke "blue" :fill "red" :id "gon1")
+;; (svg-print svg)
+;; (dom-attributes svg)
+;; (dom-by-id svg "rec1")
+;; (dom-set-attribute (dom-by-id svg "rec1") 'height 45)
+;; (svg-possibly-update-image svg)
 
 ;;; Code:
 
@@ -43,9 +68,10 @@ While in a escad (https://github.com/mkollmar/escad) session with slime-mode you
         (interactive)
         (hungry-electric-delete t)))))
 
-(defun escad-make-repl ()
+(defun escad-make-repl (load-file)
   "Generate in current buffer a slime-repl."
-  (slime))
+  (slime)
+  (slime-load-file load-file))
 
 (defun escad-make-view (view-file)
   "Generate in current buffer a view."
@@ -75,12 +101,15 @@ While in a escad (https://github.com/mkollmar/escad) session with slime-mode you
 
 (defun escad-make-layout ()
   "Creates basic window layout for escad. Bottom is for repl, upper left for graphical view and upper right for additional view/help/taxonomy-browser. Should be called once by beginning of session."
-  (split-window nil nil 'below)
-  (escad-make-repl)
-  (previous-window)
-  (escad-make-view "./public/view/view-0.pdf")
-  (split-window nil nil 'right)
-  (escad-make-taxonomy-browser "../../lib/escad_taxonomy.lisp"))
+  (let ((repl-win (split-window nil nil 'below)))
+    (window-resize repl-win (- 5 (window-body-height repl-win)))
+    (split-window nil nil 'right)
+    (escad-make-view "./public/view/view-0.pdf")
+    (next-window)
+    (escad-make-taxonomy-browser "../../lib/escad_taxonomy.lisp")
+    (next-window)
+    (escad-make-repl "../../package.lisp")))
+
   
 ;; (easy-menu-define words-menu global-map
 ;;        "Menu for word navigation commands."

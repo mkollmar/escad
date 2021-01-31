@@ -1,4 +1,4 @@
-;; Copyright (C) 2011, 2012, 2013, 2014, 2019, 2020 Markus Kollmar (email: markuskollmar@onlinehome.de)
+;; Copyright (C) 2011, 2012, 2013, 2014, 2019, 2020, 2021 Markus Kollmar (email: markuskollmar@onlinehome.de)
 ;;
 ;; This file is part of ESCAD.
 ;;
@@ -14,18 +14,30 @@
 ;;
 ;; You should have received a copy of the GNU Affero General Public License
 ;; along with ESCAD.  If not, see <http://www.gnu.org/licenses/>.
+;;
+;;
+;; Schedule (most important first):
+;;
+;;   * implement fast browsable user-interface
+;;   * implement tests
+;;   * integrate rdf im-/export
+;;   * integrate semantic reasoning via cwm
+;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+#+SBCL (require 'sb-bsd-sockets)
 
 (in-package :de.markus-herbert-kollmar.escad)
 
 
 ;; USER CONFIG START
 (defparameter *escad-view-dir* "./public/view/" "This directory will be used to save and load view's if no directory is specified.")
-(defparameter *escad-lib-dir* "./lib/" "This directory will be used to look for expansions and taxonomies.")
-(defparameter *escad-external-lib-dir* "./lib/" "This directory will be used to look for code written from others.")
-;(defparameter *escad-server-host* "127.0.0.1" "Host name")
-;(defparameter *escad-server-port* 3000 "Port number (5000)")
-(defparameter *escad-taxonomy-file* "./lib/escad_taxonomy.lisp" "Actual valid escad taxonomy-tree for whole insertable symbols and relations.")
+(defparameter *escad-lib-dir* "./lib/" "This directory will be used mostly to look for expansions and taxonomies.")
+(defparameter *escad-external-lib-dir* "./lib/" "This directory will be used to look for code which is not maintained in this project.")
+#+CLISP (defparameter *escad-server-host* "127.0.0.1" "Host address in CLISP-format")
+#+SBCL  (defparameter *escad-server-host* #(127 0 0 1) "Host address in SBCL-format")
+(defparameter *escad-server-port* 3000 "Port number (5000)")
+(defparameter *escad-taxonomy-file* "./lib/escad_taxonomy.lisp" "Actual valid escad taxonomy-tree for insertable symbols and relations.")
 (defparameter *escad_tmp_file* "escad4567.tmp" "Temporary file used mostly for export-functions.")
 ;; USER CONFIG END
 
@@ -164,9 +176,8 @@ Executes given command_string in a system shell. If command suceeds give back T,
    ;#+SBCL (= 0 (sb-ext:process-exit-code (sb-ext:run-program command_string arg_string_list :search t :output *standard-output*)))))
    ))
 
-;(defun lisp_over_network ()
-;  "Process client requests forever. If one client exits connection, open another waiting. Connection is persistent. TODO: currently only implemented for clisp, support sbcl."
-;  (or
+(defun lisp_over_network ()
+  "Process single client requests forever. If one client exits connection, open another waiting. Connection is persistent."
    #+CLISP (let ((server (socket:socket-server *escad-server-port* :interface *escad-server-host*)))
     (format t "~&Waiting for a lisp-code connection on ~S:~D~%"
 	    (socket:socket-server-host server) (socket:socket-server-port server))
@@ -187,15 +198,54 @@ Executes given command_string in a system shell. If command suceeds give back T,
 	   (terpri socket))))
       ;; make sure server is closed
       (socket:socket-server-close server)))
-;   #+SBCL nil
-;   ))
+   
+   #+SBCL (let ((server (make-instance 'sb-bsd-sockets:inet-socket :type :stream :protocol :tcp)))
+        ; Set socket options
+        (setf (sb-bsd-sockets:sockopt-reuse-address server) t)
+        (setf (sb-bsd-sockets:non-blocking-mode server) t)
+
+        ; Bind to an address
+        (sb-bsd-sockets:socket-bind server *escad-server-host* *escad-server-port*)
+        (sb-bsd-sockets:socket-listen server 1)
+        (loop
+            (let ((connection (sb-bsd-sockets:socket-accept server)))
+	      (sleep 1) ; without sleep high cpu usage!?
+	      (when connection
+                    (handle-connection connection))))))
+
+#+SBCL (defun read-from-connection (connection)
+     "Read data from a connection."
+     (multiple-value-bind (buffer length) (sb-bsd-sockets:socket-receive connection nil 1024)
+         (let (data)
+             (if (> length 0)
+                 (subseq buffer 0 length)
+                 data))))
+
+#+SBCL (defun handle-connection (connection)
+     "Handle an incoming connection."
+     (let ((data (read-from-connection connection)))
+	;(sb-bsd-sockets:socket-send connection data nil)
+       (sb-bsd-sockets:socket-send connection (write-to-string (eval (read-from-string data))) nil)
+       (sb-bsd-sockets:socket-close connection)))
+
+#+SBCL (defun handle-multiple-connection (connection)
+	 "Handle incoming connection(s)."
+    (sb-thread:make-thread
+        (lambda ()
+            ; Handle our connection in this lambda, which is run in a new thread
+            (loop
+                (let ((data (read-from-connection connection)))
+                    ; Do something with the data received
+                    ))
+            (sb-bsd-sockets:socket-close connection))))
+
 ;; END  LISP-implementation-specific-things
 
 (defun init-escad ()
   (init-views)
   (load-taxonomy)
-  (cond ;((string= (cadr (get-cmdline-args)) "net-lisp")
-	 ;(lisp_over_network))
+  (cond ((string= (cadr (get-cmdline-args)) "net-lisp")
+	 (lisp_over_network))
 	((string= (cadr (get-cmdline-args)) "gui-tk")
 	 (load "./lib/ltk/ltk.lisp")
 	 (load "./escad-gui-tk.lisp"))
@@ -1016,6 +1066,7 @@ Gives <v>iew <s>tatus."
     (setq sc2 (hash-table-count *symbols2*))
     (setq rc2 (hash-table-count *relations2*))
     (list act_view sc1 rc1 sc2 rc2)))
+
 ;;;;;;;
 ; MAIN
 (init-escad)

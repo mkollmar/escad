@@ -6,7 +6,8 @@ After modeling the graph, you can generate useful content (like PDF, SVG, DOT,..
 
 # State
 
-Escad is in basic development state. Currently there is no released version. Just clone the current repository and try it. Note that not all parts are working yet and interfaces may change over time.
+Escad is in basic development state. Currently there is no released version. Just clone the current repository and try it. Note that not all parts are working yet and interfaces may change over time. Multiple user interfaces are planed. Currently the terminal or emacs is the best choice.
+![escad-in_emacs](./doc/escad_emacs.png)
 
 # Getting started
 

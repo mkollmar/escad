@@ -1,6 +1,8 @@
-// Copyright (C) 2011, 2012, 2013, 2014, 2019, 2020 Markus Kollmar (email: markuskollmar@onlinehome.de)
+// Copyright (C) 2011, 2012, 2013, 2014, 2019, 2020, 2021 Markus Kollmar (email: markuskollmar@onlinehome.de)
 //
-// This server communicates with two parts: escad-server and a html-browser with escad-client.
+// This server implements the REST-interface for escad.
+// For this we communicate with two connections:
+// [escad] <-> [rest-server.js] <-> [html-browser + escad-web-interface].
 
 // Socket-connection (via common-lisp data) to ESCAD:
 var net = require('net');

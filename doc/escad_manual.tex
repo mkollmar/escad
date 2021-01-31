@@ -58,7 +58,7 @@
 \newcommand{\MyNachname}{Kollmar}
 \newcommand{\MyTitel}{ESCAD MANUAL}
 \newcommand{\MyDate}{\today}
-\ohead{Seite: \pagemark}
+\ohead{page: \pagemark}
 %\chead{Lösung}
 \ihead{\MyTitel}
 \ofoot{\MyVorname\, \MyNachname}
@@ -122,7 +122,7 @@
        \node[circle, fill=orange!30] (user) at (0,12) {USER};
        \node[circle, fill=green!20] (escad) at (0,0) {ESCAD};
        \node[circle, fill=green!20] (world) at (-4,7) {WORLD};
-       \node[circle, fill=green!20] (model) at (3,5) {MODEL};
+       \node[circle, fill=green!20] (model) at (3,5) {VIEW};
        %\draw [thin, gray,-latex] (escad) -- (user);
        \draw [gray] (escad) to [out=50,in=195] (user);
        \draw [red] (escad) to [out=-120,in=165] (world);
@@ -155,26 +155,36 @@ Living in todays world is getting more and more complex. There are laws made by 
 \section{State}
 Currently escad is in (wild) development. This means there are many ideas which should be developed. Some are just a quick hack to show what is possible and some are more detailed. However but only usable for experts in some areas.
 Future plans are (among many other things not mentioned):
-\begin{enumerate}
+\begin{itemize}
 \item Increase domain functionality with practic use.
 \item Create good and clear documentation with examples.
-\item Make a good graphical user interface.
-\end{enumerate}
-Escad use open interfaces and provide a wide variety of different domain tools. And if there is (yet) not the thing you need, you can customize Escad with common-lisp code. Escad wants to be kind and helpful to the user. \textbf{Your help is really welcome}: if you want maintain this manual, increase escad features, write expansions, create logo, manage homepage or just send some feedback - all things are kind to start a escad-community.
+\item Make a good graphical user interface in browser via REST-interface.
+\end{itemize}
+Escad use open interfaces and provide a wide variety of different domain tools. And if there is (yet) not the thing you need, you can customize Escad with common-lisp code. Escad wants to be kind and helpful to the user. \textbf{Your help is really welcome}: if you want maintain this manual, increase escad features, write expansions, create logo, manage homepage or just send some feedback - all things are kind to start a escad-community. Currently the best way to use escad is the terminal, or use the emacs editor, like in figure~\ref{fig:escad_emacs} where you can directly type in escad-lisp commands.
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}[node distance=0.6cm and 1cm]
+    \node[anchor=south west] (escad_emacs) at (0cm,0cm) {\includegraphics*[scale=0.35]{escad_emacs.png}};
+  \end{tikzpicture}
+  \caption{escad in emacs.}
+  \label{fig:escad_emacs}
+\end{figure}
 \section{License}
 Escad strictly wants to be open source, for more see file \path{LICENSE} in your escad root-directory.
 \section{Installation}
 Currently there are no preconfigured packages for convenient installation of escad. However installation should not be to difficult, since escad-development tries to minimize not shipped dependencies.
 \subsection{Linux or other unix-like systems}
 \begin{enumerate}
-\item Install \textbf{GNU CLISP} or \textbf{sbcl} common-lisp implementation (other implementations may work, but are not explicitely tested) preferably with your distribution-package-manager.
-\item For some PNG/SVG export install \textbf{graphviz}.
-\item For PDF exports install a basic \textbf{latex} installation.
-\item Copy escad files and directories (leave them in the given structure) to a place (e.g. your homedirectory).
+\item Copy the escad root-directory from \path{https://github.com/mkollmar/escad} with all files (leave them in the given structure) to a place (e.g. your home-directory) or clone this github-repository with \textbf{git}.
+\item You should have/install \textbf{GNU CLISP} or \textbf{sbcl} common-lisp implementation (other implementations currently probably not work) preferably with your distribution-package-manager.
+\item As shell \textbf{bash} is recommended.
+\item For REST-server you should have or install \textbf{node} and \textbf{npm}. Then in the escad root-directory you should try to install the needed node-modules (\texttt{npm install --production}).
+\item For some PNG/SVG export you need to have/install \textbf{graphviz} (not needed for basic escad usage).
+\item For PDF exports you need to have/install a \textbf{latex} installation with \textbf{pdflatex} (not needed for basic escad usage).
+\item For TK graphical interface you need to have/install a \textbf{TCL/TK} installation (not needed for basic escad usage).
 \item Check the user-config section at the beginning of \path{escad.lisp} and edit if necessary.
-\item Check the config section at the beginning of shell-script \path{escad_server} and edit if necessary.
-\item Check the user-config section at the beginning of \path{escad.lisp} and edit if necessary.
-\item You can now try to run escad with \path{escad_server}.
+\item Check the config section at the beginning of shell-script \path{escad} and edit if necessary.
+\item You can now try to run escad (in terminal-mode) within the escad-root-directory by typing \texttt{./escad start}.
 \end{enumerate}
 \subsection{Windows}
 This system is currently not tested, but may be possible.
@@ -188,16 +198,25 @@ To understand a software-system it is often easier to understand the theory behi
     \node[sym] (s1) [below left=of s0] {s1};
     \node[sym] (s2) [left=of s1] {s2};
     \node[sym] (s3) [left=of s2] {s3};
-    \draw[->] (s0) -- (s1) node [pos=0.5] {r0};
+    \draw[->] (s0) -- (s1) node [pos=0.5, below] {r0};
     \draw[->] (s1) -- (s2) node [midway, below] {r1};
     \draw[->,out=-100,in=200,looseness=2] (s2) to node[above,pos=0.5] {r2} (s3);
-    \draw[->] (s3) -- (s2) node [pos=0.5] {r3};
+    \draw[->] (s3) -- (s2) node [pos=0.5, below] {r3};
     \draw[draw=black] (1,1) rectangle ++(-8,-4);
-    \node[] (view) [above=of s3] {view};
+    \node[] (view) [above=of s2] {view};
     \draw[draw=black] (2,1) rectangle ++(3,-4);
-    \node[] at (3,0)  {taxonomy};
+    \node[] at (3.5,0)  {taxonomy};
     \draw[draw=black] (6,1) rectangle ++(3,-4);
-    \node[] at (8,0) {expansion};
+    \node[] at (7.5,0) {expansion};
+    \draw[<->,blue] (-3,-4) -- (-3,-3) node [pos=0.5] {};
+    \draw[<->,blue] (3.5,-4) -- (3.5,-3) node [pos=0.5] {};
+    \draw[<->,blue] (7.5,-4) -- (7.5,-3) node [pos=0.5] {};
+    \draw[draw=black] (-7,-4) rectangle ++(16,-1);
+    \node[] at (1,-4.5) {escad-lisp};
+    \draw[draw=black] (-3,-5) rectangle ++(12,-1);
+    \node[] at (3,-5.5) {escad-socket (TCP)};
+    \draw[draw=black] (1,-6) rectangle ++(8,-1);
+    \node[] at (5,-6.5) {escad-REST};
 \end{tikzpicture}
   \caption{Overview of basic escad structure.}
   \label{fig:overview}
@@ -209,6 +228,8 @@ Whenever needed you can add classification info (taxonomy) or functionality (exp
   E & = \{r0, r1, r2, r3\} = \{(s0, s1), (s1, s2), (s2, s3), (s3, s2)\}
 \end{align}
 You see in math you would need no name for relations, as it are ordered pairs of symbols. Escad wants names for symbols and relations. This is because relations can have some optional properties (symbols too), which you can acess via the relation-name. As convenience you can let escad give you automatic generated names, in case you do not care of the exact name.
+
+You can communicate with escad through common-lisp. This communication can also piped through a local TCP-connection. The REST-API uses this method too. Note that for security reasons you should not make such network-communications over the internet, since escad is not encrypted. However you could use technics like VPN if you want such behaviour.
 \subsection{Symbol}
 In many papers symbols are also called \index{node}node. However escad has the aim to model things into software. Thus a node is a \emph{variable} for something in our thoughts. A symbol can represent a house, a number, a theory, a joke or whatever you want. This shows the great flexibility of escad. In figure~\ref{fig:overview} symbols are circles with names in it (e.g. s0) which you can name however you want as long it is a unique name in the current graph. In case you do not care, escad can generate a unique name for you.
 \subsection{Relation}
@@ -221,7 +242,7 @@ Expansions are ordinary \emph{symbols} with a additional function, given by assi
 Here i assume it is easier to get what escad can do for you, by showing escad in work. Note that the output of the following examples may vary a little at your side (becausse of various reasons), but the basic things should be similar.
 \section{Tutorial}
 We want now do a short session in escad. After installation go to the escad root directory and start escad by typing in a shell in your terminal:
-\shellcmdline{./escad\_server start}{>}
+\shellcmdline{./escad start}{>}
 This starts escad REPL (no special arguments given). After loading of common-lisp and escad, you should switch from the common-lisp in the escad namespace:
 \lispcmdline{(in-package :escad)}{ESCAD>}
 Now you can execute all escad commands directly. To see some possible existing symbols type following escad-command:
@@ -256,23 +277,29 @@ To list available taxonomies use command \texttt{(lta)}.
 Because interoperability is important in todays heterogenic software world, there should be a way to get graphs from other software. Or in case you can not do some things in escad yet or other tools may do better, you can export your graph.
 \subsection{Import of graphviz-dot}
 Graphviz is powerful in graphically drawing of graphs. You can import those graphs with .dot extension. However only basic functionality of dot is currently supported. Import with a expansion.
-\subsection{Export of graphviz-dot}
+\subsection{Export to graphviz-dot}
 Graphviz is powerful in graphically layout and drawing of graphs. Export with a expansion.
-\subsection{Export of SVG}
+\subsection{Export to SVG}
 SVG is a vector graphic-format viewable through most modern webbrowsers.
-\subsection{Export of PDF}
+\subsection{Export to PDF}
 Export with a expansion.
 \subsection{Reporting}
 Reporting here means to get some basic statistically information about the graph. Additionally some expansions may allow you to dive deeper in the graph and provide some semantic informations too.
-\subsection{Standalone-HTML-javascript learning page generator}
-You can generate html-pages with integrated javascript functionality to train some excercises, e.g. language learning. It provides motivational intuitive training pages which you can easily generate without html or javascript knowledge. The user has to do excercises and gets result if anwer is correct or not.
+\subsection{Lessons learned}
+You model e.g. deseases and their dependencies. Then you can try to give symptom(s) and ask for possible cause-tracing.
 \subsection{Mindmap}
 This creates mindmaps in SVG format. Very usefull to view in a browser and to make your graph visible.
+\subsection{Standalone-HTML-javascript learning page generator}
+Note: this is not working yet, because it is in development!
+You can generate html-pages with integrated javascript functionality to train some excercises, e.g. language learning. It provides motivational intuitive training pages which you can easily generate without html or javascript knowledge. The user has to do excercises and gets result if anwer is correct or not.
 \subsection{Flow}
+Note: this is not working yet, because it is in development!
 A flow is a graph wich models a process. You can use escad to analyse a flow or to create a process a user should go through (e.g. a question+answer quiz).
 \subsection{Creating (technical) documentation}
+Note: this is not working yet, because it is in development!
 This feature is planed in the future. The aim is to provide good quality output with use of latex, whereby you not need to know how to write latex (however it should be possible to insert latex directly whenever it is your wish).
 \section{Questions}
+Note: this is not working yet, because it is in development!
 Sometimes questions lead to a fast recognition of a problem or help to understand things better. So lets start asking...
 \subsection{Development}
 \begin{description}
@@ -291,9 +318,9 @@ Sometimes questions lead to a fast recognition of a problem or help to understan
 Here you should find the full information to work with escad, such as available commands or interfaces. Also you should get some basic things in order to get the idea in how you can extend escad or help in development.
 \section{Commandline LISP-REPL (currently recommended)}\label{sec:cmd_line}
 The commandline currently provides the full functionality. This means you got a common-lisp REPL with escad-package loaded. This gives you the full power of common-lisp with the ability of the escad-commands to work with a simple graph environment. To get this commandline go to the escad root directory and start escad-commandline by typing in a shell in your terminal:
-\shellcmdline{./escad\_server start terminal}{>}
+\shellcmdline{./escad start terminal}{>}
 or because terminal-mode is the default you can also type:
-\shellcmdline{./escad\_server start}{>}
+\shellcmdline{./escad start}{>}
 Without correct command arguments you get a usage message.
 Now you can type in escad commands with a namespace-qualifier, in this case the help command (note the output is here ommitted):
 \lispcmdline{(escad:help)}{...}
@@ -369,7 +396,7 @@ This is in development.
 \section{TCP-Socket}
 This section can refer fully to section~\ref{sec:cmd_line}. The same commands are available, except that they are transmitted via TCP-Socket as a text-stream.
 \section{REST-API}
-This is in development and not fully working yet.
+This is in development.
 \section{Library}
 To use escad as a library in your common lisp programm, just load \path{package.lisp}.
 \section{HTML-client}
@@ -420,6 +447,18 @@ The following table~\ref{tab:exp-export-expansion} explains the export expansion
 \caption{Symbols and relations of export expansion.}
 \label{tab:exp-export-expansion}
 \end{table}
+\chapter{Development}
+Everyone is needed and welcome for escad development. If you are a graphical designer, you are got in documenting or you like to program in lisp or you are interested in web-programming - all is required in escad. :-)
+\section{Root directory structure}
+\begin{itemize}
+\item \path{doc} contains like the name says the escad documentation. Currently this is mainly this manual. But in future a manual-page, more examples or online documentation would be great, too.
+\item \path{examples} contains examples which can be loaded in escad. But note that currently not all may work yet, they are more a print what a future interface should look like.
+\item \path{lib} contains the escad-lisp files.
+\item \path{node_modules} contains the code-modules for node. Some functions are written for node (a javascript execution environment, similar the one in your browser). The REST-server is a example that needs node.
+\item \path{public} contains the files which are accesible via web by the REST-server.
+\item \path{test} is needed for development to test current implementation if it fullfills the requirements/functions needed.
+\item \path{ui} contains files needed for the various user interfaces that escad may support now or in future.
+\end{itemize}
 \section{Programming your own expansion}
 Writing escad expansions is not difficult. Go through following steps carefully and you will have a good basis for writing your own. The code in listing~\ref{listing:exp_minimal} shows a minimal expansion and the listing~\ref{listing:exp_tax} shows the entry in a taxonomy file.
 \begin{lstlisting}[caption={Minimal expansion code.}, language=Lisp, morekeywords={in-package, use}, label=listing:exp_minimal]
