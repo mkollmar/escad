@@ -1,4 +1,4 @@
-;; Copyright (C) 2011, 2012, 2013, 2020 Markus Kollmar
+;; Copyright (C) 2011, 2012, 2013, 2020, 2021 Markus Kollmar
 ;;
 ;; This file is part of ESCAD.
 ;;
@@ -23,7 +23,7 @@
   (:nicknames :escad.report)
   (:export :report2html :report2txt :report_corona_trace2pdf)
   (:shadow #:cos)
-  (:documentation "Analyse schematic and extract basic information to various file formats."))
+  (:documentation "Report (parts of) information processed from current view to various file formats (pdf, txt,...) whereby you might not able to recreate with that report the initial view (in opposite to export-expansion)."))
 
 (in-package :de.markus-herbert-kollmar.escad.report)
 

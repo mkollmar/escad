@@ -1,4 +1,4 @@
-;; Copyright (C) 2019 Markus Kollmar
+;; Copyright (C) 2019, 2020 Markus Kollmar
 ;;
 ;; This file is part of ESCAD.
 ;;
@@ -44,6 +44,31 @@
 ")
 ;; USER CONFIG END
 
+(defun 
+
+(defun generate_scad (expansion-symbol-name &optional (filename "view.scad"))
+  "expansion-symbol-name [relative-file-name] -> filename
+Export view to a textual dot (graphviz) file with name <view.dot>, which is viewable by a text editor.
+Do this if symbol will be activated!"
+  (let ((absolute-filename (concatenate 'string *escad-view-dir* filename)))
+    (with-open-file (out absolute-filename :direction :output :if-exists :supersede)
+		    (with-standard-io-syntax
+		     (princ *x3d-header* out) (write-char #\newline out)
+		     (princ "digraph schematic {" out) (write-char #\newline out)
+		     (dolist (name (ls :exclude-taxonomy '("escad.symbol._escad" "escad.symbol._thisView")))
+		       (princ (concatenate 'string name ";") out)
+		       (write-char #\newline out))
+		     (dolist (name (lr))
+		       (with-slots (comment ref_from ref_to taxonomy) (gethash name escad::*relations*)
+				   (loop for i from 0 to (- (length ref_from) 1) do
+					 (princ (concatenate 'string (string (nth i ref_from))
+							     " -> "
+							     (string (nth i ref_to))
+							     ";") out)
+					 (write-char #\newline out))))
+		     (write-char #\newline out)
+		     (princ "}" out)))
+    absolute-filename))
 
 (defun generate_x3d (expansion-symbol-name &optional (filename "view.x3d"))
   "expansion-symbol-name [relative-file-name] -> filename

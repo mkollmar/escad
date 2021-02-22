@@ -22,7 +22,7 @@
   (:nicknames :escad.export)
   (:export :export2dot :export2pdf :export2svg :export2svg4browserclient :export-pedigree2svg :export-mindmap2svg)
   (:shadow #:cos)
-  (:documentation "Export current view to various formats (dot, svg, pdf) in different ways depending of taxonomy."))
+  (:documentation "Export (parts of) current view to various formats (dot, svg, pdf) whereby you might be able to recreate with that export the initial view (in opposite to report-expansion)."))
 
 (in-package :de.markus-herbert-kollmar.escad.export)
 

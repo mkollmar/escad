@@ -24,9 +24,9 @@ var parser = require('fast-sexpr');
 // for URL parsing:
 const { URL, URLSearchParams } = require('url');
 
+
 // ********************************************************************
 // Functions for data translating
-
 
 // Translate JSON [["key", ".", "value"]["key", ".", "value"]...] to
 // JSON-STRING [["key", "value"], ["key", "value"],...]
@@ -39,7 +39,6 @@ function FormatEscadAttributes(InAoA) {
     }
     return resultString + ']';
 }
-
 
 // Format
 // [":ATTRIBUTES",[["url",".","https://github.com/mkollmar/escad"]],":COMMENT","Settings for escad belonging to this view.",":REF_TO","NIL",":REF_FROM","NIL",":TAXONOMY","escad.symbol._escad",":WEIGHT","NIL"]
@@ -69,7 +68,6 @@ function JSON2Attr(json) {
 // COMMUNICATION WITH ESCAD
 escad.connect(3000, '127.0.0.1', function() {
     console.log('Connected to escad via socket locally at port 3000 to speak common-lisp...');
-    //client.write('Hello, server! Love, Client.');
 });
 
 // Listen to 'data' event, triggered when data from escad is at socket:

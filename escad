@@ -76,12 +76,13 @@ case "$MODE" in
       ;;
   'net-rest')
       echo "Starting escad accepting REST (via nodejs) based http network-connection (e.g. with web-browser)..."
-      ${LISP_BIN_LOAD} net-lisp >${ESCAD_LOGFILE} 2>${ESCAD_ERROR_LOGFILE} &
+      ${LISP_BIN_LOAD} net-lisp
+      #${LISP_BIN_LOAD} net-lisp >${ESCAD_LOGFILE} 2>${ESCAD_ERROR_LOGFILE}
       #rm -f escad_fifo; mkfifo escad_fifo
       #cat escad_fifo | ${LISP_BIN_PRELOAD} | nc -k -l 3000 > escad_fifo 2>${ESCAD_ERROR_LOGFILE}
-	sleep 2
-	node ${ESCAD_REST_SERVER}
-	;;
+      sleep 2
+      node ${ESCAD_REST_SERVER}
+      ;;
     *)
 	echo "ERROR: unknown mode <${MODE}>!"
 	print_usage

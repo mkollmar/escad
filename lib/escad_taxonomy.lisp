@@ -1,4 +1,4 @@
-;; Copyright (C) 2011, 2012, 2013, 2014, 2019, 2020 Markus Kollmar
+;; Copyright (C) 2011, 2012, 2013, 2014, 2019, 2020, 2021 Markus Kollmar
 ;;
 ;; This file is part of ESCAD.
 ;;
@@ -31,7 +31,7 @@
 (
 (:name "escad")
 (:author "Markus Kollmar")
-(:doc "Standard taxonomy for escad. Note that if you create or use your own, you may not able to easily interchange data.
+(:doc "Standard taxonomy for escad. This description is only meant for editing this taxonomy. Note that if you create or use your own, you may not able to easily interchange data.
 Doc-strings of the taxonomies begin with [] field, which contained KEYS tell - if necessary, separated with comma - following things
 (note the KEYS of attributes, relation or symbols can have same KEY but mean different things):
 ++ATTRIBUTE:
@@ -48,12 +48,13 @@ E -> <E>xpansion is using this symbol by symbol-activation with as-command to ex
 S -> Symbol/relation should be insert only one time (<s>ingle) in the schematic."
 )
 (:license "GNU Affero GPL")
-(:version 2020nov01))
+(:version 2021feb22))
 (
+(:taxonomy "escad.attribute.angle" :doc "Float angle (length, diameter) in degrees." :type "FLOAT")
 (:taxonomy "escad.attribute.author" :doc "Name of author." :type "STRING")
 (:taxonomy "escad.attribute.color" :doc "[S] Color for this symbol: red, blue, yellow, green, black(default)." :type "STRING")
 (:taxonomy "escad.attribute.copyright" :doc "Copyright." :type "STRING")
-(:taxonomy "escad.attribute.dimension" :doc "Float dimension (diameter, angle)." :type "FLOAT")
+(:taxonomy "escad.attribute.dimension" :doc "Float dimension (length, diameter) in metres." :type "FLOAT")
 (:taxonomy "escad.attribute.filename_relative" :doc "Filename in relative form (e.g. \"view-0.pdf\"), that means no absolute directory specification." :type "STRING")
 (:taxonomy "escad.attribute.label" :doc "Text/tag as a (nicer) second name for the symbol which don't need to be uniq (not used to reference symbol!)." :type "STRING")
 (:taxonomy "escad.attribute.string-rep" :doc "[S] Explicit <rep>resentation of object as <string>. When printing the symbol this value will be used instead symbol-comment." :type "STRING")
@@ -64,7 +65,7 @@ S -> Symbol/relation should be insert only one time (<s>ingle) in the schematic.
 (:taxonomy "escad.attribute.x-coord" :doc "[S] x coordinate with unit." :type "STRING")
 (:taxonomy "escad.attribute.y-coord" :doc "[S] y coordinate with unit." :type "STRING")
 
-(:taxonomy "escad.relation" :doc "[U] Undirected universal relation (lowest fallback).")
+(:taxonomy "escad.relation" :doc "[U] Undirected universal relation (lowest fallback)." :alternative nil :opposite nil :in nil :out nil :type "undirected")
 (:taxonomy "escad.relation.cause" :doc "[D] Source leads to target.")
 (:taxonomy "escad.relation.depends_on" :doc "[D] Source depends on target.")
 (:taxonomy "escad.relation.has_child" :doc "[D] Person has genetic/law child.")
@@ -76,7 +77,11 @@ S -> Symbol/relation should be insert only one time (<s>ingle) in the schematic.
 (:taxonomy "escad.relation.transition" :doc "[D] Transition from one state to another.")
 (:taxonomy "escad.relation.3d.placed_at" :doc "[D] Place object directly at another object or with some offset.")
 
-(:taxonomy "escad.symbol" :doc "Root, universal symbol (lowest fallback).")
+(:taxonomy "escad.symbol" :count nil :doc "Root, universal symbol (lowest fallback).")
+(:taxonomy "escad.symbol.BFO2.continuant" :doc "BFO (https://basic-formal-ontology.org/).")
+(:taxonomy "escad.symbol.BFO2.continuant.dependent" :doc "BFO (https://basic-formal-ontology.org/), e.g. attributes like roles, functions...")
+(:taxonomy "escad.symbol.BFO2.continuant.independent" :doc "BFO (https://basic-formal-ontology.org/), e.g. objects, parts of objects, collection of objects, systems...")
+(:taxonomy "escad.symbol.BFO2.occurrent" :doc "BFO (https://basic-formal-ontology.org/), e.g. processes, beginnings,...")
 (:taxonomy "escad.symbol.date" :doc "A date like 2020-10-22.")
 (:taxonomy "escad.symbol.desease" :doc "Illnes or malfunction of life or plant.")
 (:taxonomy "escad.symbol.doc.begin" :doc "Documentation.")
@@ -88,7 +93,7 @@ S -> Symbol/relation should be insert only one time (<s>ingle) in the schematic.
 (:taxonomy "escad.symbol.ICD-10-GM_V2020" :doc "Desease classification in german modification, version 2020 (see https://www.dimdi.de).")
 (:taxonomy "escad.symbol.ICD-10-GM_V2020.E65" :doc "Lokalisierte Adipositas.")
 (:taxonomy "escad.symbol.human" :doc "Human.")
-(:taxonomy "escad.symbol.human.female" :doc "Genetic female human.")
+(:taxonomy "escad.symbol.human.female" :doc "Genetic female human." :in nil :opposite "escad.symbol.human.male" :out nil)
 (:taxonomy "escad.symbol.human.male" :doc "Genetic male human.")
 (:taxonomy "escad.symbol.location" :doc "Name or Adress of a physical place like a city.")
 (:taxonomy "escad.symbol.person" :doc "Name of a person.")

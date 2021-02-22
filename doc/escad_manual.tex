@@ -122,11 +122,15 @@
        \node[circle, fill=orange!30] (user) at (0,12) {USER};
        \node[circle, fill=green!20] (escad) at (0,0) {ESCAD};
        \node[circle, fill=green!20] (world) at (-4,7) {WORLD};
-       \node[circle, fill=green!20] (model) at (3,5) {VIEW};
+       \node[circle, fill=green!20] (view) at (3,5) {VIEW};
        %\draw [thin, gray,-latex] (escad) -- (user);
        \draw [gray] (escad) to [out=50,in=195] (user);
        \draw [red] (escad) to [out=-120,in=165] (world);
-       \draw [yellow] (escad) to [out=-60,in=20,looseness=2.2] (model);
+       \draw [yellow] (escad) to [out=-60,in=20,looseness=2.2] (view);
+
+       \draw [blue!60] (user) to [out=0,in=20,looseness=2.2] (view);
+       \draw [green!60] (user) to [out=140,in=100] (world);
+       \draw [red!60] (world) to [out=0,in=100] (view);
      \end{tikzpicture}
 
      
@@ -151,9 +155,9 @@ First of all i have have to apologize that escad and this manual is not in a mat
 \section{Philosophy}
 History tells us about separation. Separation between different professions was and is common. People have different interests and different knowledge. So this seems natural. Is this a problem? No. And yes. Nowadays science goes into a direction where \textbf{interdisciplinarity} seems more useful. The bounds of our disciplines are drawn by human but it not need to reflect the reality in nature. Real problems are mostly system-problems. Systems are combined of different disciplines. But do the (software) tools support this fact? Some may but many do not. This seems not a big problem in many cases. But when it comes to documentation or knowledge transfer tasks, this can be a big problem. The tools often do not interact with each other, and if so they often feel not integrated well. This problem increases when different manufacturers have tools which interact not or very bad.
 
-Living in todays world is getting more and more complex. There are laws made by human which you have to obey. Additionally mother nature has their ever-lasting rules, overwriting all human rules, and which we should obey to keep the envrionment healthy for future mankind. Thus people may have the need to get information about this \index{complexity}\textbf{complex} system and tools to make this understandable. Escad is really not good in many things. It is no unversial software. In fact it is really not yet a graph analysis tool (however one could update that functionality). Escad is a simple worker: get something out of your graph model, make PDF, 3D models, music or other documents, which would be boring to create by hand. You can additionally also use the \textbf{scripting} facility of escad.
+Living in todays world is getting more and more complex. There are laws made by human which you have to obey. Additionally mother nature has their ever-lasting rules, overwriting all human rules, and which we should obey to keep the environment healthy for future mankind. Thus people may have the need to get information about this \index{complexity}\textbf{complex} system and tools to make this understandable. Escad is really not good in some things. It is no universal software. In fact it is really not yet a good graph analysis tool (however one could update that functionality). Escad wants to be a (relatively simple) worker which also allows combining of different domains in one model: get something out of your semantic-graph-model, make PDF, 3D models, music or other documents, which would be boring to create by hand. You can additionally also use the \textbf{scripting} facility of escad.
 \section{State}
-Currently escad is in (wild) development. This means there are many ideas which should be developed. Some are just a quick hack to show what is possible and some are more detailed. However but only usable for experts in some areas.
+Currently escad is in (wild) development. This means there are many ideas which should be developed. Some are just a quick hack to show what is possible and some are more detailed. However but only usable for experts in some areas. Many things are not completed. This is often to just give the idea what should come and is intended to be completed later if the system interacts satisfactorial as a whole.
 Future plans are (among many other things not mentioned):
 \begin{itemize}
 \item Increase domain functionality with practic use.
@@ -187,7 +191,7 @@ Currently there are no preconfigured packages for convenient installation of esc
 \item You can now try to run escad (in terminal-mode) within the escad-root-directory by typing \texttt{./escad start}.
 \end{enumerate}
 \subsection{Windows}
-This system is currently not tested, but may be possible.
+This system is currently not tested, but may be possible (e.g. with WSL).
 \section{Theory}
 To understand a software-system it is often easier to understand the theory behind. In escad this is quite simple, since it is practical use of graphs (in informatically or mathematically means). \textbf{Graphs} consist only of \textbf{symbols} $V$ (vertices, nodes, Knoten) and \textbf{relations} $E$ (edges, Kanten). See figure~\ref{fig:overview} about the structure of escad.
 \begin{figure}[htbp]
@@ -205,12 +209,20 @@ To understand a software-system it is often easier to understand the theory behi
     \draw[draw=black] (1,1) rectangle ++(-8,-4);
     \node[] (view) [above=of s2] {view};
     \draw[draw=black] (2,1) rectangle ++(3,-4);
-    \node[] at (3.5,0)  {taxonomy};
+    \node[] at (3.5,0) {taxonomy};
+    \node[] at (3.5,-0.5) {(+ontology)};
     \draw[draw=black] (6,1) rectangle ++(3,-4);
     \node[] at (7.5,0) {expansion};
+    \node[] at (8.5,-2) {$\dots$};
+    \draw[draw=black] (6,-1) rectangle ++(1,-2);
+    \node[rotate=90] at (6.5,-2) {domain A};
+    \draw[draw=black] (7,-1) rectangle ++(1,-2);
+    \node[rotate=90] at (7.5,-2) {domain B};
     \draw[<->,blue] (-3,-4) -- (-3,-3) node [pos=0.5] {};
     \draw[<->,blue] (3.5,-4) -- (3.5,-3) node [pos=0.5] {};
     \draw[<->,blue] (7.5,-4) -- (7.5,-3) node [pos=0.5] {};
+    \draw[<->,blue] (1,0) -- (2,0) node [pos=0.5] {}; % view -tax
+    \draw[<->,blue] (5,0) -- (6,0) node [pos=0.5] {}; % tax - exp
     \draw[draw=black] (-7,-4) rectangle ++(16,-1);
     \node[] at (1,-4.5) {escad-lisp};
     \draw[draw=black] (-3,-5) rectangle ++(12,-1);
@@ -235,7 +247,9 @@ In many papers symbols are also called \index{node}node. However escad has the a
 \subsection{Relation}
 Relation or in computer science called \index{edge}edge creates relations between symbols.
 \subsection{Taxonomy}
-With taxonomy you can create a \index{ontology}ontology for the model. This is a domain classification which allows you to describe your symbols and relations in more detail. Depending of the taxonomy there may result different (graphical) output or behaviour (functionality).
+With taxonomy you can create in escad a classified specific (domain-based) meaning to your symbols and relations. Depending of the taxonomy there may result different (graphical) output or behaviour (functionality). This may sound clear at first, since without that a computer can not know what a symbol means just by interpreting its name.
+
+However in semantic-knowledge field you may hear often words like \index{ontology}ontology. Strictly spoken a taxonomy is merely a classification of things and terms. Ontology \emph{uses} the taxonomy to capture and represent the meaning of a domain. Since escad is aimed to be a practical tool, it has some domain specific ontologie-knowledge included. This is done by the developers of a escad expansion and you may only effect it with some attributes. If you need a special ontologie you have to search for a expansion that fullfills it, or you have to build your own expansion.
 \subsection{Expansion}
 Expansions are ordinary \emph{symbols} with a additional function, given by assigning a taxonomy and executed via activation of a symbol. Nowadays such easily achivable functionality may be called \index{app}\emph{apps}, who can do various things with your graph. This ranges from graphic output to new generated graph-elements. There are many possibilities and you can even write your own expansion(s). Those programms live in the escad environment and can use the provided feature, even of other expansions. However currently there is only a limited set of expansion, but this could increase in time. Feel free to write a expansion for your domain specific needs.
 \chapter{Usage}
@@ -274,30 +288,50 @@ To get basic help type:
 \escadcmdline{(help)}{(``Documentation text...'')}
 To list available taxonomies use command \texttt{(lta)}.
 \section{User stories}
-Because interoperability is important in todays heterogenic software world, there should be a way to get graphs from other software. Or in case you can not do some things in escad yet or other tools may do better, you can export your graph.
-\subsection{Import of graphviz-dot}
-Graphviz is powerful in graphically drawing of graphs. You can import those graphs with .dot extension. However only basic functionality of dot is currently supported. Import with a expansion.
-\subsection{Export to graphviz-dot}
-Graphviz is powerful in graphically layout and drawing of graphs. Export with a expansion.
-\subsection{Export to SVG}
-SVG is a vector graphic-format viewable through most modern webbrowsers.
-\subsection{Export to PDF}
-Export with a expansion.
+To get a fast idea how you should work with escad, please read this section carefully. It gives you general hints how to work, but uses usefull examples to make the theory more clear.
+This section is divided in subsections. These come from the basic tasks you can do with escad. In short these are:
+\begin{description}
+\item[Modeling] is the way you describe escad your topic/task of interest. This is a very important task. If you model something, look at the given examples in the \path{examples} directory. Use the most approbiate taxonomy. Try to think carefully when give attributes! Attributes are meant merely as a data to give details to a symbol (mostly for a expansion-usage). In daily work escad supports you in this topic if you use expansions. Many expansions need a 
+\item[Exporting] saves your view in a non-escad format. This is usefull for use your view in other programms.
+\item[Importing] allows you to get a view stored in a non-escad format.
+\item[Reporting] means to create/process a (new) representation/summary of your view. E.g. your view could be a description of a 3D-modell, and with reporting you could get a 3D-file in X3D-format. A report could also check your view for quality (e.g. if there would occur problems when activate a specific expansion).
+\item[Generation] creates new symbols or relations automatically for you. This may be during
+\item[Flow] allows you to automate things in escad without to know how to programm in lisp.
+\end{description}
+\subsection{Modelling}
+Modelling semantic graphs is not a easy task. Of course you can make easily symbols and relations, but it heavily depends how you use them. In the past many semantic projects are died or got not very sucessfull used at a wide range. Barry Smith stated some reasons (\url{https://www.youtube.com/watch?v=p0buEjR3t8A}) like silo-syndrome, short-half-life-syndrome and reinvent-the-wheel-syndrome. Nowadays there is a sucessfull example in bioinformatic where to show how genes affect our biology (see BFO-ontology). However even with the best ontology you can have problems, if you not use it properly. To use it you should have a clear knowledge on what the terms mean and how to use.
+
+Such problems may also occur with escad. To improve the situation, escad tries to have many examples for several domains and tasks. The aim is to have enough examples so that you have the possibility to adapt it easily to your needs. I believe it makes more sense to use semantics than to have endless discussions what is the ''correct'' taxonomy/ontology.
+\subsection{Exporting}
+In case you can not do some things in escad yet or other tools may do better, you can export your graph. You can export the view to:
+\begin{description}
+\item[graphviz-dot] is a file format for graphviz, which is powerful in graphically layout and drawing of graphs. Export with a expansion.
+\item[SVG] is a vector graphic-format viewable through most modern webbrowsers.
+\item[PDF] Export with a expansion.
+\item[Mindmap] This creates mindmaps in SVG format. Very usefull to view in a browser and to make your graph visible.
+\end{description}
+\subsection{Importing}
+Because interoperability is important in todays heterogenic software world, there should be a way to get graphs from other software.
+\begin{description}
+\item[graphviz-dot] Graphviz is powerful in graphically drawing of graphs. You can import those graphs with .dot extension. However only basic functionality of dot is currently supported. Import with a expansion.
+\end{description}
 \subsection{Reporting}
 Reporting here means to get some basic statistically information about the graph. Additionally some expansions may allow you to dive deeper in the graph and provide some semantic informations too.
-\subsection{Lessons learned}
-You model e.g. deseases and their dependencies. Then you can try to give symptom(s) and ask for possible cause-tracing.
-\subsection{Mindmap}
-This creates mindmaps in SVG format. Very usefull to view in a browser and to make your graph visible.
-\subsection{Standalone-HTML-javascript learning page generator}
-Note: this is not working yet, because it is in development!
-You can generate html-pages with integrated javascript functionality to train some excercises, e.g. language learning. It provides motivational intuitive training pages which you can easily generate without html or javascript knowledge. The user has to do excercises and gets result if anwer is correct or not.
+\begin{description}
+\item[Creating (technical) documentation]
+  Note: this is not working yet, because it is in development!
+\end{description}
+\subsection{Generation}
+Escad can automatically generate symbols or relations.
+\begin{description}
+\item[lessons-learned] You model e.g. deseases and their dependencies. Then you can try to give symptom(s) and ask for possible cause-tracing.
+\end{description}
 \subsection{Flow}
 Note: this is not working yet, because it is in development!
-A flow is a graph wich models a process. You can use escad to analyse a flow or to create a process a user should go through (e.g. a question+answer quiz).
-\subsection{Creating (technical) documentation}
-Note: this is not working yet, because it is in development!
-This feature is planed in the future. The aim is to provide good quality output with use of latex, whereby you not need to know how to write latex (however it should be possible to insert latex directly whenever it is your wish).
+A flow is a graph wich models a process. You can use escad to create a process a user should go through (e.g. a question+answer quiz) or a automation which escad should do for you.
+\begin{description}
+\item[Standalone-HTML-javascript learning page generator] Note: this is not working yet, because it is in development! You can generate html-pages with integrated javascript functionality to train some excercises, e.g. language learning. It provides motivational intuitive training pages which you can easily generate without html or javascript knowledge. The user has to do excercises and gets result if anwer is correct or not.
+\end{description}
 \section{Questions}
 Note: this is not working yet, because it is in development!
 Sometimes questions lead to a fast recognition of a problem or help to understand things better. So lets start asking...

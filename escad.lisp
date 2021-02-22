@@ -1,4 +1,5 @@
-;; Copyright (C) 2011, 2012, 2013, 2014, 2019, 2020, 2021 Markus Kollmar (email: markuskollmar@onlinehome.de)
+;; Copyright (C) 2011, 2012, 2013, 2014, 2019, 2020,
+;; 2021 Markus Kollmar (email: markuskollmar@onlinehome.de)
 ;;
 ;; This file is part of ESCAD.
 ;;
@@ -16,12 +17,13 @@
 ;; along with ESCAD.  If not, see <http://www.gnu.org/licenses/>.
 ;;
 ;;
-;; Schedule (most important first):
+;; Schedule for TODO (most important first):
 ;;
-;;   * implement fast browsable user-interface
-;;   * implement tests
+;;   * implement convenient graphical user-interface (via browser?)
+;;   * enhance expansions
+;;   * enhance the tests
 ;;   * integrate rdf im-/export
-;;   * integrate semantic reasoning via cwm
+;;   * integrate semantic reasoning (via cwm?)
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -211,7 +213,9 @@ Executes given command_string in a system shell. If command suceeds give back T,
             (let ((connection (sb-bsd-sockets:socket-accept server)))
 	      (sleep 1) ; without sleep high cpu usage!?
 	      (when connection
-                    (handle-connection connection))))))
+		(handle-connection connection)))
+	   )
+	))
 
 #+SBCL (defun read-from-connection (connection)
      "Read data from a connection."
@@ -222,11 +226,14 @@ Executes given command_string in a system shell. If command suceeds give back T,
                  data))))
 
 #+SBCL (defun handle-connection (connection)
-     "Handle an incoming connection."
-     (let ((data (read-from-connection connection)))
-	;(sb-bsd-sockets:socket-send connection data nil)
-       (sb-bsd-sockets:socket-send connection (write-to-string (eval (read-from-string data))) nil)
-       (sb-bsd-sockets:socket-close connection)))
+	 "Handle an incoming connection."
+	 (loop (unless (sb-bsd-sockets:socket-open-p connection) (return))
+	    (let ((data (read-from-connection connection)))
+	      (sleep 1) ; without sleep high cpu usage!?
+	      (if data
+		  (sb-bsd-sockets:socket-send connection (write-to-string (eval (read-from-string data))) nil)
+		  (sb-bsd-sockets:socket-close connection))
+       	      )))
 
 #+SBCL (defun handle-multiple-connection (connection)
 	 "Handle incoming connection(s)."
@@ -237,7 +244,8 @@ Executes given command_string in a system shell. If command suceeds give back T,
                 (let ((data (read-from-connection connection)))
                     ; Do something with the data received
                     ))
-            (sb-bsd-sockets:socket-close connection))))
+            (sb-bsd-sockets:socket-close connection)
+	    )))
 
 ;; END  LISP-implementation-specific-things
 
@@ -1067,6 +1075,6 @@ Gives <v>iew <s>tatus."
     (setq rc2 (hash-table-count *relations2*))
     (list act_view sc1 rc1 sc2 rc2)))
 
-;;;;;;;
-; MAIN
+;;;;;;;;;;;;;;;;;;;;;;;
+;; MAIN
 (init-escad)
