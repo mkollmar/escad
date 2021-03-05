@@ -17,13 +17,13 @@ var args = {
     requestConfig: {
 	//timeout: 1000, //request timeout in milliseconds
 	//noDelay: true, //Enable/disable the Nagle algorithm
-	keepAlive: false //Enable/disable keep-alive functionalityidle socket.
-	//keepAliveDelay: 1000 //and optionally set the initial delay before the first keepalive probe is sent
+	keepAlive: true, //Enable/disable keep-alive functionalityidle socket.
+	keepAliveDelay: 1000 //and optionally set the initial delay before the first keepalive probe is sent
 	},
 	//responseConfig: {
 	//	timeout: 1000 //response timeout
 	//},
-	headers: { "Accept": "application/json" } // request headers
+    headers: { "Accept": "application/json" } // request headers
 };
 
 // for console colors:
@@ -68,16 +68,15 @@ process.on('uncaughtException', function (err) {
 
 
 function Test01() {
-    console.log("1. (symbol)... ")
-    client.get("http://127.0.0.1:4000/rest/version1/symbol/_view", args, function (data, response) {
+    console.log("1. (symbol)... ");
+    client.get("http://127.0.0.1:4000/rest/version1/symbol/_escad", args, function (data, response) {
 	console.log(data); // parsed response body as js object
-	    /^\[":ATTRIBUTES",.+\]$/.test(data) && console.log("ok :-)") || console.log("failed :-( ", data);
     });
 }
 
 function Test02() {
-    console.log("1. (symbol2)... ")
-    client.get("http://127.0.0.1:4000/rest/version1/symbol/_view", function (data, response) {
+    console.log("1. (symbol2)... ");
+    client.get("http://127.0.0.1:4000/rest/version1/symbol/_escad", function (data, response) {
 	console.log(data); // parsed response body as js object
 	//console.log(response); // raw response
 	    /^\[":ATTRIBUTES",.+\]$/.test(data) && console.log("ok :-)") || console.log("failed :-(");
@@ -86,9 +85,21 @@ function Test02() {
 
 ///////////////////////////
 // Test cases:
-
 console.log(colors.fg.green, '---- Test escad rest-api ----', colors.reset);
-setTimeout(Test01, 0); // wait 0ms then execute
-//setTimeout(Test02, 500); // wait 500ms then execute
-//Test01();
-//Test02();
+
+// generate symbols
+
+// generate relations
+
+// get symbols
+client.get("http://127.0.0.1:4000/rest/version1/symbol/_view",
+	   args,
+	   function (data, response) {
+	       console.log(data); // parsed response body as js object
+	   });
+
+setTimeout(Test01, 50); // wait 500ms then execute
+
+// get relations
+
+// activate symbols

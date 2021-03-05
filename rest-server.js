@@ -3,6 +3,14 @@
 // This server implements the REST-interface for escad.
 // For this we communicate with two connections:
 // [escad] <-> [rest-server.js] <-> [html-browser + escad-web-interface].
+//
+
+// ******** CONFIG START
+const port2escad = 3000;
+const host2escad = '127.0.0.1';
+const port2browser = 4000;
+// ******** CONFIG END
+
 
 // Socket-connection (via common-lisp data) to ESCAD:
 var net = require('net');
@@ -10,13 +18,18 @@ var escad = new net.Socket();  // bidirectional TCP-stream to write/read to esca
 //var endOfLine = require('os').EOL;
 
 var escad_result_string = "";  // incoming escad data
-var responseToBrowser = "";  // handler for the next repsonse if data from escad arrives
+var responseToBrowser = [];  // queue-array with handler for next response if data from escad arrives (used as queue)
+var requestFromBrowser = [];  // queue-array with browser requests in the same order as in responseToBrowser queue.
 var responseType = "text";  // currently 'json' or 'text' (lisp)
 var processEscadIncome = undefined;  // if true process attributes of sym/rel
 
 // HTML-REST-connection (via JSON-objects) to HTML-browser:
 var express = require('express');
-var server = express();
+const server = express();
+
+// Cross Origin Recource Sharing (which is normally blocked by browsers):
+//const cors = require('cors');
+//server.use(cors());
 
 // required to translate lisp to JSON:
 var parser = require('fast-sexpr');
@@ -66,8 +79,8 @@ function JSON2Attr(json) {
 
 // ********************************************************************
 // COMMUNICATION WITH ESCAD
-escad.connect(3000, '127.0.0.1', function() {
-    console.log('Connected to escad via socket locally at port 3000 to speak common-lisp...');
+escad.connect(port2escad, host2escad, function() {
+    console.log('Connect to escad at port ' + port2escad + ' to speak lisp...');
 });
 
 // Listen to 'data' event, triggered when data from escad is at socket:
@@ -129,7 +142,7 @@ server.get('/escad', function(request, response) {
 
 // Get all data of one symbol with id:
 server.get('/rest/version1/symbol/:id', function (request, response) {
-    var meineURL = new URL('http://127.0.0.1:4000' + request.url);
+    var meineURL = new URL('http://127.0.0.1:' + port2browser + request.url);
     if (request.accepts(['json', 'application/json'])) {
 	responseType = 'json';
 	processEscadIncome = "sym"; // set ref to function
@@ -137,7 +150,7 @@ server.get('/rest/version1/symbol/:id', function (request, response) {
 	responseType = 'text';
 	processEscadIncome = undefined;
     }
-    responseToBrowser = response;
+    responseToBrowser.push(response);
     var StringToEscad = "(o (s \"" + request.params.id + "\"))";
     console.log("[REST-SRV] write to escad: " + StringToEscad);
     escad.write(StringToEscad);
@@ -164,10 +177,11 @@ server.post('/rest/version1/command', function (request, response) {
 
 // register to 'gotEscadData' event to send response to browser if escad sent answer:
 server.on('gotEscadData', function(data) {
+    var response = responseToBrowser.shift();
     if (responseType == 'json') {
-	responseToBrowser.status(200).type('json').send(data);
+	response.status(200).type('json').send(data);
     } else {  // TODO: give error if expected type not possible
-	responseToBrowser.status(200).type('text').send(data);
+	response.status(200).type('text').send(data);
     }
 });
 
@@ -182,6 +196,6 @@ server.delete('/symbol/:id', function (request, response) {
 });
  
 
-// start server:
-server.listen(4000);
-console.log("[REST-SRV] Started REST-server: http://127.0.0.1:4000");
+// ***** start server ********
+//server.listen(4000);
+server.listen(port2browser, () => console.log(`[REST-SRV] Started REST-server: http://127.0.0.1:${port2browser}!`));
