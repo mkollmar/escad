@@ -47,12 +47,16 @@
 (defclass obj ()
   ((attributes
     :initarg :attributes
-    :documentation "Specify your object more (e.g. for use in expansions)."
+    :documentation "Obsolete! Do not use in future anymore!"
     :initform '()
     :reader attributes)
    (comment
     :documentation "Description or notices to a object."
     :initarg :comment
+    :initform "")
+   (representation
+    :initarg :representation
+    :documentation "String which represents the object. Often used for dynamic text in expansion."
     :initform "")
    (taxonomy
     :documentation "Classificates the object into a defined taxonomy-scheme to indicate basic meaning of the object."
@@ -64,22 +68,23 @@
     :initform '())))
 
 (defclass sym (obj)
-  ((ref_to
-    :initarg :ref_to
-    :documentation "List with relation-names, which indicate the relations which go to another symbol (but need not to be directed!)."
-    :initform '())   
-   (ref_from
+  ((ref_from
     :initarg :ref_from
     :documentation "List with relation-names, which indicate the relations which comes from another symbol (but need not to be directed!)."
+    :initform '())
+   (ref_to
+    :initarg :ref_to
+    :documentation "List with relation-names, which indicate the relations which go to another symbol (but need not to be directed!)."
     :initform '())))
 
 (defclass rel (obj)
-  ((ref_to
-    :initarg :ref_to
-    :documentation "List with one symbol-name that indicate to which symbol the relation points.")
-   (ref_from
+  ((ref_from
     :initarg :ref_from
-    :documentation "List with one symbol-name that indicate from which symbol the relation starts.")))
+    :documentation "List with one symbol-name that indicate from which symbol the relation starts.")
+   (ref_to
+    :initarg :ref_to
+    :documentation "List with one symbol-name that indicate to which symbol the relation points.")))
+
 
 (define-condition escad-internal-error (error)
   ((error-text

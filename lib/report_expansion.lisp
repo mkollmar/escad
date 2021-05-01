@@ -21,7 +21,7 @@
 (defpackage :de.markus-herbert-kollmar.escad.report
   (:use :common-lisp :escad)
   (:nicknames :escad.report)
-  (:export :report2html :report2txt :report_corona_trace2pdf)
+  (:export :report2pdf :report2html :report2txt :report_corona_trace2pdf)
   (:shadow #:cos)
   (:documentation "Report (parts of) information processed from current view to various file formats (pdf, txt,...) whereby you might not able to recreate with that report the initial view (in opposite to export-expansion)."))
 
@@ -100,6 +100,7 @@ make pdf file of given latex_filename which have to be without directory path."
       (return-from make-pdf-report (concatenate 'string filename ".pdf"))))
   nil)
 
+
 (defun report2html (expansion-symbol-name &optional (filename "report.html"))
   "expansion-symbol-name [relative-file-name] ->
 Analyse view and try to report view to a html file with name <report.html>, which is viewable by a internet browser with svg support."
@@ -141,6 +142,7 @@ Analyse view and try to report view to a html file with name <report.html>, whic
 </html>" out)
 		     (write-char #\newline out)))
     output-filename))
+
 
 (defun report_corona_trace2pdf (expansion-symbol-name &optional (filename "report"))
   "expansion-symbol-name [relative-file-name_without_extension] ->

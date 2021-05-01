@@ -23,6 +23,7 @@
 ;; Step1: make buffer right, execute (pdf-tools-install), load view-0.pdf, (auto-revert-mode)
 ;; Step2: make buffer below, start slime, load escad, set repl-width to frame-width, hide headline
 ;; Step3: make buffer left, execute (escad-taxonomy-browser)
+;; Step4: create escad-lisp mode for editing escad-lisp files. Thus allow support for special auto-complete functionality of taxonomy (e.g. with https://github.com/auto-complete/auto-complete/blob/master/doc/manual.md#omni-completion)
 ;;
 ;; Provide:
 ;; - ido.mode for taxonomy-list fast selection:
@@ -110,6 +111,7 @@ While in a escad (https://github.com/mkollmar/escad) session with slime-mode you
     (next-window)
     (escad-make-repl "../../package.lisp")))
 
+(defun escad-make-
   
 ;; (easy-menu-define words-menu global-map
 ;;        "Menu for word navigation commands."

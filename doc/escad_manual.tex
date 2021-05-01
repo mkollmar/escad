@@ -1,22 +1,24 @@
-%% Editiert mit emacs (set-keyboard-coding-system 'utf-8)
+%% Edited with emacs (set-keyboard-coding-system 'utf-8)
+%% COMPILATION: pdflatex -synctex=1 -interaction=nonstopmode escad_manual.tex
+%% COMPILATION WITH EXTERNAL-PACKAGE: pdflatex -synctex=1 -interaction=nonstopmode --shell-escape escad_manual.tex
+%% COMPILATION ALTERNATIVE: latexmk -pdf escad_manual.tex
 %% Emacs-modes: latex-mode, outline-minor-mode
 %% Emacs-commands: M-x outline-toggle-children
 %% M-x pdf-tools-install
 %% M-x customize apropos TeX-source-correlate-method -> synctex
 %% M-x TeX-source-correlate-mode
 \documentclass[a4paper, 12pt, openany]{scrbook}
-\usepackage[T1]{fontenc}  % grafische Darstellung der Zeichen
-\usepackage{lmodern,textcomp} % Euro
-\usepackage[utf8]{inputenc}  % Umlaute direkt eingeben (ohne \"a)
-% \usepackage[ngerman]{babel}  % neue Rechtschreibung für automatisch erzeugte Dokumentelemente
+\usepackage[T1]{fontenc}
+\usepackage{lmodern,textcomp} % Euro symbol
+\usepackage[utf8]{inputenc}  % umlauts (without \"a)
+% \usepackage[ngerman]{babel}  % new german rules
 \usepackage[UKenglish]{babel}  % english for toc...
-\usepackage[paper=a4paper, left=2cm, top=20mm, bottom=15mm, right=15mm, includefoot, foot=\baselineskip, footskip=10mm]{geometry}  %für Raender
-\usepackage[headsepline,footsepline]{scrpage2}  % für Header
-\usepackage{longtable}
+\usepackage[paper=a4paper, left=2cm, top=20mm, bottom=15mm, right=15mm, includefoot, foot=\baselineskip, footskip=10mm]{geometry} % borders
+\usepackage[headsepline,footsepline]{scrpage2}
+%\usepackage{longtable}
 \usepackage[table]{xcolor}
 \usepackage{amsmath}
-%\usepackage{polynom} % Ausführung und Darstellung von Polynomdivision
-\usepackage{rotating} % Dinge rotieren
+\usepackage{rotating}
 \DeclareMathOperator\sign{sign}
 \usepackage{listings}
 \usepackage[autostyle]{csquotes} % Anführungszeichen mit \enquote{Anführungszeichen}
@@ -35,19 +37,21 @@
     {~}{{\textasciitilde}}1
     {°}{{\textdegree}}1
 }
-\usepackage{upgreek} % für aufrechtes pi im mathe-modus
+\usepackage{upgreek} % uppright (mathly correct) pi in math-mode
 \usepackage[locale=DE,per=frac]{siunitx}
 \usepackage{amssymb} %für Mathesymbole wie Menge der natürlichen Zahlen
 %\usepackage{color} % farbiger Texthintergrund
-\usepackage{xcolor} % Textfarbe
+\usepackage{xcolor} % Text color
 %\usepackage{pdfpages}
 %\usepackage[abs]{overpic}
 %\usepackage{lastpage} % für gesamtseitenzahl
-\usepackage{tikz} % für grafikzeichnen
+\usepackage{tikz} % graphical drawing
 \usepackage{pgfplots}
 \usetikzlibrary{matrix, positioning, shapes}
 \usetikzlibrary{arrows, automata, shadows, patterns}
-% \usepackage{circuitikz} % für Schaltpläne
+% \usepackage{circuitikz}
+%\usetikzlibrary{external} % faster compilation, but see compile command
+%\tikzexternalize[prefix=figures/] % activate and define figures/ as cache folder
 \usepackage{index}
 \makeindex
 \pagestyle{scrheadings}
@@ -207,40 +211,7 @@ This system is currently not tested, but may be possible (e.g. with WSL).
 To understand a software-system it is often easier to understand the theory behind. In escad this is quite simple, since it is practical use of graphs (in informatically or mathematically means). \textbf{Graphs} consist only of \textbf{symbols} $V$ (vertices, nodes, Knoten) and \textbf{relations} $E$ (edges, Kanten). See figure~\ref{fig:overview} about the structure of escad.
 \begin{figure}[htbp]
   \centering
-  \tikzset{ sym/.style={circle, shading=ball, ball color=green!40, minimum size=6mm} }
-  \begin{tikzpicture}[node distance=0.6cm and 1cm]
-    \node[sym] (s0) {s0};
-    \node[sym] (s1) [below left=of s0] {s1};
-    \node[sym] (s2) [left=of s1] {s2};
-    \node[sym] (s3) [left=of s2] {s3};
-    \draw[->] (s0) -- (s1) node [pos=0.5, below] {r0};
-    \draw[->] (s1) -- (s2) node [midway, below] {r1};
-    \draw[->,out=-100,in=200,looseness=2] (s2) to node[above,pos=0.5] {r2} (s3);
-    \draw[->] (s3) -- (s2) node [pos=0.5, below] {r3};
-    \draw[draw=black] (1,1) rectangle ++(-8,-4);
-    \node[] (view) [above=of s2] {view};
-    \draw[draw=black] (2,1) rectangle ++(3,-4);
-    \node[] at (3.5,0) {taxonomy};
-    \node[] at (3.5,-0.5) {(+ontology)};
-    \draw[draw=black] (6,1) rectangle ++(3,-4);
-    \node[] at (7.5,0) {expansion};
-    \node[] at (8.5,-2) {$\dots$};
-    \draw[draw=black] (6,-1) rectangle ++(1,-2);
-    \node[rotate=90] at (6.5,-2) {domain A};
-    \draw[draw=black] (7,-1) rectangle ++(1,-2);
-    \node[rotate=90] at (7.5,-2) {domain B};
-    \draw[<->,blue] (-3,-4) -- (-3,-3) node [pos=0.5] {};
-    \draw[<->,blue] (3.5,-4) -- (3.5,-3) node [pos=0.5] {};
-    \draw[<->,blue] (7.5,-4) -- (7.5,-3) node [pos=0.5] {};
-    \draw[<->,blue] (1,0) -- (2,0) node [pos=0.5] {}; % view -tax
-    \draw[<->,blue] (5,0) -- (6,0) node [pos=0.5] {}; % tax - exp
-    \draw[draw=black] (-7,-4) rectangle ++(16,-1);
-    \node[] at (1,-4.5) {escad-lisp};
-    \draw[draw=black] (-3,-5) rectangle ++(12,-1);
-    \node[] at (3,-5.5) {escad-socket (TCP)};
-    \draw[draw=black] (1,-6) rectangle ++(8,-1);
-    \node[] at (5,-6.5) {escad-REST};
-\end{tikzpicture}
+  \includegraphics{figures/overview.pdf}
   \caption{Overview of basic escad structure.}
   \label{fig:overview}
 \end{figure}
@@ -340,11 +311,11 @@ This section is divided in subsections. These come from the basic tasks you can 
 \item[Flow] allows you to automate things in escad without to know how to programm in lisp. This also enables live-expansions which periodically activated generate symbols to reflect the state of a continous process.
 \end{description}
 \subsection{3D (escad version 0.2)}
-Todo...
-\subsection{Contact tracing}
+Generate 3D-models.
+\subsection{Contact tracing (escad version 0.2)}
 Tool to provide contact tracing, useful by tracking viral deseases (e.g. corona).
 \subsection{Documentation}
-Create (technical) documentation in latex or PDF file-format (reporting). Reporting here means to get some basic statistically information about the graph. Additionally some expansions may allow you to dive deeper in the graph and provide some semantic informations too.
+Create (technical) documentation in latex or PDF file-format (reporting).
 \subsection{Exporting}
 In case you can not do some things in escad yet or other tools may do better, you can export your graph. You can export the view to:
 \begin{description}
@@ -362,9 +333,11 @@ Graphviz is powerful in graphically drawing of graphs. You can import those grap
 \subsection{Learning page (version 0.2)}
 Standalone-HTML-javascript learning page generator Note: this is not working yet, because it is in development! You can generate html-pages with integrated javascript functionality to train some excercises, e.g. language learning. It provides motivational intuitive training pages which you can easily generate without html or javascript knowledge. The user has to do excercises and gets result if anwer is correct or not.
 \subsection{Lessons learned}
- You model e.g. deseases and their dependencies. Then you can try to give symptom(s) and ask for possible cause-tracing.
+You model e.g. deseases and their dependencies. Then you can try to give symptom(s) and ask for possible cause-tracing.
+\subsection{Music/sound creation (version 0.2)}
+Todo...
 \subsection{Mind-map}
-Todo... 
+Todo...
 \subsection{Modelling}
 Modelling semantic graphs is not a easy task. Of course you can make easily symbols and relations, but it heavily depends how you use them. In the past many semantic projects are died or got not very sucessfull used at a wide range. Barry Smith stated some reasons (\url{https://www.youtube.com/watch?v=p0buEjR3t8A}) like silo-syndrome, short-half-life-syndrome and reinvent-the-wheel-syndrome. Nowadays there is a sucessfull example in bioinformatic where to show how genes affect our biology (see BFO-ontology). However even with the best ontology you can have problems, if you not use it properly. To use it you should have a clear knowledge on what the terms mean and how to use.
 
@@ -477,7 +450,7 @@ To use escad as a library in your common lisp programm, just load \path{package.
 \section{HTML-client}
 This is in development and not fully working yet.
 \section{Included expansions}
-Those are the expansions which are included/shipped in this escad-package.
+Those are the expansions which are included/shipped in this escad-package. Note that currently this part is less actual, since we first want concentrate on the big picture - before diving in the details. However details can be documented in parts which are relatively mature.
 \subsection{export\_expansion.lisp}
 The following table~\ref{tab:exp-export-expansion} explains the export expansion.
 \newcommand{\tabitem}{~~\llap{\textbullet}~~}
@@ -524,16 +497,24 @@ The following table~\ref{tab:exp-export-expansion} explains the export expansion
 \end{table}
 \chapter{Development}
 Everyone is needed and welcome for escad development. If you are a graphical designer, you are got in documenting or you like to program in lisp or you are interested in web-programming - all is required in escad. :-)
-\section{Root directory structure}
-\begin{itemize}
-\item \path{doc} contains like the name says the escad documentation. Currently this is mainly this manual. But in future a manual-page, more examples or online documentation would be great, too.
-\item \path{examples} contains examples which can be loaded in escad. But note that currently not all may work yet, they are more a print what a future interface should look like.
-\item \path{lib} contains the escad-lisp files.
-\item \path{node_modules} contains the code-modules for node. Some functions are written for node (a javascript execution environment, similar the one in your browser). The REST-server is a example that needs node.
-\item \path{public} contains the files which are accesible via web by the REST-server.
-\item \path{test} is needed for development to test current implementation if it fullfills the requirements/functions needed.
-\item \path{ui} contains files needed for the various user interfaces that escad may support now or in future.
-\end{itemize}
+The project is managed with the famous source-code management tool \emph{git} (also known as used in the linux kernel development). The repository is hosted under \url{https://github.com/mkollmar/escad}.
+\section{Directory structure}
+The directory structure of the repository will be explained in this section. This structure also mirrors the different workflows which exist.
+\subsection{doc/*}
+Contains like the name says the escad documentation. Currently this is mainly this manual written in \emph{latex}. But in future a unix man-page, more examples or online documentation would be great, too.
+The compilation of this latex-document can be done with the command \shellcmdline{latexmk}{>}. \path{doc/figures} contains figures needed for the manual. Those will be compiled if needed automatically via \emph{latexmk}.
+\subsection{examples/*}
+\path{examples} contains examples which can be loaded in escad. But note that currently not all may work yet, they are more a print what a future interface should look like.
+\subsection{lib/*}
+\path{lib} contains the escad-lisp files.
+\subsection{node\_modules/*}
+\path{node\_modules} contains the code-modules for node.js. Some functions are written for node (a javascript execution environment, similar the one in your browser). The REST-server is a example that needs node.
+\subsection{public/*}
+\path{public} contains the files which are accesible via web by the REST-server.
+\subsection{test/*}
+\path{test} is needed for development to test current implementation if it fullfills the requirements/functions needed.
+\subsection{ui/*}
+\path{ui} contains files needed for the various user interfaces that escad may support now or in future.
 \section{Programming your own expansion}
 Writing escad expansions is not difficult. Go through following steps carefully and you will have a good basis for writing your own. The code in listing~\ref{listing:exp_minimal} shows a minimal expansion and the listing~\ref{listing:exp_tax} shows the entry in a taxonomy file.
 \begin{lstlisting}[caption={Minimal expansion code.}, language=Lisp, morekeywords={in-package, use}, label=listing:exp_minimal]
