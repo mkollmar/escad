@@ -105,13 +105,13 @@ While in a escad (https://github.com/mkollmar/escad) session with slime-mode you
   (let ((repl-win (split-window nil nil 'below)))
     (window-resize repl-win (- 5 (window-body-height repl-win)))
     (split-window nil nil 'right)
-    (escad-make-view "./public/view/view-0.pdf")
+    (escad-make-view "../public/view/view-0.pdf")
     (next-window)
-    (escad-make-taxonomy-browser "../../lib/escad_taxonomy.lisp")
+    (escad-make-taxonomy-browser "../lib/escad_taxonomy.lisp")
     (next-window)
-    (escad-make-repl "../../package.lisp")))
+    (escad-make-repl "../package.lisp")))
 
-(defun escad-make-
+;;(defun escad-make-
   
 ;; (easy-menu-define words-menu global-map
 ;;        "Menu for word navigation commands."

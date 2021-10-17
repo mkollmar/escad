@@ -23,11 +23,18 @@
 ;;   * enhance expansions
 ;;   * enhance the tests
 ;;   * integrate rdf im-/export
-;;   * integrate semantic reasoning (via cwm?)
+;;   * integrate semantic reasoning (via cwm or wilbur or arangodb?)
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 #+SBCL (require 'sb-bsd-sockets)
+
+;(load "/usr/lib/sbcl/contrib/asdf.fasl") ; load ASDF
+;(setf asdf:*central-registry*
+;       (list* '*default-pathname-defaults*
+;              #p"/home/BLABLA/XY"
+;              asdf:*central-registry*)) ; set which directories ASDF search for systems
+;(asdf:load-system :cl-paketname) ;optional: (asdf:operate 'asdf:load-op 'cl-latex)
 
 (in-package :de.markus-herbert-kollmar.escad)
 
@@ -93,16 +100,14 @@
 
 (defmethod print-object ((object obj) *current-stream*)
   (print-unreadable-object (object *current-stream* :type t)
-    (with-slots (comment weight) object
-      (format *current-stream* "comment: ~s weight: ~s" comment weight))))
+    (with-slots (representation comment weight) object
+      (format *current-stream* "representation: ~s comment: ~s weight: ~s" representation comment weight))))
 
 
 (defmethod print-object ((object sym) *current-stream*)
   (print-unreadable-object (object *current-stream* :type t)
-    (with-slots (attributes comment taxonomy ref_to ref_from weight) object
-      (cond ((cdr (assoc "escad.attribute.string-rep" attributes :test #'string=))
-	     (format *current-stream* "~s" (cdr (assoc "escad.attribute.string-rep" attributes :test #'string=))))
-	    (t (format *current-stream* "~s" comment taxonomy ref_to ref_from weight))))))
+    (with-slots (attributes comment representation taxonomy ref_to ref_from weight) object
+      (format *current-stream* "~s" representation comment taxonomy ref_to ref_from weight))))
 
 (defmethod print-object ((object rel) *current-stream*)
   (print-unreadable-object (object *current-stream* :type t)
@@ -271,10 +276,10 @@ Executes given command_string in a system shell. If command suceeds give back T,
 
 (defun init-views ()
   "Initialize the two escad views."
-  (ns "_escad" :attributes '("url" "https://github.com/mkollmar/escad" "encoding" "UTF-8") :taxonomy "escad.symbol._escad" :comment "Settings for escad belonging to this view.")
-  (ns "_view" :comment "Settings for active view.")
-  (s "_view" :taxonomy "escad.symbol._escad.export.pdf")
-  (asa "_view" (list "escad.attribute.filename_relative" "view-0.pdf"))
+  (ns "_escad" :taxonomy "escad.escad" :comment "Settings for escad (https://github.com/mkollmar/escad) belonging to this view.")
+  (ns "_encoding" :taxonomy "escad.encoding" :representation "UTF-8")
+  (ns "_view" :comment "Settings for active view." :taxonomy "escad.export.pdf")
+  (ns "_view_exportfile" :taxonomy "escad.filename_relative" :representation "view-0.pdf")
   (cs "_view")
   (tv)
   (ns "_escad" :attributes '("url" "https://github.com/mkollmar/escad" "encoding" "UTF-8") :comment "Settings for escad belonging to this view." :taxonomy "escad.symbol._escad")

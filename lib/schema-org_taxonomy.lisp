@@ -1,4 +1,4 @@
-;; Copyright (C) 2020 Markus Kollmar
+;; Copyright (C) 2021 Markus Kollmar
 ;;
 ;; This file is part of ESCAD.
 ;;
@@ -49,11 +49,21 @@ S -> means this symbol/relation should be insert only one time (Single) in the s
 U -> means the relation is treated as a Undirected relation.
 B -> means the relation is treated as a Bidirected relation.")
 (:license "?")
-(:version 7.01))
+(:version 7.01)
+)
+
 (
+ :attribute (
 (:taxonomy "schema-org.attribute.default_taxonomy" :doc "" :type "STRING")
+)
 
+:relation (
 (:taxonomy "schema-org.relation" :doc "Root, universal relation (lowest fallback).")
+)
 
+:symbol (
 (:taxonomy "schema-org.thing" :doc "Root, universal symbol (lowest fallback).")
-))
+)
+)
+
+)

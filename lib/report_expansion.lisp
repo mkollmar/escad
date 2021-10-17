@@ -16,6 +16,7 @@
 ;; along with ESCAD.  If not, see <http://www.gnu.org/licenses/>.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; TODO: check whether for latex we can use cl-latex.
 
 (in-package "COMMON-LISP-USER")
 (defpackage :de.markus-herbert-kollmar.escad.report
