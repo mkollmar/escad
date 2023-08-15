@@ -1,2 +1,0 @@
-@default_files = ("figures/*.tex", 'escad_manual.tex');
-$pdf_mode = 1;

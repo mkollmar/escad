@@ -603,12 +603,13 @@ Contains the escad documentation for user and developer. Currently this is mainl
 \path{examples} contains examples which can be loaded in escad. But note that currently not all may work yet, they are more a print what a future interface should look like.
 \subsection{misc/}
 Contains miscellaneous things which have no other place where it fits.
-\subsection{test/*}
+\subsection{test/}
 Here there are unit tests, which execution may be controlled with make.
-\subsection{web-gui/*}
+\subsection{web-gui/}
 The web based graphical user interface (gui) things, which are executed in the web-browser, live here.
 \section{Programming your own expansion}
-Writing escad expansions is not difficult. Go through following steps carefully and you will have a good basis for writing your own. The code in listing~\ref{listing:exp_minimal} shows a minimal expansion and the listing~\ref{listing:exp_tax} shows the entry in a taxonomy file.
+Writing escad expansions means inherit some escad classes and refine them. Go through following steps carefully and you will have a good basis for writing your own. The code in listing~\ref{listing:exp_minimal} shows a minimal expansion.
+%and the listing~\ref{listing:exp_tax} shows the entry in a taxonomy file.
 \begin{lstlisting}[caption={Minimal expansion code.}, language=Lisp, morekeywords={in-package, use}, label=listing:exp_minimal]
 (in-package "COMMON-LISP-USER")
 (defpackage :de.markus-herbert-kollmar.escad.expansion.hello_world
@@ -619,19 +620,19 @@ Writing escad expansions is not difficult. Go through following steps carefully 
 (defun my-function (symbol-name-string)
 "This function will be executed by calling this expansion.")
 \end{lstlisting}
-\begin{lstlisting}[caption={Entry in a taxonomy-file.}, language=Lisp, morekeywords={}, label=listing:exp_tax]
-(:taxonomy "escad.symbol.hello_world" :doc "[E] Hello world."
-:expansion "hello_world_expansion.lisp"
-:package :de.markus-herbert-kollmar.escad.hello_world
-:function "my_function"
-:license "GNU GPL 3")
-\end{lstlisting}
+% \begin{lstlisting}[caption={Entry in a taxonomy-file.}, language=Lisp, morekeywords={}, label=listing:exp_tax]
+% (:taxonomy "escad.symbol.hello_world" :doc "[E] Hello world."
+% :expansion "hello_world_expansion.lisp"
+% :package :de.markus-herbert-kollmar.escad.hello_world
+% :function "my_function"
+% :license "GNU GPL 3")
+% \end{lstlisting}
 Following things you should keep in mind:
 \begin{itemize}
 \item Choose namespace.
 \item Provide documentation within your expansion.
-\item Provide at least one function which can be called with the symbol-name-string as first argument und some possible further arguments.
-\item Provide a taxonomy file with your expansion declaration or request that your expansion will be taken into the default escad-taxonomy.
+% \item Provide at least one function which can be called with the symbol-name-string as first argument und some possible further arguments.
+% \item Provide a taxonomy file with your expansion declaration or request that your expansion will be taken into the default escad-taxonomy.
 \end{itemize}
 You are wellcome if you want include your expansion in this escad distribution.
 

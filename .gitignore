@@ -1,10 +1,10 @@
+# emacs temporary files
 *~
-*.log
 
-# we ignore output of a expansion in this directory:
-public/view/
+# temporary directory for project related things which meant not to commit:
+tmp/
 
-# ignore latex generation stuff:
+# latex generation stuff:
 doc/escad_manual.aux
 doc/escad_manual.bbl
 doc/escad_manual.blg
@@ -14,3 +14,6 @@ doc/escad_manual.ind
 doc/escad_manual.log
 doc/escad_manual.out
 doc/escad_manual.toc
+doc/figures/*.aux
+doc/figures/*.log
+doc/figures/*.pdf
