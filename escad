@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright (C) 2011, 2014, 2019, 2020, 2021 Markus Kollmar
+# Copyright (C) 2011, 2014, 2019, 2020, 2021, 2022 Markus Kollmar
 #
 # This file is part of ESCAD.
 #
@@ -16,12 +16,14 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with ESCAD.  If not, see <http://www.gnu.org/licenses/>.
+#
+# This starts escad
 ##############################################################################
 
 #### CONFIG:
 ESCAD_ROOT_DIR="./"
-ESCAD='package.lisp'
-ESCAD_REST_SERVER='rest-server.js'
+ESCAD='main.lisp'
+ESCAD_SERVER='escad-server.js'
 ESCAD_INIT_FILE="${ESCAD_ROOT_DIR}escad_init.lisp"
 ESCAD_LOGFILE="${ESCAD_ROOT_DIR}escad.log"
 ESCAD_ERROR_LOGFILE="${ESCAD_ROOT_DIR}escad_error.log"
@@ -49,8 +51,8 @@ print_status() {
 }
 
 print_usage() {
-    echo "Usage: $0 [start [terminal | emacs | gui-tk | net-lisp | net-rest] | status |stop]"
-    echo "<Terminal> is the default mode since it has little requirements. However <emacs> is currently recommended as good supported user-interface."
+    echo "Usage: $0 start [ terminal | emacs | net-lisp | net-http ] | status | stop."
+    echo "<terminal> is the default mode since it has little requirements."
 }
 
 
@@ -63,22 +65,22 @@ case "$MODE" in
 	echo "Starting emacs client..."
 	emacs --load ./ui/escad-mode.el --eval "(escad-make-layout)"
 	;;
-  'gui-tk')
-	echo "Starting Tk gui client..."
-	${LISP_BIN_LOAD} gui-tk # TODO!
-	;;
+#  'gui-tk')
+#	echo "Starting Tk gui client..."
+#	${LISP_BIN_LOAD} gui-tk # TODO!
+#	;;
   'net-lisp')
-      echo "Starting escad accepting common lisp over network socket (e.g. with telnet)..."
+      echo "Starting escad accepting common lisp over network socket (e.g. with telnet, nc)..."
       ${LISP_BIN_LOAD} net-lisp
       ## alternativ:
       #rm -f escad_fifo; mkfifo escad_fifo
       #cat escad_fifo | ${LISP_BIN_PRELOAD} | nc -k -l 3000 > escad_fifo
       ;;
-  'net-rest')
+  'net-http')
       echo "Starting escad accepting REST (via nodejs) based http network-connection (e.g. with web-browser)..."
       ${LISP_BIN_LOAD} net-lisp
       sleep 2
-      node ${ESCAD_REST_SERVER}
+      node ${ESCAD_SERVER}
       ## alternativ:
       #${LISP_BIN_LOAD} net-lisp >${ESCAD_LOGFILE} 2>${ESCAD_ERROR_LOGFILE}
       #rm -f escad_fifo; mkfifo escad_fifo
