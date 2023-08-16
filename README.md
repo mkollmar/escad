@@ -9,9 +9,9 @@ After modeling the graph, you can generate content (like PDF, SVG, DOT,...) from
 Escad is in basic development state. Currently there is no released version and nor is it guaranted to work. However the development follows now the document driven development approach. Thus currently the activities are to prepare the manual and basic file structure for the 0.1 release.
 
 Just clone the current repository and look at it. There are basically two two ways to use escad. The easiest way is to start the browser and use the graphical gui.
-![escad-gui](./doc/escad_web_ui.png)
+![escad-gui](./doc/figures/escad_web_ui.png)
 Experienced user can use the commandline (or the scripting possibility) and directly write lisp code.
-![escad-in_emacs](./doc/escad_emacs.png)
+![escad-in_emacs](./doc/figures/escad_emacs.png)
 
 # Getting started
 
