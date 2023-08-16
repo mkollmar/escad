@@ -9,10 +9,6 @@
 
 import cytoscape from 'cytoscape';
 import contextMenus from 'cytoscape-context-menus';
-//import Vue from 'vue';    // vue.runtime.esm.js
-//import VueCytoscape from 'vue-cytoscape';
-//Vue.use(VueCytoscape);
-
 
 // register extension
 cytoscape.use(contextMenus);
@@ -23,7 +19,7 @@ import './escad-client.css';
 
 var escad = {};  // global entry to escad database
 var cy = {};  // global entry to cytoscape object
-var arango_authorization = "bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJwcmVmZXJyZWRfdXNlcm5hbWUiOiJyb290IiwiaXNzIjoiYXJhbmdvZGIiLCJpYXQiOjE2NDY1MzAxNDgsImV4cCI6MTY0OTEyMjE0OH0.-VX0eXUh0W8avClofFTiebdoVtIMIc6UmX2Invi6-zg";
+var authorization = "";  // currently not used
 
 function checkValidEscadName(name) {
     return name;
@@ -97,8 +93,8 @@ function getTaxonomy() {
 
 // Connect to graph-database and read whole graph. In detail this means read all edges into variable escad.relations and all nodes into variable escad.symbols.
 function getDBgraph() {
-    fetch('http://127.0.0.1:8529/_db/thesis/_api/document/thesis_prozess/CAD',
-	  { headers: { Authorization: arango_authorization }}).then(function (response) {
+    fetch('http://127.0.0.1:8529/test',
+	  { headers: { Authorization: authorization }}).then(function (response) {
 	// The API call was successful!
 	if (response.ok) {
 	    return response.json();
