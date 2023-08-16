@@ -92,12 +92,12 @@ manual: $(doc_dir)$(manual_pdf)  ## Build manual (LaTeX + figures)
 
 $(doc_dir)$(manual_pdf): $(doc_dir)$(manual_tex) $(figures_all) $(doc_dir)$(bibliography)
 	cd $(doc_dir); $(latex) $(manual_tex)      # main run
-	#cd $(doc_dir); biber $(manual_tex:.tex=)  # bibliography
-	cd $(doc_dir); bibtex $(manual_tex:.tex=)  # bibliography
-	cd $(doc_dir); $(latex) $(manual_tex)  # incremental run
+	cd $(doc_dir); biber $(manual_tex:.tex=)  # bibliography
+	#cd $(doc_dir); bibtex $(manual_tex:.tex=)  # bibliography
+	#cd $(doc_dir); $(latex) $(manual_tex)  # incremental run
 	cd $(doc_dir); $(latex) $(manual_tex)  # incremental run
 	cd $(doc_dir); makeglossaries $(manual_tex:.tex=) # list of abbreviations, nomenclature
-	cd $(doc_dir); $(latex) $(manual_tex)  # incremental run
+	#cd $(doc_dir); $(latex) $(manual_tex)  # incremental run
 	cd $(doc_dir); $(latex) $(manual_tex)  # incremental run
 
 

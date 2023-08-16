@@ -1,0 +1,1 @@
+; escad configuration file with common-lisp
