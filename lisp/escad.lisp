@@ -172,8 +172,16 @@ Get exact named taxonomy-item whereby :type-key is :attribute, :relation or :sym
 	 nil)))
 
 (defun init-escad ()
-  (init-views)
-  (load-taxonomy))
+  (let ((cmd-line-args (cadr (get-cmdline-args))))
+    (init-views)
+    (load-taxonomy)
+    (start-gui-server)
+    ;(lisp_over_network)
+    ;(handler-bind ((escad-internal-error #'skip-json_rpc-request))
+    ;(json-rpc_over_network)))
+    (pprint "Welcome and thanks for using escad!  :-)")
+    (pprint "Please type now '(in-package :escad)' to switch to escad package for typing any escad command.")
+    (pprint "Type then (help) to see short info about available escad commands.")))
 
 (defun init-views ()
   "Initialize the two escad views with symbols and relations."
@@ -364,9 +372,9 @@ Symbols which represent expansions will execute the configured function of the e
 	(maphash #'(lambda(key value) (setf (gethash key *relations1*) value)) *relations2*)))
   t)
 
-(defun cs (&optional symbol)
+(defun cus (&optional symbol)
   "[symbol-name-string] -> current-symbol
-Get/set <c>urrent <s>ymbol in current view."
+Get/set <cu>rrent <s>ymbol in current view."
   (when (stringp symbol) (setf *current_symbol* symbol))
   *current_symbol*)
 

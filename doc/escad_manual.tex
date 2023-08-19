@@ -211,7 +211,7 @@ Documentation-driven development means here (at least we try), at first we defin
 Currently escad is in (wild) development {\fontspec{DejaVu Sans} 😀}. This means there are many ideas which should be developed. Some are just a quick hack to show what is possible and some are more detailed. However but only usable for experts in some areas. Many things are not completed. This is often to just give the idea what should come and is intended to be completed later if the system interacts satisfactorial as a whole.
 Basically you can use escad in two ways:
 \begin{itemize}
-\item Command line entering common-lisp code, here in the editor emacs, see figure~\ref{fig:escad_emacs}.
+\item Command-line entering common-lisp code, here in the editor emacs, see figure~\ref{fig:escad_emacs}.
 \item Graphical user interface via web browser, see figure~\ref{fig:escad_gui}.
 \end{itemize}
 Escad use open technologies and provide a wide variety of different domain tools. And if there is (yet) not the thing you need, you can customize escad with common-lisp code. Escad wants to be kind and helpful to the user. \textbf{Your help is really welcome}: if you want maintain this manual, increase escad features, write expansions, create logo, manage homepage or just send some feedback - all things are kind to start a escad-community.
@@ -248,8 +248,8 @@ Sorry, for now other systems are currently not tested, but may be possible to wo
 To understand a software-system it is often easier to understand the theory behind. In escad this is quite simple, since it is practical use of graph data structure (in informatically or mathematically means). But simple means just in the basic building blocks, not in the power, since graphs can be quite big and nested. Such \textbf{graphs} consist only of \textbf{symbols} $V$ (vertices, nodes, Knoten) and \textbf{relations} $E$ (edges, Kanten). Mathematically (see also \cite{math:taschenbuchdermathematik}) you can see this in equations~\ref{eq:graph}:
 \begin{align}
   \label{eq:graph}
-  V & = \{s0, s1, s2, s3\} \notag \\
-  E & = \{r0, r1, r2, r3\} = \{(s0, s1), (s1, s2), (s2, s3), (s3, s2)\}
+  V & = \{s_0, s_1, s_2, s_3, \_escad\} \notag \\
+  E & = \{r_0, r_1, r_2, r_3\} = \{(s_0, s_1), (s_1, s_2), (s_2, s_3), (s_3, s_2)\}
 \end{align}
 You see in math you would need no name for relations, as it are ordered pairs of symbols. Escad uses names for symbols and relations. This is because relations can have some optional properties (symbols too), which you can acess via the relation-name. As convenience you can let escad give you automatic generated names, in case you do not care of the exact name.
 See figure~\ref{fig:overview} about the structure of escad. The three grey blocks are needed for the interaction with the user (commandline or web interface). Thus they are explained not here but will be looked later in detail. In the following sub-chapters the other three parts and their contents are explained in detail.
@@ -273,7 +273,7 @@ A relation (or in computer science also called \index{edge}edge) creates a relat
 % \item[instance\_of] can be used to describe a concept-object (also known as token/object $\rightarrow$ type/class).
 % \end{description}
 \subsection{Attribute}
-An \index{attribute}attribute in escad is an \emph{optional} specifier of a symbol/relation. There can be a huge discusion whether attributes or whether a symbol and relation should be used instead a symbol-attribute. Attributes can lower the complexity of an graph. On the other hand attributes are implicite relations, perhaps sometimes it is more useful to state explicitely relations (e.g. for graphical purposes). Take your choice and try to keep this choice consistent over your graph. Some attributes merely are parameters which give the symbol or relation additional information, mostly needed in conjunction with expansions (e.g. giving a filename to a file-generation expansion).
+An \index{attribute}attribute in escad is an \emph{optional} specifier of a symbol/relation. There can be a huge discusion whether attributes or whether a symbol and relation should be used instead a symbol-attribute. Attributes can lower the complexity of an graph. On the other hand attributes are implicite relations, perhaps sometimes it is more useful to state explicitely relations (e.g. for graphical purposes). Take your choice and try to keep this choice consistent over your graph. Some attributes merely are parameters which give the symbol or relation additional information, mostly needed in conjunction with expansions (e.g. giving a filename to a file-generation expansion). A symbol/relation can at least have maximum one attribute to keep it simple and relatively fast. If you need more attributes you should consider to create a special object or struct, or you choose to model it with additional symbols and relations to it.
 \subsection{View}
 You can think of the view as a workplace where you can put in symbols and relations, which model an part of the real world. It is called view because it is the current view of a world modelled in your escad session. However like in the real world there are often multiple and different views of the world. Thus you can acess other views through a view-symbol in the standard expansion mentioned later.
 \subsection{Taxonomy}
@@ -304,23 +304,23 @@ Is used to create new symbols, relations or attributes automatically for you.
 %With \emph{flows} automating in escad is possible without to know how to programm in lisp. This also enables live-expansions which periodically activated generate symbols to reflect the state of a continous process.
 \chapter{Getting started}\label{cha:gettingstarted}
 Here i assume it is easier to get what escad can do for you, by showing escad in work. Note that the output of the following examples may vary a little at your side (becausse of various reasons), but the basic things should be similar.
-\section{Tutorial with escad-commandline}
+\section{Tutorial with escad command-line}
 We want now do a short session in escad. After installation go to the escad root directory and start escad by typing in a shell in your terminal:
-\shellcmdline{./escad start}{>}
+\shellcmdline{./escad}{>}
 This starts escad REPL (no special arguments given). After loading of common-lisp and escad, you should switch from the common-lisp in the escad namespace:
 \lispcmdline{(in-package :escad)}{ESCAD>}
 Now you can execute all escad commands directly. To see some possible existing symbols type following escad-command:
-\escadcmdline{(ls)}{(``\_escad'' ``\_view'')}\label{ex:ls}\index{command example!ls}
-You can read more about this command at page~\pageref{it:ls}. We see two symbols which escad has already created for us. The first symbol can contain settings for our current escad session. The second symbol stands for the current working space we are working. In escad this is called \emph{view} and is just a place where you can work. It can hold graph(s), but does not have to. Escad has two views, you can use (toggle with command \texttt{tv}). But mostly you need just one view.
+\escadcmdline{(ls)}{(``\_escad'')}\label{ex:ls}\index{command example!ls}
+You can read more about this command at page~\pageref{it:ls}. We see a symbol which escad has already created for us. The symbol can contain settings for our current escad session.
 However we heard that escad has symbols and relations. Lets look at the relations:
 \escadcmdline{(lr)}{NIL}\label{ex:lr}\index{command example!lr}
 Upps, we get \emph{NIL} which is the lisp way of saying that there is nothing. But that is ok, since we just have not created anything yet. So lets create three symbols:
-\escadcmdline{(dolist (name '(``one'' ``two'' nil)) (ns name))}{NIL}\label{ex:ns}\index{command example!ns}
+\escadcmdline{(dolist (name '(``one'' ``two'' nil)) (cs name))}{NIL}\label{ex:cs}\index{command example!cs}
 This produces three new symbols, which names we not see because of the \texttt{dolist} nature:
 \escadcmdline{(ls)}{(``\_escad'' ``\_view'' ``one'' ``two'' ``s0'')}\index{command example!ls}
 The third symbol name \texttt{s0} created escad for us, because we provided \texttt{nil}.
 Now lets create a relation:
-\escadcmdline{(nr nil ``one'' ``two'')}{``r0''}\label{ex:nr}\index{command example!nr}
+\escadcmdline{(cr nil ``one'' ``two'')}{``r0''}\label{ex:cr}\index{command example!cr}
 Now we got
 \escadcmdline{(lr)}{(``r0'')}
 Note that you can not insert a new relation or symbol which name already exists.
@@ -328,21 +328,21 @@ You now have nearly seen all basic operations in escad. Most functionality can b
 \escadcmdline{(as ``s0'')}{(``Documentation text...'')}
 You can activate every symbol, but most of them will just print some documentation about themselves, like you have seen in the last command. To get another functionality you have to assign a taxonomy which refers to a expansion. Those expansion is then loaded and executes a defined command (which is defined by the taxonomy).
 You can easily add taxonomy to a symbol with add a \emph{property}:
-\escadcmdline{(s ``s0'' :taxonomy ``escad.symbol.\_escad.export.pdf'')}{(``s0'')}
+\escadcmdline{(s ``s0'' :taxonomy ``export.pdf'')}{(``s0'')}
 If you would activate this smybol now, it would produce a pdf with graphic output of your current view. Because you gave no file-name it would generate some. To give a filename you can add a special attribute-property:
-\escadcmdline{(asa ``s0'' '(``filename\_relative'' ``my\_file.pdf''))}{(``my\_file.pdf'')}
+\escadcmdline{(s ``s0'' :attribute ``my\_file.pdf'')}{(``s0'')}
 Now you should get those pdf-file.
 This are the most basic commands you need to know in escad. To get detailed command info use command help:
 \escadcmdline{(help-command 'cmd\_name)}{(``Documentation text of cmd\_name...'')}
 To get basic help type:
 \escadcmdline{(help)}{(``Documentation text...'')}
-To load stored views or escad-lisp-scripts (e.g. in the \emph{examples} directory) type:
-\escadcmdline{(lov ``mindmap.lisp'')}{(...)}
-To list available taxonomies use command \texttt{(lta)}.
+%To load stored views or escad-lisp-scripts (e.g. in the \emph{examples} directory) type:
+%\escadcmdline{(lov ``mindmap.lisp'')}{(...)}
+%To list available taxonomies use command \texttt{(lta)}.
 \section{Tutorial with graphical browser-interface}
 We want now do a web-session in escad. Go to the escad root directory and start escad by typing in a shell in your terminal:
-\shellcmdline{./escad start net-http}{>}
-This starts escad and a server. With your web-browser you can browse the page which at first time loads a web-client in your browser. After that you can view and edit the graph like in figure~\ref{fig:escad_gui}.
+\shellcmdline{./escad}{>}
+This starts escad and a http-server if you have the default settings in your \path{escad\_conf.lisp} (with the symbol \emph{\_gui} activated). With your web-browser you can browse the page which at first time loads a web-client in your browser. After that you can view and edit the graph like in figure~\ref{fig:escad_gui}.
 \section{User stories}
 To get a fast idea how you should work with escad, please read this section carefully. It gives you general hints how to work, and useful example-patterns to make the theory more clear.
 %\subsection{3D (escad version 0.2)}
@@ -403,11 +403,100 @@ Sometimes questions lead to a fast recognition of a problem or help to understan
 \end{description}
 \chapter{Reference}
 Here you should find the full information to work with escad, such as available commands or interfaces. Also you should get some basic things in order to get the idea in how you can extend escad or help in development.
-\section{Commandline LISP-REPL}\label{sec:cmd_line}
-The commandline currently provides the full functionality. This means you got a common-lisp REPL with escad-package loaded. This gives you the full power of common-lisp with the ability of the escad-commands to work with a simple graph environment. To get this commandline go to the escad root directory and start escad-commandline by typing in a shell in your terminal:
-\shellcmdline{./escad start terminal}{>}
-or because terminal-mode is the default you can also type:
-\shellcmdline{./escad start}{>}
+\section{Architecture}
+See figure~\ref{fig:overview} for how escad is structured. Basically you get with escad two parts of software. The lisp side and in case of the gui the javascript side.
+\section{Lifecycle (from start until end)}
+In following the lifecycle of an escad session is explained.
+\begin{enumerate}
+\item Escad is started.
+\item \path{escad\_conf.lisp} is read.
+\item Start REPL.
+\item Escad is ended.
+\end{enumerate}
+\section{Symbol in detail}
+Table~\ref{tab:symbol} shows the symbol slots (properties) meant for editing by the user and their meaning.
+\begin{table}[htbp]
+\definecolor{light-gray}{gray}{0.9}
+\rowcolors{2}{light-gray}{black!20} % alterniert Farbe der Tabellenzeilen
+\centering
+\begin{tabular}{|p{2.5cm}|p{13cm}|}
+  \hline
+  \textbf{slot (property)} & \textbf{description} \\
+  \hline
+  activate & When a symbol is activated the slot-content is submitted to the activation function. \\
+  \hline
+  attribute & Used sometimes by expansions for their work. \\
+  \hline
+  comment & Tells something additional about the symbol. \\
+  \hline
+  label & Alternative name which has not to be unique. \\
+  \hline
+  representation & Text representing the symbol. \\
+  \hline
+  taxonomy & Classifies the symbol and shows to which expansion it belongs. \\
+  \hline
+  weight & A number which denotes depending on the usage the importance / weight / order of the symbol. \\
+  \hline
+\end{tabular}
+\caption{Slots of the symbol object.}
+\label{tab:symbol}
+\end{table}
+\section{Relation in detail}
+Table~\ref{tab:relation} shows the relation slots (properties) meant for editing by the user and their meaning.
+\begin{table}[htbp]
+\definecolor{light-gray}{gray}{0.9}
+\rowcolors{2}{light-gray}{black!20} % alterniert Farbe der Tabellenzeilen
+\centering
+\begin{tabular}{|p{2.5cm}|p{13cm}|}
+  \hline
+  \textbf{slot (property)} & \textbf{description} \\
+  \hline
+  attribute & Used sometimes by expansions for their work. \\
+  \hline
+  comment & Tells something additional about the symbol. \\
+  \hline
+  label & Alternative name which has not to be unique. \\
+  \hline
+  representation & Text representing the symbol. \\
+  \hline
+  taxonomy & Classifies the symbol and shows to which expansion it belongs. \\
+  \hline
+  weight & A number which denotes depending on the usage the importance / weight / order of the symbol. \\
+  \hline
+\end{tabular}
+\caption{Slots of the relation object.}
+\label{tab:relation}
+\end{table}
+\section{``\_*'' internal escad symbols}
+Escad pushes it's concept of \emph{all can be described as graph} clearly forward. So even escad itself shows errors or other informations about itself with auto generated symbols beginning with the character \emph{\_}. Thus you can for example check if an command created an error by search for the symbol \emph{\_error}. You have not to delete it after the error occurs but you can. If a new error occurs the symbol will be populated with new message. All this symbols can be populated from escad in the graph and are connected by a relation to the parent symbol \emph{\_escad}.
+Table~\ref{tab:internal-symbols} shows all internal symbols in the current version of escad.
+\begin{table}[htbp]
+\definecolor{light-gray}{gray}{0.9}
+\rowcolors{2}{light-gray}{black!20} % alterniert Farbe der Tabellenzeilen
+\centering
+\begin{tabular}{|p{2.5cm}|p{13cm}|}
+  \hline
+  \textbf{symbol} & \textbf{description} \\
+  \hline
+  \_escad & Root symbol from which all other internal escad symbols are connected. \\
+  \hline
+  \_error & An error occured. If the error is generated from a expansion, a relation will be added from this symbol to the corresponding expansion symbol. \\
+  \hline
+  \_gui & Controls the server for the graphical web interface. Activate with default value \emph{start} starts server, activate set to \emph{stop} ends the server. \\
+  \hline
+  \_help & Root symbol for help about escad. \\
+  \hline
+  \_taxonomy & This is the root symbol from which you cann explorer all actual loaded expansions und thus taxonomies. \\
+  \hline
+  \_warning & Warning message. \\
+  \hline
+\end{tabular}
+\caption{Auto generated internal symbols of escad.}
+\label{tab:internal-symbols}
+\end{table}
+\section{LISP command-line usage}\label{sec:cmd_line}
+The command-line currently provides the full functionality. This means you got a common-lisp REPL with escad-package loaded. This gives you the full power of common-lisp with the ability of the escad-commands to work with a simple graph environment. To get this command-line go to the escad root directory and start escad-commandline by typing in a shell in your terminal:
+\shellcmdline{./escad}{>}
 Without correct command arguments you get a usage message.
 Now you can type in escad commands with a namespace-qualifier, in this case the help command (note the output is here ommitted):
 \lispcmdline{(escad:help)}{...}
@@ -464,31 +553,24 @@ The table~\ref{tab:cmd_abbreviatons} explains used symbols, abbreviations and th
 \end{table}
 In general escad provides two flavours of commands: object- or text-based. There is no superior flavour, just use the one which fits your concrete needs the best. This command reference is sorted alphabetically, so the order of commands does not say something about the quality or importance of them.
 \begin{description}% \item[$\to$]
-\item[\parbox{8.5mm}{ad}] \label{it:ad} \escadcmd{ad}{}{STRING}{<a>nalyze <d>iameter (length of longest path(s)) of current view and returns multiple values: the diameter of longest path(s) and the path(s) itself.}
+%\item[\parbox{8.5mm}{ad}] \label{it:ad} \escadcmd{ad}{}{STRING}{<a>nalyze <d>iameter (length of longest path(s)) of current view and returns multiple values: the diameter of longest path(s) and the path(s) itself.}
 \item[\parbox{8.5mm}{as}] \label{it:as} \escadcmd{as}{\lbrack\ SN \rbrack}{STRING}{<a>ctivate <s>ymbol in current view.
 What happens depends on the taxonomy of the symbol. Many symbols print out a string as their contents.
 Symbols which represent expansions will execute the configured function of the expansion.}
-\item[\parbox{8.5mm}{asa}] \label{it:asa} \escadcmd{asa}{SN (ATTR STRING ...)+}{SN | NIL}{
-<A>dd/edit <s>ymbol <a>ttributes depending of key. NIL if nothing is added.}
-\item[\parbox{8.5mm}{gra}] \label{it:gra} \escadcmd{gra}{RN attribute-string}{STRING}{<G>et <r>elation <a>ttributes depending of given attribute-string.}
-\item[\parbox{8.5mm}{gsa}] \label{it:gsa} \escadcmd{gsa}{SN attribute-string}{STRING}{<G>et <s>ymbol <a>ttributes depending of given attribute-string.}
+%\item[\parbox{8.5mm}{asa}] \label{it:asa} \escadcmd{asa}{SN (ATTR STRING ...)+}{SN | NIL}{<A>dd/edit <s>ymbol <a>ttributes depending of key. NIL if nothing is added.}
+%\item[\parbox{8.5mm}{gra}] \label{it:gra} \escadcmd{gra}{RN attribute-string}{STRING}{<G>et <r>elation <a>ttributes depending of given attribute-string.}
+%\item[\parbox{8.5mm}{gsa}] \label{it:gsa} \escadcmd{gsa}{SN attribute-string}{STRING}{<G>et <s>ymbol <a>ttributes depending of given attribute-string.}
 \item[\parbox{8.5mm}{help}] \label{it:help} \escadcmd{help}{}{STRING}{Print <help>ful overview of escad, meaning of terms and all available commands.}
 \item[\parbox{8.5mm}{lr}] \label{it:lr} \escadcmd{lr}{\lbrack\ :filter :exclude-taxonomy \rbrack}{(RN*)}{<L>ist all <r>elations in current schematic which name match the filter. Additionally exclude relations which match the exclude-taxonomy.}
 \item[\parbox{8.5mm}{ls}] \label{it:ls} \escadcmd{ls}{\lbrack\ :filter :exclude-taxonomy \rbrack}{(SN*)}{<L>ist all <s>ymbols in current schematic which name match the filter. Additionally exclude symbols which match the exclude-taxonomy.} See example at page~\pageref{ex:ls} for usage.
-\item[\parbox{8.5mm}{nr}] \label{it:nr} \escadcmd{nr}{RN | nil SN SN \lbrack\ :attributes :comment :taxonomy :weight \rbrack}{RN | nil}{Create <n>ew <r>elation with given name and possible additional values in view. If the relation-name already exists do nothing and return nil. Default type is undirected relation. To make a directed or bidirected relation, set the appropriate taxonomy (note that ref\_from and ref\_to are only technical terms meaning you first tie the relation from that symbol to another. it can mean that is directe, but it is not guaranted that the author means that unless he makes that explicit with a relation that declares that).}
-\item[\parbox{8.5mm}{ns}] \label{it:ns} \escadcmd{ns}{SN | nil \lbrack\ :attributes :comment :taxonomy :weight \rbrack}{SN | nil}{Create <n>ew <s>ymbol with given name and possible additional values in view. If the symbol-name already exists do nothing and return nil.}
+\item[\parbox{8.5mm}{cr}] \label{it:cr} \escadcmd{cr}{RN | nil SN SN \lbrack\ :attributes :comment :taxonomy :weight \rbrack}{RN | nil}{<C>reate <r>elation with given name and possible additional values in view. If the relation-name already exists do nothing and return nil. Default type is undirected relation. To make a directed or bidirected relation, set the appropriate taxonomy (note that ref\_from and ref\_to are only technical terms meaning you first tie the relation from that symbol to another. it can mean that is directe, but it is not guaranted that the author means that unless he makes that explicit with a relation that declares that).}
+\item[\parbox{8.5mm}{cs}] \label{it:cs} \escadcmd{cs}{SN | nil \lbrack\ :attributes :comment :taxonomy :weight \rbrack}{SN | nil}{<C>reate <s>ymbol with given name and possible additional values in view. If the symbol-name already exists do nothing and return nil.}
 \item[\parbox{8.5mm}{r}] \label{it:r} \escadcmd{r}{RN \lbrack\ :comment :ref\_from :ref\_to :taxonomy :weight \rbrack}{RO | nil}{Get/set <r>elation object.}
 \item[\parbox{8.5mm}{s}] \label{it:s} \escadcmd{s}{SN \lbrack\ :comment :taxonomy :weight \rbrack}{SO | nil}{Get/set <s>ymbol object.}
-\item[\parbox{8.5mm}{tv}] \label{it:tv} \escadcmd{tv}{}{VN}{<T>oggle <v>iew since escad has two views change from the one to the other and gives back the number of the new view (0 or 1).}
-\item[\parbox{8.5mm}{vs}] \label{it:vs} \escadcmd{vs}{}{(VN SC1 RC1 SC2 RC2)}{Gives <v>iew <s>tatus.}
 \end{description}
-%\section{Emacs with LISP-REPL and view buffer}
-%This is currently possible for experienced users via slime-mode in emacs.
-%\section{Tk GUI}
-%This is in development but currently in sleep, because other user interfaces are prefered.
-\section{Library}
+\section{Library usage}
 To use escad as a library in your common lisp programm, just load \path{package.lisp}.
-\section{HTML-webclient}
+\section{HTML-webclient usage}
 Take your browser to communicate with escad in a graphical intuitive way.
 \section{Included expansions}
 Those are the expansions which are included/shipped in this escad-package.
@@ -498,26 +580,28 @@ Table~\ref{tab:expansion_overview} shows the available expansions included in th
 \definecolor{light-gray}{gray}{0.9}
 \rowcolors{2}{light-gray}{black!20} % alterniert Farbe der Tabellenzeilen
 \centering
-\begin{tabular}{|p{2.5cm}|p{6cm}|p{5cm}|p{2cm}|}
+\begin{tabular}{|p{2.5cm}|p{6cm}|p{7cm}|}
   \hline
-  \textbf{topic} & \textbf{file} & \textbf{description} & \textbf{since version} \\
-%  \hline
+  \textbf{topic} & \textbf{file} & \textbf{description} \\
+  \hline
+  standard & \path{standard_expansion.lisp} & Provides common functionality for broad usage even for other expansions. \\
+  \hline
 %  3D & \path{3d_expansion.lisp} & Generate 3D files. & 0.2 \\
+  import & \path{import_expansion.lisp} & Import graphviz dot-file in view. \\
   \hline
-  export & \path{export_expansion.lisp} & Export graph to PDF and SVG. & 0.1 \\
+  export & \path{export_expansion.lisp} & Export graph to PDF and SVG. \\
 %  \hline
 %  flow & \path{flow_expansion.lisp} & Automates processes in escad. & 0.1 \\
-  \hline
-  generation & \path{generator_expansion.lisp} & Generate objects in view. & 0.1 \\
-  \hline
-  import & \path{import_expansion.lisp} & Import graphviz dot-file in view. & 0.1 \\
+%  \hline
+%  generation & \path{generator_expansion.lisp} & Generate objects in view. & 0.1 \\
+%  \hline
 %  \hline
 %  import & \path{mount_expansion.lisp} & Mount other graphs into view like from a graph database. & 0.1 \\
-  \hline
-  report & \path{report_expansion.lisp} & Report view to latex and PDF. & 0.1 \\
-  \hline
-%  standard & \path{standard_expansion.lisp} & Provides common useful concepts like sets, checks or canonizing. & 0.1 \\
 %  \hline
+%  report & \path{report_expansion.lisp} & Report view to latex and PDF. & 0.1 \\
+%  \hline
+%  standard & \path{standard_expansion.lisp} & Provides common useful concepts like sets, checks or canonizing. & 0.1 \\
+  \hline
 \end{tabular}
 \caption{Contained expansions in escad and their functionality.}
 \label{tab:expansion_overview}
@@ -530,47 +614,94 @@ Of course there can exist many more not shipped one, but you should check this i
 \item[attribute] which are allowed/expected/needed.
 \item[description] tells what the expansion does.
 \end{description}
-\subsection{export\_expansion.lisp}
-The table~\ref{tab:exp-export-expansion} explains the export expansion.
-\newcommand{\tabitem}{~~\llap{\textbullet}~~}
+\subsection{standard\_expansion.lisp}
+The table~\ref{tab:standard-expansion} explains the standard expansion.
 \begin{table}[htbp]
+\definecolor{light-gray}{gray}{0.9}
+\rowcolors{2}{light-gray}{black!20} % alterniert Farbe der Tabellenzeilen
 \centering
-\begin{tabular}{rp{11cm}}
-  \toprule
-  \textbf{taxonomy} & \colorbox{black!20}{escad.symbol.\_escad.export.dot} \\
-  \textbf{in} & - \\
-  \textbf{out} & - \\
-  \textbf{attribute} & 1. symbol name \\
-                     & 2. [file name] \\
-  \textbf{description} & exports view to dot (graphviz) \\
-  \midrule
-  \textbf{taxonomy} & \colorbox{black!20}{escad.symbol.\_escad.export.pdf} \\
-  \textbf{in} & - \\
-  \textbf{out} & - \\
-  \textbf{attribute} & 1. symbol name \\
-                     & 2. [file name] \\
-  \textbf{description} & exports view to pdf \\
-  \midrule
-  \textbf{taxonomy} & \colorbox{black!20}{escad.symbol.\_escad.export.svg} \\
-  \textbf{in} & - \\
-  \textbf{out} & - \\
-  \textbf{attribute} & 1. symbol name \\
-                     & 2. [file name] \\
-  \textbf{description} & exports view to svg. \\
-  \bottomrule
+\begin{tabular}{|p{3.5cm}|p{3.5cm}|p{3.5cm}|p{5cm}|}
+  \hline
+  \textbf{taxonomy} & \textbf{in/out} & \textbf{attribute} & \textbf{description} \\
+  \hline
+  group & - & symbol name & groups symbols. \\
+  \hline
 \end{tabular}
-\caption{Symbols and relations of export expansion.}
-\label{tab:exp-export-expansion}
+\caption{Standard expansion.}
+\label{tab:standard-expansion}
 \end{table}
+
+% \newcommand{\tabitem}{~~\llap{\textbullet}~~}
+% \begin{table}[htbp]
+% \centering
+% \begin{tabular}{rp{11cm}}
+%   \toprule
+%   \textbf{taxonomy} & \colorbox{black!20}{escad.symbol.\_escad.export.dot} \\
+%   \textbf{in} & - \\
+%   \textbf{out} & - \\
+%   \textbf{attribute} & 1. symbol name \\
+%                      & 2. [file name] \\
+%   \textbf{description} & exports view to dot (graphviz) \\
+%   \midrule
+%   \textbf{taxonomy} & \colorbox{black!20}{escad.symbol.\_escad.export.pdf} \\
+%   \textbf{in} & - \\
+%   \textbf{out} & - \\
+%   \textbf{attribute} & 1. symbol name \\
+%                      & 2. [file name] \\
+%   \textbf{description} & exports view to pdf \\
+%   \midrule
+%   \textbf{taxonomy} & \colorbox{black!20}{escad.symbol.\_escad.export.svg} \\
+%   \textbf{in} & - \\
+%   \textbf{out} & - \\
+%   \textbf{attribute} & 1. symbol name \\
+%                      & 2. [file name] \\
+%   \textbf{description} & exports view to svg. \\
+%   \bottomrule
+% \end{tabular}
+% \caption{Symbols and relations of export expansion.}
+% \label{tab:exp-export-expansion}
+% \end{table}
 %\subsection{flow\_expansion.lisp}
 %Todo...
-\subsection{generator\_expansion.lisp}
-Todo...
+%\subsection{generator\_expansion.lisp}
+%Todo...
 \subsection{import\_expansion.lisp}
-Todo...
-\subsection{report\_expansion.lisp}
-Todo...
-%\subsection{standard\_expansion.lisp}
+The table~\ref{tab:import-expansion} explains the import expansion.
+\begin{table}[htbp]
+\definecolor{light-gray}{gray}{0.9}
+\rowcolors{2}{light-gray}{black!20} % alterniert Farbe der Tabellenzeilen
+\centering
+\begin{tabular}{|p{3.5cm}|p{4cm}|p{4cm}|p{4cm}|}
+  \hline
+  \textbf{taxonomy} & \textbf{in/out} & \textbf{attribute} & \textbf{description} \\
+  \hline
+  import.dot & - & symbol name,\newline file name & import from dot (graphviz). \\
+  \hline
+\end{tabular}
+\caption{Import expansion.}
+\label{tab:import-expansion}
+\end{table}
+\subsection{export\_expansion.lisp}
+The table~\ref{tab:export-expansion} explains the standard expansion.
+\begin{table}[htbp]
+\definecolor{light-gray}{gray}{0.9}
+\rowcolors{2}{light-gray}{black!20} % alterniert Farbe der Tabellenzeilen
+\centering
+\begin{tabular}{|p{3.5cm}|p{4cm}|p{4cm}|p{4cm}|}
+  \hline
+  \textbf{taxonomy} & \textbf{in/out} & \textbf{attribute} & \textbf{description} \\
+  \hline
+  export.dot & - & symbol name, [file name] & exports view to dot (graphviz). \\
+  \hline
+  export.pdf & - & symbol name, [file name] & exports view to pdf. \\
+  \hline
+  export.svg & - & symbol name, [file name] & exports view to svg. \\
+  \hline
+\end{tabular}
+\caption{Export expansion.}
+\label{tab:export-expansion}
+\end{table}
+%\subsection{report\_expansion.lisp}
 %Todo...
 \chapter{Development}
 Everyone is needed and welcome for escad development. If you are a graphical designer, you are got in documenting or you like to program in lisp or you are interested in web-programming - all is required in escad. :-)
@@ -588,27 +719,21 @@ All follows this process in short:
 \item Tag version and deliver it.
 \end{enumerate}
 A note to tests as it seems to become one big factor of good code quality. Surely test are a good method to check well defined interfaces. So here we implement tests too. However because at the early development stage of escad and limited man power, tests will not take as much room as there could be. Since interfaces may change often we will concentrate at often used functions and in more stable versions of escad the tests should be increased.
-\section{Directory and files}
+\section{Files and directories}
 The directory structure and some basic files of the repository will be explained in this section. In the root of the repository there are following files with their purpose:
 \begin{description}
 \item[Makefile] contains the instructions for the \emph{make} programm and controls the most part of escad development process (generating documentation, binary or other things). Just enter \texttt{make} in the command line to see available options.
 \item[LICENSE] holds the license to which terms you have to use escad.
 \item[README.md] is mostly for github where escad is hosted and contains shor overview about the project.
+\item[escad\_conf.lisp] can contain user settings which are executed at startup.
+\item[doc/] contains the escad documentation for user and developer. Currently this is mainly this manual written in \emph{latex}. But in future a unix man-page, more examples or online documentation would be great, too.
+\item[lisp/] contains the escad-lisp files with the implementation.
+\item[lisp/expansion/] contains all escad-expansions which are available.
+\item[lisp/examples/] contains examples which can be loaded in escad. But note that currently not all may work yet, they are more a print what a future interface should look like.
+\item[misc/] contains miscellaneous things which have no other place where it fits.
+\item[test/] has unit tests, which execution may be controlled with make.
+\item[web/] with the web based graphical user interface (gui) things, which are executed in the web-browser, live here. \path{index.html} is the starting point for the gui and will be served first bei the server.
 \end{description}
-\subsection{doc/}
-Contains the escad documentation for user and developer. Currently this is mainly this manual written in \emph{latex}. But in future a unix man-page, more examples or online documentation would be great, too.
-\subsection{lisp/}
-\path{lisp/} contains the escad-lisp files with the implementation.
-\subsection{lisp/expansion/}
-\path{lisp/} contains all escad-expansions which are available.
-\subsection{lisp/examples/}
-\path{examples} contains examples which can be loaded in escad. But note that currently not all may work yet, they are more a print what a future interface should look like.
-\subsection{misc/}
-Contains miscellaneous things which have no other place where it fits.
-\subsection{test/}
-Here there are unit tests, which execution may be controlled with make.
-\subsection{web-gui/}
-The web based graphical user interface (gui) things, which are executed in the web-browser, live here.
 \section{Programming your own expansion}
 Writing escad expansions means inherit some escad classes and refine them. Go through following steps carefully and you will have a good basis for writing your own. The code in listing~\ref{listing:exp_minimal} shows a minimal expansion.
 %and the listing~\ref{listing:exp_tax} shows the entry in a taxonomy file.

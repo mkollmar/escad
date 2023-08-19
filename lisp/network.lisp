@@ -20,10 +20,30 @@
 
 (in-package :de.markus-herbert-kollmar.escad)
 
-#+CLISP (defparameter *escad-server-host* "127.0.0.1" "Host address in CLISP-format")
-#+SBCL  (defparameter *escad-server-host* #(127 0 0 1) "Host address in SBCL-format")
-(defparameter *escad-server-port* 3000 "Port number (5000)")
+;#+CLISP (defparameter *escad-server-host* "127.0.0.1" "Host address in CLISP-format")
+;#+SBCL  (defparameter *escad-server-host* #(127 0 0 1) "Host address in SBCL-format")
+;(defparameter *escad-server-port* 3000 "Port number (5000)")
 
+;;;; Hunchentoot server for escad web-gui
+;; ACESS WITH "HTTP://LOCALHOST:4242/"
+;; an acceptor handles multiple http requests (chmod -R 775 www).
+(defparameter *server-acceptor* (make-instance 'hunchentoot:easy-acceptor
+        :port 4242
+        :document-root (truename "../web/")))
+
+(defun start-gui-server ()
+  "Start hunchentoot web server for escad gui."
+  (hunchentoot:start *server-acceptor*)
+  (hunchentoot:define-easy-handler (say-yo :uri "/yo") (name)
+    (setf (hunchentoot:content-type*) "text/plain")
+    (format nil "Hey~@[ ~A~]!" name)))
+
+(defun stop-gui-server ()
+  "Stop hunchentoot web server for escad gui."
+  (hunchentoot:stop *server-acceptor*))
+
+
+;;;; Lisp over socket (old code, currently not used)
 (defun lisp_over_network ()
   "Process single client requests forever. If one client exits connection, open another waiting. Connection is persistent."
    #+CLISP (let ((server (socket:socket-server *escad-server-port* :interface *escad-server-host*)))

@@ -1,0 +1,85 @@
+/* html { overflow-y:scroll; } */
+
+body { background-color: #336644; }
+
+h1 { opacity: 0.5;
+     font-size: 1em;
+     font-weight: bold;}
+
+input { background-color: #996666;
+	height: 25px;
+	margin: 0; }
+
+textarea { background-color: #996666;
+	   height: 22px;
+	   margin: 0; }
+
+
+/* id's */
+#input {
+    position: absolute;
+    z-index: 9999;
+}
+
+/* cytoscape id */
+#cy {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    z-index: 999;
+  /* width: 1200px;
+  height: 600px;
+  display: block;
+  border: 2px solid black;
+  background-color: #666666; */
+}
+
+/* message area */
+#message {
+    background-color:  #336644;
+}
+
+#output {
+    background-color: #228866;
+    width: 80em;
+    height: 2.5em;
+    overflow-x: auto;
+    overflow-y: scroll;
+    padding: 5px;
+    resize: vertical;
+    resize: horizontal;
+    border: 2px solid black;
+}
+
+#weight {
+    width: 4em;
+}
+
+#time {
+    width: 4em;
+}
+
+#info {
+    vertical-align: top;
+}
+
+/* classes: */
+.save {
+    background-color: #f44336;
+    border-radius: 4px;
+}
+
+.insert {
+    background-color: #448899;
+    border-radius: 4px;
+}
+
+.error {
+    color: "red";
+}
+
+.info {
+    color: "green";
+}

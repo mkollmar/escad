@@ -1,0 +1,56 @@
+/* html { overflow-y:scroll; } */
+
+body { background-color: #446644; }
+
+h1 { opacity: 0.5;
+     font-size: 1em;
+     font-weight: bold;}
+
+.error {
+    color: "red";
+}
+
+.info {
+    color: "green";
+}
+
+/* user input id */
+#input {
+    position: absolute;
+    z-index: 9999;
+}
+
+/* cytoscape id */
+#cy {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    z-index: 999;
+  /* width: 1200px;
+  height: 600px;
+  display: block;
+  border: 2px solid black;
+  background-color: #666666; */
+}
+
+/* message area */
+#message {
+    background-color: #228866;
+}
+
+#save {
+    background-color: #f44336;
+    border-radius: 4px;
+}
+
+/* classes: */
+.relation_input {
+    visibility: hidden;
+}
+
+.symbol_input {
+    visibility: hidden;
+}
+

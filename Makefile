@@ -83,8 +83,15 @@ figures_all = $(wildcard $(figures_dir)*.png $(figures_pdf)) #$(notdir $(wildcar
 
 .PHONY: executable
 executable: escad ## make binary of lisp part
-	sbcl --eval "(save-lisp-and-die \"escad\" :executable t :toplevel \"init-escad\")"	
+	cd $(lisp_dir) && sbcl --eval "(save-lisp-and-die \"escad\" :executable t :toplevel \"init-escad\")"	
 #sbcl --eval "(asdf:operate :build-op :escad)"
+
+
+.PHONY: webgui
+webgui: $(web_dir)bundle.js  ## bundle all referenced js (and css) each in one file
+
+$(web_dir)bundle.js: $(web_dir)escad-client.js
+	cd $(web_dir); ./node_modules/.bin/esbuild --bundle escad-client.js --outfile=bundle.js
 
 
 .PHONY: manual
@@ -95,8 +102,9 @@ $(doc_dir)$(manual_pdf): $(doc_dir)$(manual_tex) $(figures_all) $(doc_dir)$(bibl
 	cd $(doc_dir); biber $(manual_tex:.tex=)  # bibliography
 	#cd $(doc_dir); bibtex $(manual_tex:.tex=)  # bibliography
 	#cd $(doc_dir); $(latex) $(manual_tex)  # incremental run
-	cd $(doc_dir); $(latex) $(manual_tex)  # incremental run
-	cd $(doc_dir); makeglossaries $(manual_tex:.tex=) # list of abbreviations, nomenclature
+	cd $(doc_dir); makeindex $(manual_tex:.tex=)  # actualize index
+	#cd $(doc_dir); $(latex) $(manual_tex)  # incremental run
+	#cd $(doc_dir); makeglossaries $(manual_tex:.tex=) # list of abbreviations, nomenclature
 	#cd $(doc_dir); $(latex) $(manual_tex)  # incremental run
 	cd $(doc_dir); $(latex) $(manual_tex)  # incremental run
 
@@ -119,7 +127,7 @@ clean:  ## Clean LaTeX and output figure files
 
 .PHONY: run
 run:  ## run escad
-	cd lisp && sbcl --load main.lisp
+	cd $(lisp_dir) && sbcl --load main.lisp
 
 
 .PHONY: test

@@ -1,0 +1,48 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Optimize mobile viewport -->
+
+    <title>ESCAD Client V0.1</title>
+
+    <link rel="stylesheet" href="./escad.css">
+    <link rel="stylesheet" href="./cytoscape-context-menus.css">
+  
+    <link rel="icon" type="image/x-icon" href="./favicon.ico">
+    <link rel="shortcut icon" type="image/x-icon" href="./favicon.ico">
+    <link type="image/x-icon" href="./favicon.ico">
+
+    <script src="./bundle.js"></script>
+  </head>
+
+  <body>
+    <div id="input">
+      <h1>⚡ESCAD (V0.1) <span id="message" class="info"></span>⚡</h1>
+      <div id="output" title="Info">
+      </div>
+      <select id="query_result" title="Search results" class="search">
+	<option value="">Fehler!?</option>
+      </select>
+      <input id="id" title="ID (unique)">
+      <input id="semantic" title="Semantic">
+      <input id="type" list="node-type-list" title="Typ">
+      <datalist id="edge-type-list">
+	<option value="query">
+	<option value="knowledge">
+      </datalist>
+      <datalist id="node-type-list">
+	<option value="class">
+	<option value="object">
+      </datalist>
+      <input id="weight" title="Gewichtung (1=hoch, 0=keine)">
+      <input id="time" title="ISO8601 Datum: <YYYY-MM-DD HH:MM:SS> oder Zeitstempel (Millisekunden in UNIX Zeit).)">
+      <textarea id="info" title="Wissenstext" rows="1" cols="80"></textarea>      
+      <button id="save" title="Speichere angezeigten Knoten oder angezeigte Kante in die Graphdatenbank." class="save">Objekt speichern</button>
+      <button id="insert" title="Insert symbol." class="insert">Knoten einfügen</button>
+      <button id="toggle_query" title="Zeige/verstecke Suchgraph." class="insert">Zeige/verstecke Suchgraph</button>
+    </div>
+
+    <div id="cy"></div>
+  </body>
+</html>

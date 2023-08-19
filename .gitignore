@@ -1,6 +1,9 @@
 # emacs temporary files
 *~
 
+# lisp things
+*.fasl
+
 # temporary directory for project related things which meant not to commit:
 tmp/
 
