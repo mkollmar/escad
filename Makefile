@@ -82,16 +82,19 @@ figures_all = $(wildcard $(figures_dir)*.png $(figures_pdf)) #$(notdir $(wildcar
 ###
 
 .PHONY: executable
-executable: escad ## make binary of lisp part
+executable: escad ## make binary of lisp code
 	cd $(lisp_dir) && sbcl --eval "(save-lisp-and-die \"escad\" :executable t :toplevel \"init-escad\")"	
 #sbcl --eval "(asdf:operate :build-op :escad)"
 
 
-.PHONY: webgui
-webgui: $(web_dir)bundle.js  ## bundle all referenced js (and css) each in one file
+.PHONY: web
+web: $(web_dir)bundle.js $(web_dir)bundle.css  ## bundle all (also referenced) js and css each in one file
 
-$(web_dir)bundle.js: $(web_dir)escad-client.js
-	cd $(web_dir); ./node_modules/.bin/esbuild --bundle escad-client.js --outfile=bundle.js
+$(web_dir)bundle.js: $(web_dir)escad.js
+	cd $(web_dir); ./node_modules/.bin/esbuild --bundle escad.js --outfile=bundle.js
+
+$(web_dir)bundle.css: $(web_dir)escad.css
+	cd $(web_dir); ./node_modules/.bin/esbuild --bundle escad.css --outfile=bundle.css
 
 
 .PHONY: manual

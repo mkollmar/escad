@@ -1,5 +1,7 @@
 /* html { overflow-y:scroll; } */
 
+@import "./node_modules/cytoscape-context-menus/cytoscape-context-menus.css";
+
 body { background-color: #336644; }
 
 h1 { opacity: 0.5;
