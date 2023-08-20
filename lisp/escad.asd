@@ -27,11 +27,13 @@
    :version "0.1.0"
    :author "Markus Kollmar <markuskollmar@onlinehome.de>"
    :license "GNU Affero General Public License as published by the Free Software Foundation, version 3"
-   ;:serial t ; "serial" means following components are depending in a serial way from top to bottom (saves :depending-on writing)
+					;:serial t ; "serial" means following components are depending in a serial way from top to bottom (saves :depending-on writing)
+   :depends-on ("hunchentoot")
    :components ((:file "package")
-		(:file "utils" :depends-on ("package"))
-		(:file "network" :depends-on ("utils"))
-		(:file "escad" :depends-on ("network")))
+		(:file "utils")
+		(:file "network")
+		(:file "escad" :depends-on ("package" "network" "utils")))
+		;(:file "main" :depends-on ("package")))
    :build-operation "asdf:program-op"
    :build-pathname "./"
    :entry-point "init-escad")

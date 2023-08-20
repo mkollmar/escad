@@ -174,8 +174,9 @@ Get exact named taxonomy-item whereby :type-key is :attribute, :relation or :sym
 (defun init-escad ()
   (let ((cmd-line-args (cadr (get-cmdline-args))))
     (init-views)
-    (load-taxonomy)
-    (start-gui-server)
+    ;(read-config-file)
+    ;(load-taxonomy)
+    (start-gui-server) ; just for tests called here
     ;(lisp_over_network)
     ;(handler-bind ((escad-internal-error #'skip-json_rpc-request))
     ;(json-rpc_over_network)))

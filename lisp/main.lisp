@@ -28,22 +28,7 @@
 ;;   THEN COMPILE/LOAD THE FILE main.lisp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(in-package :cl-user)
-
-;; load all needed systems for escad
-; setting path if all code not in current dir:
-; (setf asdf:*central-registry*
-;       (list* '*default-pathname-defaults*
-;              #p"/home/BLABLA/XY"
-;              asdf:*central-registry*)) ; set which directories ASDF search for systems
-#+SBCL (require 'asdf) ; before asdf-load we need the module loaded
-#+SBCL (require 'sb-bsd-sockets) ; before asdf-load we need the module loaded
-(push "./" asdf:*central-registry*) ; old way to tell asdf where escad.asd (system-definitions are located
-(push "/usr/share/common-lisp/systems/" asdf:*central-registry*)
-;(asdf:make "escad")  ; compile and load escad
-; optional for older systems?: (asdf:operate 'asdf:load-op 'escad)
 (asdf:load-system "escad")
-(asdf:load-system "hunchentoot") ; webserver
 
 (in-package :de.markus-herbert-kollmar.escad)
 

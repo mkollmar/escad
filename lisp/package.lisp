@@ -18,9 +18,7 @@
 ;; Define escad package and things to export for expansions.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;(in-package :cl-user)
-;(in-package "COMMON-LISP-USER")
-
+(in-package :cl-user)
 
 (defpackage :de.markus-herbert-kollmar.escad
   (:use :common-lisp)

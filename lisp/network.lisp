@@ -27,6 +27,7 @@
 ;;;; Hunchentoot server for escad web-gui
 ;; ACESS WITH "HTTP://LOCALHOST:4242/"
 ;; an acceptor handles multiple http requests (chmod -R 775 www).
+(asdf:load-system "hunchentoot") ; webserver
 (defparameter *server-acceptor* (make-instance 'hunchentoot:easy-acceptor
         :port 4242
         :document-root (truename "../web/")))
