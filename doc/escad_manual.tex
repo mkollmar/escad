@@ -237,9 +237,9 @@ Escad strictly wants to be open source and helpful for many people. It is licens
 Currently there are no preconfigured packages for convenient installation of escad. However installation should not be to difficult, since escad-development tries to minimize not shipped dependencies.
 \subsection{Linux or unix-like systems}
 \begin{enumerate}
-\item Get the repository from \path{https://github.com/mkollmar/escad} by clone it, or download repository as zip-file and extracting it. The escad executable is at the root folder and is called \path{escad}. If you want make the excecutable yourself (in the case the preinstalled does not work), then you currently need \textbf{sbcl} common-lisp implementation installed with your distribution-package-method. In the root directory of the repository execute \texttt{make executable} and after some while you will get it.
+\item Get the repository from \path{https://github.com/mkollmar/escad} by clone it, or download repository as zip-file and extracting it. The escad executable is at the root folder and is called \path{escad}. If you want make the excecutable yourself (in the case the preinstalled does not work), then you currently need \textbf{sbcl} common-lisp implementation and depending lisp packages according asd-file installed (see your distribution-package-method or maybe \textbf{quicklisp}). In the root directory of the repository execute \texttt{make executable} and after some while you will get it.
 \item Optional: For some PNG/SVG export functionality you need to have/installed \textbf{graphviz} and for PDF exports you need to have/install a \textbf{lualatex} installed with your distribution-package-method.
-\item You can now try to run escad (in terminal-mode) within the escad-root-directory. If you want the command line interface mode then type just \texttt{./escad}. If you want use the browser gui then type \texttt{./escad webgui} and enter in your browser \texttt{127.0.0.1:8529/}.
+\item You can now try to run escad (in terminal-mode) within the escad-root-directory. If you want the command line interface mode then type just \texttt{./escad}. If you want use the browser gui then type \texttt{./escad} and enter in your browser \texttt{127.0.0.1:4242/}.
 \item Optional: To make initial settings for escad check the config file \path{escad_conf.lisp} and edit if necessary. This file will be read and executed at start of escad and contains escad lisp commands, like the one you type in at escad command line.
 \end{enumerate}
 \subsection{Other systems}
@@ -342,7 +342,7 @@ To get basic help type:
 \section{Tutorial with graphical browser-interface}
 We want now do a web-session in escad. Go to the escad root directory and start escad by typing in a shell in your terminal:
 \shellcmdline{./escad}{>}
-This starts escad and a http-server if you have the default settings in your \path{escad\_conf.lisp} (with the symbol \emph{\_gui} activated). With your web-browser you can browse the page which at first time loads a web-client in your browser. After that you can view and edit the graph like in figure~\ref{fig:escad_gui}.
+This starts escad and a http-server if you have the default settings in your \path{escad\_conf.lisp} (with the symbol \emph{\_web} activated). With your web-browser you can browse the page which at first time loads a web-client in your browser. After that you can view and edit the graph like in figure~\ref{fig:escad_gui}.
 \section{User stories}
 To get a fast idea how you should work with escad, please read this section carefully. It gives you general hints how to work, and useful example-patterns to make the theory more clear.
 %\subsection{3D (escad version 0.2)}
@@ -409,7 +409,7 @@ See figure~\ref{fig:overview} for how escad is structured. Basically you get wit
 In following the lifecycle of an escad session is explained.
 \begin{enumerate}
 \item Escad is started.
-\item \path{escad\_conf.lisp} is read.
+\item \path{escad_conf.lisp} is read.
 \item Start REPL.
 \item Escad is ended.
 \end{enumerate}
@@ -447,7 +447,7 @@ Table~\ref{tab:relation} shows the relation slots (properties) meant for editing
 \definecolor{light-gray}{gray}{0.9}
 \rowcolors{2}{light-gray}{black!20} % alterniert Farbe der Tabellenzeilen
 \centering
-\begin{tabular}{|p{2.5cm}|p{13cm}|}
+\begin{tabular}{|p{4cm}|p{12cm}|}
   \hline
   \textbf{slot (property)} & \textbf{description} \\
   \hline
@@ -467,14 +467,14 @@ Table~\ref{tab:relation} shows the relation slots (properties) meant for editing
 \caption{Slots of the relation object.}
 \label{tab:relation}
 \end{table}
-\section{``\_*'' internal escad symbols}
+\section{Auto generated internal symbols (``\_''...)}
 Escad pushes it's concept of \emph{all can be described as graph} clearly forward. So even escad itself shows errors or other informations about itself with auto generated symbols beginning with the character \emph{\_}. Thus you can for example check if an command created an error by search for the symbol \emph{\_error}. You have not to delete it after the error occurs but you can. If a new error occurs the symbol will be populated with new message. All this symbols can be populated from escad in the graph and are connected by a relation to the parent symbol \emph{\_escad}.
 Table~\ref{tab:internal-symbols} shows all internal symbols in the current version of escad.
 \begin{table}[htbp]
 \definecolor{light-gray}{gray}{0.9}
 \rowcolors{2}{light-gray}{black!20} % alterniert Farbe der Tabellenzeilen
 \centering
-\begin{tabular}{|p{2.5cm}|p{13cm}|}
+\begin{tabular}{|p{4cm}|p{12cm}|}
   \hline
   \textbf{symbol} & \textbf{description} \\
   \hline
@@ -482,7 +482,7 @@ Table~\ref{tab:internal-symbols} shows all internal symbols in the current versi
   \hline
   \_error & An error occured. If the error is generated from a expansion, a relation will be added from this symbol to the corresponding expansion symbol. \\
   \hline
-  \_gui & Controls the server for the graphical web interface. Activate with default value \emph{start} starts server, activate set to \emph{stop} ends the server. \\
+  \_web & Controls the server for the graphical web-interface. Activated with \emph{activate-slot} \texttt{start} starts server, \emph{activate-slot} set to \texttt{stop} ends the server. The \emph{attribute-slot} can hold the root directory for the web-server (where your index.html lives). \\
   \hline
   \_help & Root symbol for help about escad. \\
   \hline
@@ -571,7 +571,7 @@ Symbols which represent expansions will execute the configured function of the e
 \section{Library usage}
 To use escad as a library in your common lisp programm, just load \path{package.lisp}.
 \section{HTML-webclient usage}
-Take your browser to communicate with escad in a graphical intuitive way.
+Take your browser to communicate with escad in a graphical intuitive way. This starts only a http-server if you have the default settings in your \path{escad\_conf.lisp} (with the symbol \emph{\_web} activated). With your web-browser you can browse the page at \texttt{127.0.0.1:4242/} which at first time loads a web-client in your browser. After that you can view and edit the graph like in figure~\ref{fig:escad_gui}.
 \section{Included expansions}
 Those are the expansions which are included/shipped in this escad-package.
 

@@ -1,12 +1,12 @@
 # Welcome to ESCAD.
 
-ESCAD stands for **E**xpandable **S**ymbolic **C**omputer **A**ided **D**escription. It is a tool in common-lisp which allows you to model parts of the world in symbols and relations, which are combined to a graph.
+ESCAD stands for **E**xpandable **S**ymbolic **C**omputer **A**ided **D**escription. It is a tool in common-lisp which allows you to model parts of the world in a graph (symbols and relations). Unlike some (still common) workflows which need the switching to different software tools and probably erroneous reentering of data, escad in principal (with domain expansions) allows model it once and do as many tasks as possible in escad.
 
 After modeling the graph, you can generate content (like PDF, SVG, DOT,...) from the graph or extract informations. The whole system is extendable through domain specific (self-written or existing) expansions, so you are not limited to the predefined shipped expansion-functions.
 
 # State
 
-Escad is in basic development state. Currently there is no released version and nor is it guaranted to work. However the development follows now the document driven development approach. Thus currently the activities are to prepare the manual and basic file structure for the 0.1 release.
+Escad is in basic development state. Currently there is no released version and nor is it guaranted to work (or just partly) after download! However the development follows the document driven development approach. Thus currently the activities are to prepare the manual and, controlled by it, also the code for the version 0.1 release.
 
 Just clone the current repository and look at it. There are basically two two ways to use escad. The easiest way is to start the browser and use the graphical gui.
 ![escad-gui](./doc/figures/escad_web_ui.png)

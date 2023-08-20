@@ -56,8 +56,9 @@ SHELL = /bin/bash
 latex = lualatex
 
 doc_dir = ./doc/
-lisp_dir = ./lisp/
 figures_dir = ./doc/figures/
+lisp_dir = ./lisp/
+test_dir = ./test/
 web_dir = ./web/
 
 manual_tex = escad_manual.tex
@@ -82,13 +83,13 @@ figures_all = $(wildcard $(figures_dir)*.png $(figures_pdf)) #$(notdir $(wildcar
 ###
 
 .PHONY: executable
-executable: escad ## make binary of lisp code
+executable: escad ## Make binary of lisp code.
 	cd $(lisp_dir) && sbcl --eval "(save-lisp-and-die \"escad\" :executable t :toplevel \"init-escad\")"	
 #sbcl --eval "(asdf:operate :build-op :escad)"
 
 
 .PHONY: web
-web: $(web_dir)bundle.js $(web_dir)bundle.css  ## bundle all (also referenced) js and css each in one file
+web: $(web_dir)bundle.js $(web_dir)bundle.css  ## Bundle all (also referenced) js and css each in one file.
 
 $(web_dir)bundle.js: $(web_dir)escad.js
 	cd $(web_dir); ./node_modules/.bin/esbuild --bundle escad.js --outfile=bundle.js
@@ -98,7 +99,7 @@ $(web_dir)bundle.css: $(web_dir)escad.css
 
 
 .PHONY: manual
-manual: $(doc_dir)$(manual_pdf)  ## Build manual (LaTeX + figures)
+manual: $(doc_dir)$(manual_pdf)  ## Build manual (LaTeX + figures).
 
 $(doc_dir)$(manual_pdf): $(doc_dir)$(manual_tex) $(figures_all) $(doc_dir)$(bibliography)
 	cd $(doc_dir); $(latex) $(manual_tex)      # main run
@@ -113,7 +114,7 @@ $(doc_dir)$(manual_pdf): $(doc_dir)$(manual_tex) $(figures_all) $(doc_dir)$(bibl
 
 
 .PHONY: figures
-figures: $(figures_pdf)  ## Create pdf-figures from tex for the manuscript
+figures: $(figures_pdf)  ## Create pdf-figures from tex for the manuscript.
 
 #$(figures_all): %.pdf : %.tex
 #$(filter %.pdf,$(figures_all)): %.pdf : %.tex
@@ -123,25 +124,25 @@ $(figures_pdf): $(figures_tex)
 
 
 .PHONY: clean
-clean:  ## Clean LaTeX and output figure files
+clean:  ## Clean LaTeX and output figure files.
 	cd $(doc_dir); rm -f $(texts_aux) $(texts_log) #$(manual_tmp)
 	cd $(figures_dir); rm -f $(figures_aux) $(figures_log)
 
 
 .PHONY: run
-run:  ## run escad
+run:  ## Run escad.
 	cd $(lisp_dir) && sbcl --load main.lisp
 
 
 .PHONY: test
-test:  ## run module tests
-	@echo "TODO!"
+test:  ## Run module tests.
+	cd $(test_dir) && sbcl --noinform --load test_lisp.lisp
+	cd $(test_dir) && sbcl --noinform --load test_web.lisp
 
 
 .PHONY: help
-help:  # auto generate this help via http://marmelab.com/blog/2016/02/29/auto-documented-makefile.html
+help:  # Auto generate this help via http://marmelab.com/blog/2016/02/29/auto-documented-makefile.html.
 	@grep -P '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
 
 
 .DEFAULT_GOAL := help
-
