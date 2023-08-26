@@ -102,7 +102,7 @@ const wmui = createMachine(
 const wmuiService = interpret(wmui).onTransition( (state) => console.log(state.value) );
 
 var cy = {};  // global entry to cytoscape object
-var arango_authorization = "bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJwcmVmZXJyZWRfdXNlcm5hbWUiOiJyb290IiwiaXNzIjoiYXJhbmdvZGIiLCJpYXQiOjE2NDY1MzAxNDgsImV4cCI6MTY0OTEyMjE0OH0.-VX0eXUh0W8avClofFTiebdoVtIMIc6UmX2Invi6-zg";
+var authorization = ""; // currently not used
 
 // execute this whenever the state changes:
 wmuiService.subscribe( (state) => {
@@ -232,7 +232,7 @@ function doURLencode(string) {
 async function getDBsearch(target_node_id) {
     const id = doURLencode(target_node_id);
     try {
-        let response = await fetch('http://127.0.0.1:8529/_db/thesis/thesis_api/search_equal_semantic/' + id,  { headers: { Authorization: arango_authorization }});
+        let response = await fetch('http://127.0.0.1:8529/_db/thesis/thesis_api/search_equal_semantic/' + id,  { headers: { Authorization: authorization }});
 	if (response.status === 200) {
             return await response.json();
 	} else {
@@ -251,7 +251,7 @@ async function getDBTree(root_node_id) {
     console.log('Get tree ' + root_node_id);
     const id = doURLencode(root_node_id);
     try {
-        let response = await fetch('http://127.0.0.1:8529/_db/thesis/thesis_api/tree/' + id,  { headers: { Authorization: arango_authorization }});
+        let response = await fetch('http://127.0.0.1:8529/_db/thesis/thesis_api/tree/' + id,  { headers: { Authorization: authorization }});
 	if (response.status === 200) {
             return await response.json();
 	} else {
@@ -270,7 +270,7 @@ async function getDBTree(root_node_id) {
 async function getDBClassNodes() {
     try {
         let response = await fetch('http://127.0.0.1:8529/_db/thesis/thesis_api/class_nodes',
-			      { headers: { Authorization: arango_authorization }});
+			      { headers: { Authorization: authorization }});
 	if (response.status === 200) {
             return await response.json();
 	} else {
@@ -288,7 +288,7 @@ async function getDBObjectNodes(semantic) {
     const semantic_enc = doURLencode(semantic);
     try {
         let response = await fetch('http://127.0.0.1:8529/_db/thesis/thesis_api/object_nodes/' + semantic_enc,
-			      { headers: { Authorization: arango_authorization }});
+			      { headers: { Authorization: authorization }});
 	if (response.status === 200) {
             return await response.json();
 	} else {
@@ -306,7 +306,7 @@ async function getDBEdge(id) {
     const edge_id = doURLencode(id);
     try {
         let response = await fetch('http://127.0.0.1:8529/_db/thesis/thesis_api/edge/' + edge_id,
-			      { headers: { Authorization: arango_authorization }});
+			      { headers: { Authorization: authorization }});
 	if (response.status === 200) {
             return await response.json();
 	} else {
@@ -324,7 +324,7 @@ async function getDBNode(id) {
     const node_id = doURLencode(id);
     try {
         let response = await fetch('http://127.0.0.1:8529/_db/thesis/thesis_api/node/' + node_id,
-			      { headers: { Authorization: arango_authorization }});
+			      { headers: { Authorization: authorization }});
 	if (response.status === 200) {
             return await response.json();
 	} else {
@@ -343,7 +343,7 @@ async function saveDBEdge(edge) {
     try {
         let response = await fetch('http://127.0.0.1:8529/_db/thesis/thesis_api/set_edges',
 				   { method: 'POST',
-				     headers: { Authorization: arango_authorization },
+				     headers: { Authorization: authorization },
 				     body: JSON.stringify(edge)});
 	if (response.status === 200) {
 	    displayInfo("Erfolgreich in Graphdatenbankserver gespeichert.");
@@ -363,7 +363,7 @@ async function saveDBNode(node) {
     try {
         let response = await fetch('http://127.0.0.1:8529/_db/thesis/thesis_api/set_nodes',
 				   { method: 'POST',
-				     headers: { Authorization: arango_authorization,
+				     headers: { Authorization: authorization,
 						'Accept': 'application/json',
 						'Content-Type': 'application/json'},
 				     body: JSON.stringify(node)});
@@ -387,11 +387,11 @@ async function removeDBEdge(edge_id) {
     try {
         let response = await fetch('http://127.0.0.1:8529/_db/thesis/thesis_api/edge/' + id,
 				   { method: 'DELETE',
-				     headers: { Authorization: arango_authorization,
+				     headers: { Authorization: authorization,
 						'Accept': 'application/json',
 						'Content-Type': 'application/json'}});
 	if (response.status === 200) {
-	    displayInfo("Erfolgreich in Graphdatenbankserver gelöscht.");
+	    displayInfo("Successful removed relation in escad.");
             return await response.json();
 	} else {
             return Promise.reject(response);
@@ -409,7 +409,7 @@ async function removeDBNode(node_id) {
     try {
         let response = await fetch('http://127.0.0.1:8529/_db/thesis/thesis_api/node/' + id,
 				   { method: 'DELETE',
-				     headers: { Authorization: arango_authorization,
+				     headers: { Authorization: authorization,
 						'Accept': 'application/json',
 						'Content-Type': 'application/json'}});
 	if (response.status === 200) {

@@ -86,7 +86,11 @@ Creates a list of all <o>bject (symbol or relation) data with references (in/out
 
 ;;;; symbol
 (defclass sym (obj)
-  ((ref_from
+  ((activate
+    :initarg :activate
+    :documentation "Argument (mostly string) for the activate command."
+    :initform '())
+   (ref_from
     :initarg :ref_from
     :documentation "List with relation-names, which indicate the relations which comes from another symbol (but need not to be directed!)."
     :initform '())
