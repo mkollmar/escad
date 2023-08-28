@@ -37,6 +37,7 @@
   (hunchentoot:start *server-acceptor*)
   (hunchentoot:define-easy-handler (say-yo :uri "/yo") (name)
     (setf (hunchentoot:content-type*) "text/plain")
+    (com.inuoe.jzon:parse "{\"hey\": 3}")
     (format nil "Hey~@[ ~A~]!" name)))
 
 (defun stop-gui-server ()

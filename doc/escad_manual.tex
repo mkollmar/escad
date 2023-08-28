@@ -208,7 +208,7 @@ History tells us about separation. Separation between different professions was 
 
 Living in todays world is getting more and more complex. There are laws made by human which you have to obey. Additionally mother nature has their ever-lasting rules, overwriting all human rules, and which we should obey to keep the environment healthy for future mankind. Thus people may have the need to get information about this \index{complexity}\textbf{complex} system and tools to make this understandable. Escad is not good in some things. In fact it is really not yet a good graph analysis tool (however one could update that functionality). Escad wants to be a (relatively simple) worker which allows combining different domains in one model: get something out of your semantic-graph-model, avoid switching different tools too much, make \LaTeX\ , PDF, 3D models, music or other documents, which would be boring to create by hand. You can additionally also use the \textbf{scripting} facility of escad.
 \section{Documentation-driven development}\label{sec:ddd}
-Documentation-driven development means here (at least we try), at first we define in this manual what we want to develop mostly from the user perspective. Then the feature will be implemented according this documentation. This is an advantage for the user, since he can see what a feature will look like, and documentation is ahead and not behind the actual implementation. The specified features in the manual, align to the mentioned version of escad. If some feature will be in a later version, this should be mentioned by a version notice. Features which are in the software but not documented here, should not be used or rely on, because they may change or are not ready for production yet.
+Documentation-driven development means here, at first it is defined in this manual what we want to develop. Then the feature will be implemented according this documentation. This is an advantage for the user, since he can see what a feature will look like, and documentation is ahead and not behind the actual implementation. The specified features in the manual, align to the mentioned version of escad. If some feature will be in a later version, this should be mentioned by a version notice. Features which are in the software but not documented here, should not be used or rely on, because they may change or are not ready for production yet.
 \section{State and screenshoots}
 Currently escad is in (wild) development {\fontspec{DejaVu Sans} 😀}. This means there are many ideas which should be developed. Some are just a quick hack to show what is possible and some are more detailed. However but only usable for experts in some areas. Many things are not completed. This is often to just give the idea what should come and is intended to be completed later if the system interacts satisfactorial as a whole.
 Basically you can use escad in two ways:
@@ -246,7 +246,7 @@ Currently there are no preconfigured packages for convenient installation of esc
 \end{enumerate}
 \subsection{Other systems}
 Sorry, for now other systems are currently not tested, but may be possible to work, since common-lisp is available for wide range of os. However some additional tools may be not available or have different behaviour so that not all things work like under linux. Another way is trying to start linux in a virtual environment, but knowledge is needed. If there is more man power it may be possible to improve that situation.
-\section{How it works and terms}
+\section{Concept and terms}\label{sec:concept}
 To understand a software-system it is often easier to understand the theory behind. In escad this is quite simple, since it is practical use of graph data structure (in informatically or mathematically means). But simple means just in the basic building blocks, not in the power, since graphs can be quite big and nested. Such \textbf{graphs} consist only of \textbf{symbols} $V$ (vertices, nodes, Knoten) and \textbf{relations} $E$ (edges, Kanten). Mathematically (see also \cite{math:taschenbuchdermathematik}) you can see this in equations~\ref{eq:graph}:
 \begin{align}
   \label{eq:graph}
@@ -386,9 +386,18 @@ Sometimes questions lead to a fast recognition of a problem or help to understan
 \item[Is there support for other languages as english?]  No not currently. The main author is german, but has spare time to keep manual in german as well. Currently english is choosen to reach a wide international range of people. If you want contribute with translation for your language feel welcome.
 \end{description}
 \chapter{Reference}
-Here you should find the full information to work with escad, such as available commands or interfaces. Also you should get some basic things in order to get the idea in how you can extend escad or help in development.
+Note in order to understand the reference you should be familiar with the section~\ref{sec:concept}. Here you find the detailed information to work with escad, such as available commands or interfaces. Also you should get some basic things in order to get the idea in how you can extend escad or help in development.
 \section{Architecture}
 See figure~\ref{fig:overview} for how escad is structured. Basically you get with escad two parts of software. The lisp side as \emph{server} and in case of the gui the javascript side, which acts as a \emph{client}.
+\subsection{View in detail}
+The figure~\ref{fig:graphdetail} shows the view in detail. It lives in the server and holds all your symbols and relations. You can see the default automatically generated symbols which are explained later. For the first left relation there are the reference slot names given (printed in red). The symbol \emph{\_escad} has no incoming references, thus there is just the \emph{ref\_to} slot with relations. Further you see the first relation which has both references bound to a symbol and this is usual for relations. This relations references to the symbol \emph{\_configuration} which thus has just \emph{ref\_from} slot filled.
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[scale=0.5]{figures/graphdetails.pdf}
+  \caption{View and all reference-slot names (red colored) which are involved with the first left relation.}
+  \label{fig:graphdetail}
+\end{figure}
+Note that the view is your main workplace. There may exist other escad views in other computers. In future escad-versions you may even mount this other views (from file or internet) or from other software tools. In order to acess all the symbols and relations, escad requires a \emph{unique ID}. Even if symbols or relations could technically have the same id, it is adviced to not do this. Some graph-databases do not allow same id for symbols or relations. In that case data exchange with that tools would not work or cause additional work to solve this.
 \subsection{Symbol in detail}
 Table~\ref{tab:symbol} shows the symbol slots (properties) meant for editing by the user and their meaning.
 \begin{table}[htbp]
@@ -418,6 +427,8 @@ Table~\ref{tab:symbol} shows the symbol slots (properties) meant for editing by 
 \label{tab:symbol}
 \end{table}
 \subsection{Relation in detail}
+In escad every relation is technically \emph{directed}. But this is just to store the direction in case you need it. Of course you can also model undirected or bidirectional graphs in escad. To do this you can use expansions which ignore the direction of the relation or you can use a special undirected- or bidirectional taxonomy or you can create two relations with the opposite direction to model bidirectionally. Escad also supports \emph{multigraphs}, so that there are multiple relations to/from the same target/source.
+
 Table~\ref{tab:relation} shows the relation slots (properties) meant for editing by the user and their meaning.
 \begin{table}[htbp]
 \definecolor{light-gray}{gray}{0.9}
@@ -443,8 +454,8 @@ Table~\ref{tab:relation} shows the relation slots (properties) meant for editing
 \caption{Slots of the relation object.}
 \label{tab:relation}
 \end{table}
-\subsection{Auto generated internal symbols (``\_''...)}
-Escad pushes it's concept of \emph{all can be described as graph} clearly forward. So even escad itself shows errors or other informations about itself with auto generated symbols beginning with the character \emph{\_}. Thus you can for example check if an command created an error by search for the symbol \emph{\_error}. In the slot \emph{representation} you can see the detailed error message. You have not to delete it after the error occurs but you can (in case to know that a new error exists another time). If a new error occurs the symbol will be populated with new message. All this symbols can be populated from escad in the graph and are connected by a relation to the parent symbol \emph{\_escad}.
+\subsection{Internal symbols (``\_''<name>)}
+Escad pushes it's concept of \emph{all can be described as graph} clearly forward. So even escad itself shows errors or other informations about itself with \emph{auto generated symbols} beginning with the character \emph{\_}. Thus you can for example check if an command created an error by search for the symbol \emph{\_error}. In the slot \emph{representation} you can see the detailed error message. You have not to delete it after the error occurs but you can (in case to know that a new error exists another time). If a new error occurs the symbol will be populated with new message. All this symbols can be populated from escad in the graph and are connected by a relation to the parent symbol \emph{\_escad}.
 Table~\ref{tab:internal-symbols} shows all internal symbols in the current version of escad.
 \begin{table}[htbp]
 \definecolor{light-gray}{gray}{0.9}
@@ -456,17 +467,21 @@ Table~\ref{tab:internal-symbols} shows all internal symbols in the current versi
   \hline
   \_configuration & Holds the path to the configuration file. \\
   \hline
-  \_escad & Root symbol from which all other internal escad symbols are connected. \\
-  \hline
   \_error & An error occured. If the error is generated from a expansion, a relation will be added from this symbol to the corresponding expansion symbol. \\
   \hline
-  \_web & Controls the server for the graphical web-interface. Activated with \emph{activate-slot} \texttt{start} starts server, \emph{activate-slot} set to \texttt{stop} ends the server. The \emph{attribute-slot} can hold the root directory for the web-server (where your index.html lives). \\
+  \_escad & Root symbol from which all other internal escad symbols are connected. \\
   \hline
   \_help & Root symbol for help about escad. \\
+  \hline
+  \_selection & You can preselect symbols or relations for further actions. The selection for symbols and relations is different. by creating a symbol with taxonomy \emph{std.symbol} or \emph{std.relation} with the object name you want select in slot \emph{representation}. After that create relation to the symbol \emph{\_selection}. \\
+  \hline
+  \_show & Escad at default tries to show you all available symbols. However in case your graph is big, you may want just to see a part of the graph (this also improves performance). To do this, you can create a relation from this symbol to the relations you want see. Note that there is the attribute-slot which controls the depth of child-symbols you can see (default is \emph{all} which shows all, \emph{1} would show the given symbol and it first child-symbols). Escad always shows the \emph{\_escad} symbol, so you not have to relate to it. \\
   \hline
   \_taxonomy & This is the root symbol from which you cann explorer all actual loaded expansions und thus taxonomies. \\
   \hline
   \_warning & Warning message. \\
+  \hline
+  \_web & Controls the server for the graphical web-interface. Activated with \emph{activate-slot} \texttt{start} starts server, \emph{activate-slot} set to \texttt{stop} ends the server. The \emph{attribute-slot} can hold the root directory for the web-server (where your index.html lives). \\
   \hline
 \end{tabular}
 \caption{Auto generated internal symbols of escad.}

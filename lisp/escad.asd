@@ -28,7 +28,7 @@
    :author "Markus Kollmar <markuskollmar@onlinehome.de>"
    :license "GNU Affero General Public License as published by the Free Software Foundation, version 3"
 					;:serial t ; "serial" means following components are depending in a serial way from top to bottom (saves :depending-on writing)
-   :depends-on ("hunchentoot")
+   :depends-on ("hunchentoot" "com.inuoe.jzon") ; http server, secure json library
    :components ((:file "package")
 		(:file "utils")
 		(:file "network")

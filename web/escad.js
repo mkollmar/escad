@@ -1,4 +1,4 @@
-// Copyright (C) 2021, 2022 Markus Kollmar (email: markuskollmar@onlinehome.de)
+// Copyright (C) 2021, 2022, 2023 Markus Kollmar (email: markuskollmar@onlinehome.de)
 //
 // BUILD COMMAND:
 // ./node_modules/.bin/esbuild --bundle escad-client.js --outfile=bundle.js
@@ -17,7 +17,7 @@ const pushNodeId = assign({ last_selected_two_nodes: (context, event) => {
 	context.last_selected_two_nodes.shift(); }
     return context.last_selected_two_nodes; } });
 
-// wissensmanagement user interfache
+// user interfache
 const wmui = createMachine(
     {
 	id: 'wmui',
@@ -132,7 +132,7 @@ wmuiService.subscribe( (state) => {
 	document.getElementById('query_result').style.display = "none";
 	document.getElementById('toggle_query').style.display = "none";
     } else if (state.matches("default")) {
-	displayInfo("Klicke auf einen Knoten oder eine Kante, um mehr Informationen darüber zu sehen.<br />Klicke auf den Hintergrund, um auf diese Startansicht zu kommen.<br />Die rechte Maustaste öffnet ein Kontextmenue mit weiteren Möglichkeiten je nach Objekt.<br />Erstellen Sie eine Suche indem sie Knoten und Kante einfügen bzw. verbinden.<br />Um eine Suche komplett zurückzusetzen, die Seite mit dem Browser neu laden (reload).");
+	displayInfo("Click on symbol or relation in order to see more information about it.<br />Click on background in order to get to this home-view.<br />Right-click on objects opens context dependent menue with further actions.<br />Create a search by connecting or creating symbols and relation.<br />To reset input reload this page.");
 	document.getElementById('id').style.display = "none";
 	document.getElementById('semantic').style.display = "none";
 	document.getElementById('info').style.display = "none";
@@ -165,7 +165,7 @@ async function displayEdge(id) {
     //cy.$id(id).json( {data: {semantic: dbe.semantic, weight: dbe.weight, time: dbe.time, type: dbe.type} } );
 
     if (cy.$id(id).data('atdb') != true) {
-	displayInfo("Kante ist noch nicht in der Datenbank gespeichert (klicke <Objekt speichern> zum Speichern)!<br />Kanteninformationen:");
+	displayInfo("Relation is not stored in escad yet (click <Object save> to store)!<br />Relation info:");
     }
     
     console.log("got id: " + id);
@@ -183,7 +183,7 @@ async function displayNode(id) {
     //cy.$id(id).json( {data: {semantic: dbn.semantic, weight: dbn.weight, info: dbn.info, type: dbn.type}, position: {x: dbn.x, y: dbn.y} } );
 
     if (cy.$id(id).data('atdb') != true) {
-	displayInfo("Knoten ist noch nicht in der Datenbank gespeichert (klicke <Objekt speichern> zum Speichern)!<br />Knoteninformationen:");
+	displayInfo("Symbol is not stored in escad yet (click <Object save> to store)!<br />Symbol info:");
     }
 
     console.log("got id: " + id);
