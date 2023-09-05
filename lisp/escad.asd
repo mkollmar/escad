@@ -32,8 +32,8 @@
    :components ((:file "package")
 		(:file "utils")
 		(:file "network")
-		(:file "escad" :depends-on ("package" "network" "utils")))
-		;(:file "main" :depends-on ("package")))
+		(:file "escad"))
+		;(:file "main" :depends-on ("package" "network" "utils")))
    :build-operation "asdf:program-op"
    :build-pathname "./"
    :entry-point "init-escad")

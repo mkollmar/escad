@@ -266,11 +266,12 @@ async function getDBTree(root_node_id) {
 }
 
 
-// DB GET NODE/EDGE
+// get all taxonomies
 async function getDBClassNodes() {
     try {
-        let response = await fetch('http://127.0.0.1:8529/_db/thesis/thesis_api/class_nodes',
-			      { headers: { Authorization: authorization }});
+        let response = await fetch('http://127.0.0.1:4242/_escad/get-all-taxonomies',
+			      { method: 'GET',
+				headers: {'Accept': 'application/json'} });
 	if (response.status === 200) {
             return await response.json();
 	} else {
@@ -432,7 +433,9 @@ async function initGraph(cy) {
     let nodes = await getDBClassNodes();
 
     let nr = Date.now();
-    nodes.forEach( (n) => { nr = nr +1; cy.add({group: 'nodes', data: { id: nr.toString(), info: n.info, _key: n._key, semantic: n.semantic, type: n.type, weight: n.weight, atdb: true }, position: { x: n.x, y: n.y }} ); } );
+    nodes.forEach( (n) => { nr = nr +1; cy.add({group: 'nodes', data: { id: nr.toString(), info: "info", _key: n, semantic: "semantic", type: "type", weight: 0, atdb: true }, position: { x: 100, y: 50 }} ); } );
+    // let nr = Date.now();
+    // nodes.forEach( (n) => { nr = nr +1; cy.add({group: 'nodes', data: { id: nr.toString(), info: n.info, _key: n._key, semantic: n.semantic, type: n.type, weight: n.weight, atdb: true }, position: { x: n.x, y: n.y }} ); } );
 }
 
 

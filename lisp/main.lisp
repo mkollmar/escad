@@ -17,7 +17,7 @@
 ;;
 ;; -------------------------------------
 ;; START ESCAD IN CLI:
-;;   sbcl --load main.lisp net-lisp
+;;   sbcl --load main.lisp
 ;;
 ;; START ESCAD IN EMACS SLIME-MODE:
 ;;   (load "~/quicklisp/setup.lisp")

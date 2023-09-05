@@ -27,7 +27,9 @@
 ;;;; Hunchentoot server for escad web-gui
 ;; ACESS WITH "HTTP://LOCALHOST:4242/"
 ;; an acceptor handles multiple http requests (chmod -R 775 www).
-(asdf:load-system "hunchentoot") ; webserver
+;(asdf:load-system "hunchentoot") ; webserver
+;(asdf:load-system "jzon")
+
 (defparameter *server-acceptor* (make-instance 'hunchentoot:easy-acceptor
         :port 4242
         :document-root (truename "../web/")))
@@ -35,6 +37,12 @@
 (defun start-gui-server ()
   "Start hunchentoot web server for escad gui."
   (hunchentoot:start *server-acceptor*)
+  
+  (hunchentoot:define-easy-handler (get-taxonomies :uri "/_escad/get-all-taxonomies") ()
+    ;(setf (hunchentoot:content-type*) "text/plain")
+    ;(com.inuoe.jzon:parse "{\"hey\": 3}")
+    (format nil "[\"_escad\", \"_show\"]"))
+  
   (hunchentoot:define-easy-handler (say-yo :uri "/yo") (name)
     (setf (hunchentoot:content-type*) "text/plain")
     (com.inuoe.jzon:parse "{\"hey\": 3}")
