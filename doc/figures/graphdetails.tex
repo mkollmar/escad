@@ -7,31 +7,51 @@
 
 \begin{document}
 \begin{tikzpicture}[
-      node distance=2.5cm and 1cm,
-      sym/.style={circle, shading=ball, ball color=green!40, minimum size=30mm},
+      node distance=2.5cm and 1.3cm,
+      sym/.style={ellipse, shading=ball, ball color=green!40, minimum size=11mm},
       atr/.style={circle, fill=blue!50, minimum size=0.5mm}]
+
       \node[sym] (escad) {$\_escad$};
+
       \node[sym] (configuration) [below=of escad] {$\_configuration$};
-      \node[sym] (error) [right=of configuration] {$\_error$};
-      \node[sym] (help) [right=of error] {$\_help$};
-      \node[sym] (selection) [right=of help] {$\_selection$};
-      \node[sym] (show) [right=of selection] {$\_show$};
-      \node[sym] (taxonomy) [right=of show] {$\_taxonomy$};
-      \node[sym] (warning) [right=of taxonomy] {$\_warning$};
-      \node[sym] (web) [right=of warning] {$\_web$};
+      \node[sym] (view) [below=of configuration] {$\_view$}; %
+      \node[sym] (web) [below=of view] {$\_web$};
+      
+      \node[sym] (message) [right=of configuration] {$\_message$}; %
+      \node[sym] (warning) [below=of message] {$\_warning$};
+      \node[sym] (error) [below=of warning] {$\_error$};
+      
+      \node[sym] (flow) [right=of message] {$\_flow$}; %
+      \node[sym] (selection) [below=of flow] {$\_selection$};
+      \node[sym] (show) [below=of selection] {$\_show$};
+
+      \node[sym] (mount) [right=of flow] {$\_mount$}; %
+      \node[sym] (taxonomy) [below=of mount] {$\_taxonomy$};
+
+      \node[sym] (help) [right=of mount] {$\_help$};
 
     % \node[sym] (s1) [below left=of s0] {$s_1$};
     % \node[atr] at (-1.4,-1.6) {}; % s1 attribute
     % \node[sym] (s2) [left=of s1] {$s_2$};
     % \node[sym] (s3) [left=of s2] {$s_3$};
-      \draw[-{Latex[width=3mm, length=3mm]}] (escad) -- (configuration) node [pos=-0.1, above, color=red] {ref\_to} node [pos=0.1, left, color=red] {ref\_from} node [pos=0.7, left, color=red] {ref\_to} node [pos=1.1, below, color=red] {ref\_from};
-      \draw[-{Latex[width=3mm, length=3mm]}] (escad) to[out=-60, in=90, looseness=0.4] (error);
-      \draw[-{Latex[width=3mm, length=3mm]}] (escad) to[out=-50, in=90, looseness=0.4] (help);
-      \draw[-{Latex[width=3mm, length=3mm]}] (escad) to[out=-40, in=90, looseness=0.4] (selection);
-      \draw[-{Latex[width=3mm, length=3mm]}] (escad) to[out=-30, in=90, looseness=0.4] (show);
-      \draw[-{Latex[width=3mm, length=3mm]}] (escad) to[out=-20, in=90, looseness=0.4] (taxonomy);
-      \draw[-{Latex[width=3mm, length=3mm]}] (escad) to[out=-10, in=90, looseness=0.4] (warning);
-      \draw[-{Latex[width=3mm, length=3mm]}] (escad) to[out=0, in=90, looseness=0.4] (web);
+      \draw[-{Latex[width=3mm, length=3mm]}] (escad) -- (configuration) node [pos=0.03, above, color=red] {ref\_to} node [pos=0.1, left, color=red] {ref\_from} node [pos=0.7, left, color=red] {ref\_to} node [pos=1.0, below, color=red] {ref\_from};
+      \draw[-{Latex[width=3mm, length=3mm]}] (escad) to[out=185, in=150, looseness=1] (view);
+      \draw[-{Latex[width=3mm, length=3mm]}] (escad) to[out=180, in=130, looseness=1] (web);
+      
+      \draw[-{Latex[width=3mm, length=3mm]}] (escad) to[out=-25, in=110, looseness=0.4] (message);
+      \draw[-{Latex[width=3mm, length=3mm]}] (escad) to[out=-55, in=100, looseness=0.4] (warning);
+      \draw[-{Latex[width=3mm, length=3mm]}] (escad) to[out=-60, in=115, looseness=1.9] (error);
+      
+      \draw[-{Latex[width=3mm, length=3mm]}] (escad) to[out=-15, in=100, looseness=0.4] (flow);
+      \draw[-{Latex[width=3mm, length=3mm]}] (escad) to[out=-20, in=100, looseness=0.9] (selection);
+      \draw[-{Latex[width=3mm, length=3mm]}] (escad) to[out=-50, in=95, looseness=0.3] (show);
+      
+      \draw[-{Latex[width=3mm, length=3mm]}] (escad) to[out=-5, in=100, looseness=0.5] (mount);
+      \draw[-{Latex[width=3mm, length=3mm]}] (escad) to[out=-10, in=110, looseness=1.2] (taxonomy);
+      
+      \draw[-{Latex[width=3mm, length=3mm]}] (escad) to[out=0, in=90, looseness=0.4] (help);
+
+
       %\draw[-{Latex[width=3mm, length=3mm]}, out=0, in=90, looseness=1] (escad) -- (web);
     % \draw[->] (s1) -- (s2) node [midway, below] {$r_1$};
     % \draw[->,out=-100,in=200,looseness=2] (s2) to node[above,pos=0.5] {$r_2$} (s3);

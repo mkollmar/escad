@@ -114,13 +114,15 @@ $(doc_dir)$(manual_pdf): $(doc_dir)$(manual_tex) $(figures_all) $(doc_dir)$(bibl
 
 
 .PHONY: figures
-figures: $(figures_pdf)  ## Create pdf-figures from tex for the manuscript.
+figures: $(figures_pdf)  ## Create pdf-figures from tex (trigger latex manually for new figures to get inital pdf).
 
 #$(figures_all): %.pdf : %.tex
 #$(filter %.pdf,$(figures_all)): %.pdf : %.tex
 #$(addprefix $(figures_dir),$(figures_all))
-$(figures_pdf): $(figures_tex)
-	cd $(figures_dir); $(latex) $(notdir $<);
+#$(objects): %.o: %.c
+#$(figures_pdf): $(figures_tex)
+$(figures_pdf): %.pdf: %.tex
+	cd $(figures_dir) && echo "-------------------=========---------------"; $(latex) $(notdir $<);
 
 
 .PHONY: clean

@@ -17,7 +17,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (in-package "COMMON-LISP-USER")
-(defpackage :de.markus-herbert-kollmar.escad.standard
+(defpackage :de.markus-herbert-kollmar.escad.expansion.std
   (:use :common-lisp :escad)
   (:nicknames :escad.standard)
   ;(:export :make-statement :do-ask :do-finish :check-answer)

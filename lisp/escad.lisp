@@ -69,6 +69,14 @@
     :documentation "Classificates the object into a defined taxonomy-scheme to indicate basic meaning of the object."
     :initarg :taxonomy
     :reader taxonomy)
+   (visual_cli
+    :initarg :visual_cli
+    :documentation "Slot which holds data specifying the visualisation of the object for the command line interface."
+    :initform nil)
+   (visual_web
+    :initarg :visual_web
+    :documentation "Slot which holds JSON data specifying the visualisation of the object for the web-interface."
+    :initform "")
    (weight
     :initarg :weight
     :documentation "Positive or negative float-number that rates the object aginst other objects. Null means neutral."
@@ -130,6 +138,21 @@ Creates a list of all <o>bject (symbol or relation) data with references (in/out
       (format *current-stream*
 	      "attributes: ~s comment: ~s taxonomy: ~s ref_to: ~s ref_from: ~s weight: ~s"
 	      attributes comment taxonomy ref_to ref_from weight))))
+
+;;;; 
+(defclass expansion (obj)
+  ((activate
+    :initarg :activate
+    :documentation "Argument (mostly string) for the activate command."
+    :initform '())
+   (ref_from
+    :initarg :ref_from
+    :documentation "List with relation-names, which indicate the relations which comes from another symbol (but need not to be directed!)."
+    :initform '())
+   (ref_to
+    :initarg :ref_to
+    :documentation "List with relation-names, which indicate the relations which go to another symbol (but need not to be directed!)."
+    :initform '())))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; helper functions for this library
