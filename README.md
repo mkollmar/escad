@@ -1,8 +1,15 @@
 # Welcome to ESCAD.
 
-ESCAD stands for **E**xpandable **S**ymbolic **C**omputer **A**ided **D**escription. It is a tool basically written in common-lisp which allows you to model parts of the world in a graph (symbols and relations). Unlike some (still common) workflows which need the switching to different software tools and probably erroneous reentering of data, escad in principal (with domain expansions) allows model it once and do as many tasks as possible in escad.
+ESCAD stands for **E**xpandable **S**ymbolic **C**omputer **A**ided **D**escription. It is a tool basically written in common-lisp which allows you to describe parts of the world in a graph (symbols and relations). After modeling the graph, you can generate content (like PDF, SVG, DOT,...) from the graph or extract informations. Unlike some (still common) workflows which need the switching to different software tools and probably erroneous reentering of data, escad in principal (with domain expansions) allows model it once and do as many tasks as possible in escad. The whole system is extendable through domain specific (self-written or existing) expansions, so you are not limited to the predefined shipped expansion-functions.
 
-After modeling the graph, you can generate content (like PDF, SVG, DOT,...) from the graph or extract informations. The whole system is extendable through domain specific (self-written or existing) expansions, so you are not limited to the predefined shipped expansion-functions. You need an example what escad exactly is about? Then read the next section with an practical use case.
+Following key principles are provided:
+* UTF-8 encoding instead of vendor specific binary format for your data.
+* Web-browser based graphical user interface for multiple operation systems.
+* Powerful scripting language common lisp (a multi-paradigm, performant, ANSI-standardized, mature language).
+* Symbolic description allows even with no programming skills to generate output with mature tools under the hood, like latex for professional document layouts.
+* Existing or self created expansions support symbolic description of many domains and different levels of abstraction in one tool - escad.
+
+You need now an example what escad exactly is about? Then read the next section with an practical use case.
 
 # Use case example "room planing"
 
