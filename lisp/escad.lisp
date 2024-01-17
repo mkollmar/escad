@@ -1,73 +1,61 @@
-;; Copyright (C) 2011, 2012, 2013, 2014, 2019, 2020,
-;; 2021, 2022 Markus Kollmar (email: markuskollmar@onlinehome.de)
-;;
-;; This file is part of ESCAD.
-;;
-;; ESCAD is free software: you can redistribute it and/or modify
-;; it under the terms of the GNU Affero General Public License as published by
-;; the Free Software Foundation, either version 3 of the License, or
-;; (at your option) any later version.
-;;
-;; ESCAD is distributed in the hope that it will be useful,
-;; but WITHOUT ANY WARRANTY; without even the implied warranty of
-;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-;; GNU Affero General Public License for more details.
-;;
-;; You should have received a copy of the GNU Affero General Public License
-;; along with ESCAD.  If not, see <http://www.gnu.org/licenses/>.
-;;
-;; escad base library.
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;; Copyright (C) 2011, 2012, 2013, 2014, 2019, 2020,
+;;;; 2021, 2022, 2023, 2024 Markus Kollmar (email: markuskollmar@onlinehome.de)
+;;;;
+;;;; This file is part of ESCAD.
+;;;;
+;;;; ESCAD is free software: you can redistribute it and/or modify
+;;;; it under the terms of the GNU Affero General Public License as published by
+;;;; the Free Software Foundation, either version 3 of the License, or
+;;;; (at your option) any later version.
+;;;;
+;;;; ESCAD is distributed in the hope that it will be useful,
+;;;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;;;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;;;; GNU Affero General Public License for more details.
+;;;;
+;;;; You should have received a copy of the GNU Affero General Public License
+;;;; along with ESCAD.  If not, see <http://www.gnu.org/licenses/>.
+;;;;
+;;;; escad base library.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (in-package :de.markus-herbert-kollmar.escad)
-
-;; USER CONFIG START
-(defparameter *escad-view-dir* "./public/view/" "This directory will be used to save and load view's if no directory is specified.")
-(defparameter *escad-lib-dir* "./lib/" "This directory will be used mostly to look for expansions and taxonomies.")
-(defparameter *escad-external-lib-dir* "./lib/" "This directory will be used to look for code which is not maintained in this project.")
-(defparameter *escad-taxonomy-file* "./lib/escad_taxonomy.lisp" "Actual valid escad taxonomy-tree for insertable symbols and relations.")
-(defparameter *escad_tmp_file* "escad4567.tmp" "Temporary file used mostly for export-functions.")
-;; USER CONFIG END
-
-
-(defparameter *current-stream* *STANDARD-OUTPUT* "Output stream for some output commands.")
-(defparameter *symbols1* (make-hash-table :test 'equal) "Symbols for first view.")
-(defparameter *symbols2* (make-hash-table :test 'equal) "Symbols for second view.")
-(defparameter *symbols* *symbols1* "Pointer to current symbol-hash.")
-(defparameter *relations1* (make-hash-table :test 'equal))
-(defparameter *relations2* (make-hash-table :test 'equal))
-(defparameter *relations* *relations1* "Pointer to current relation-hash.")
-(defvar *current_symbol1* "_view" "Current marked symbol (e.g. as a result of flow-view).")
-(defvar *current_symbol2* "_view" "Current marked symbol (e.g. as a result of flow-view).")
-(defvar *current_symbol* *current_symbol1* "Pointer to current marked symbol.")
-(defparameter *escad_version* 0)
-(defparameter *escad_file_format* 0)
-(defparameter *taxonomy* nil "Currently used taxonomy-tree for symbols, relations and attributes.")
-(defparameter *escad-max-obj-count* 999 "Maximal count of automatic generated relations or symbols.")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;; data structures/object-definitions
 ;;;; relation+symbol
 (defclass obj ()
   ((attributes
     :initarg :attributes
-    :documentation "A data-structure with detailed info of a object. Usually this attributes are slower/expensive to get."
+    :documentation "A list of strings with additional user-defineable characterisations of a object."
     :initform '()
     :reader attributes)
    (comment
-    :documentation "Description or notices to a object."
+    :documentation "String for human reading which describes the object or contains notices to it."
     :initarg :comment
     :initform "")
+   (id
+    :documentation "String to identify the object and should therefore be unique in the given context."
+    :initarg :id
+    :initform ""
+    :type string)
    (label
-    :documentation "String with a text given to the symbol. Note that this text need not to be unique and could occur more than once for different symbols. It is meant for pretty printing for some user interfaces."
+    :documentation "String with a text given to the symbol. Note that this text need not to be unique as the id and could occur more than once for different symbols. It is meant for pretty printing for some user interfaces."
     :initarg :label
     :initform "")
+   (parameter
+    :initarg :parameter
+    :documentation "String with parameter(s) to the activation method. This gives the object finer control of the activation-method functionality."
+    :initform ""
+    :accessor parameter)
    (representation
     :initarg :representation
-    :documentation "String which represents the object. Often used for dynamic text in expansion."
-    :initform "")
+    :documentation "String which represents the object. It can be set by the activation method or set directly by the user. Depending on the symbol taxonomy it can hold the state of an object or in case of data like e.g. latex the latex source code."
+    :initform ""
+    :accessor representation)
    (taxonomy
-    :documentation "Classificates the object into a defined taxonomy-scheme to indicate basic meaning of the object."
+    :documentation "String which classificates the object to give meaning (semantic) to the object."
     :initarg :taxonomy
+    :initform ""
     :reader taxonomy)
    (visual_cli
     :initarg :visual_cli
@@ -75,17 +63,26 @@
     :initform nil)
    (visual_web
     :initarg :visual_web
-    :documentation "Slot which holds JSON data specifying the visualisation of the object for the web-interface."
+    :documentation "String in JSON format which specifies the visualisation of the object for the web-interface."
     :initform "")
    (weight
     :initarg :weight
-    :documentation "Positive or negative float-number that rates the object aginst other objects. Null means neutral."
-    :initform '())))
+    :documentation "Signed float-number (positive or negative) that is used to rank similar objects against each other to specify order/importance/cost/possibility. Null usual means neutral."
+    :initform 0))
+  (:documentation "Root object for symbols and relations."))
 
 (defgeneric o (obj)
   (:documentation "object -> property-list
 Creates a list of all <o>bject (symbol or relation) data with references (in/out)."))
 
+(defgeneric reset (obj)
+  (:documentation "object -> object
+Reset representation- and attributes-slot to nil."))
+
+(defmethod reset ((object obj))
+  (setf (slot-value object 'representation) nil)
+  (setf (slot-value object 'attributes) nil))
+  
 (defmethod print-object ((object obj) *current-stream*)
   (print-unreadable-object (object *current-stream* :type t)
     (with-slots (representation comment weight) object
@@ -94,18 +91,23 @@ Creates a list of all <o>bject (symbol or relation) data with references (in/out
 
 ;;;; symbol
 (defclass sym (obj)
-  ((activate
-    :initarg :activate
-    :documentation "Argument (mostly string) for the activate command."
-    :initform '())
-   (ref_from
+  ((ref_from
     :initarg :ref_from
-    :documentation "List with relation-names, which indicate the relations which comes from another symbol (but need not to be directed!)."
+    :documentation "List with relation-ids, which indicate the relations comming from another symbol (but need not be seen as directed relations!)."
     :initform '())
    (ref_to
     :initarg :ref_to
-    :documentation "List with relation-names, which indicate the relations which go to another symbol (but need not to be directed!)."
+    :documentation "List with relation-ids, which indicate the relations going to another symbol (but need not to be seen as directed relations!)."
     :initform '())))
+
+(defgeneric activate (sym)
+  (:documentation "Activate command for symbol-functionality, with optional arguments given in activate-slot."))
+
+(defmethod activate ((obj sym))
+  (with-slots ((att attributes) (com comment) (lab label) (rep representation) (tax taxonomy)
+ 	       (refto ref_to) (reffrom ref_from) (wei weight)) obj
+    (format t "activate sym!!")
+    rep))
 
 (defmethod o ((obj sym))
   (with-slots ((att attributes) (com comment) (lab label) (rep representation) (tax taxonomy)
@@ -115,17 +117,17 @@ Creates a list of all <o>bject (symbol or relation) data with references (in/out
 (defmethod print-object ((object sym) *current-stream*)
   (print-unreadable-object (object *current-stream* :type t)
     (with-slots (attributes comment label representation taxonomy ref_to ref_from weight) object
-      (format *current-stream* "~s: ~s" label representation))))
+      (format *current-stream* "\[~d\]->\{~a\}->\[~d\]" (length ref_from) taxonomy (length ref_to)))))
 
 
 ;; relation
 (defclass rel (obj)
   ((ref_from
     :initarg :ref_from
-    :documentation "List with one symbol-name that indicate from which symbol the relation starts.")
+    :documentation "List with one symbol-id that indicate from which symbol the relation starts. List is used to represent hypergraphs (where edges have multiple from and to-refs).")
    (ref_to
     :initarg :ref_to
-    :documentation "List with one symbol-name that indicate to which symbol the relation points.")))
+    :documentation "List with one symbol-id that indicate to which symbol the relation points. List is used to represent hypergraphs (where edges have multiple from and to-refs).")))
 
 (defmethod o ((obj rel))
   (with-slots ((att attributes) (com comment) (lab label) (rep representation) (tax taxonomy)
@@ -135,24 +137,8 @@ Creates a list of all <o>bject (symbol or relation) data with references (in/out
 (defmethod print-object ((object rel) *current-stream*)
   (print-unreadable-object (object *current-stream* :type t)
     (with-slots (attributes comment taxonomy ref_to ref_from view weight) object
-      (format *current-stream*
-	      "attributes: ~s comment: ~s taxonomy: ~s ref_to: ~s ref_from: ~s weight: ~s"
-	      attributes comment taxonomy ref_to ref_from weight))))
+      (format *current-stream* "\[~d\]->\{~a\}->\[~d\]" (length ref_from) taxonomy (length ref_to)))))
 
-;;;; 
-(defclass expansion (obj)
-  ((activate
-    :initarg :activate
-    :documentation "Argument (mostly string) for the activate command."
-    :initform '())
-   (ref_from
-    :initarg :ref_from
-    :documentation "List with relation-names, which indicate the relations which comes from another symbol (but need not to be directed!)."
-    :initform '())
-   (ref_to
-    :initarg :ref_to
-    :documentation "List with relation-names, which indicate the relations which go to another symbol (but need not to be directed!)."
-    :initform '())))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; helper functions for this library
@@ -162,85 +148,112 @@ Creates a list of all <o>bject (symbol or relation) data with references (in/out
     :initarg :error-text
     :reader error-text)))
 
-(defun get-taxonomy-db-header ()
-  "-> taxonomy-header-list
-Get the taxonomy header from the taxonomy database."
-  (car *taxonomy*))
+;; (defun get-taxonomy-db-header ()
+;;   "-> taxonomy-header-list
+;; Get the taxonomy header from the taxonomy database."
+;;   (car *taxonomy*))
 
-(defun get-taxonomy-db-attributes ()
-  "-> taxonomy-attribute-list
-Get the attributes-taxonomies-property-list from the taxonomy database."
-  (getf (cadr *taxonomy*) :attribute))
+;; (defun get-taxonomy-db-attributes ()
+;;   "-> taxonomy-attribute-list
+;; Get the attributes-taxonomies-property-list from the taxonomy database."
+;;   (getf (cadr *taxonomy*) :attribute))
 
-(defun get-taxonomy-db-relations ()
-  "-> taxonomy-relation-list
-Get the relation-taxonomies-property-list from the taxonomy database."
-    (getf (cadr *taxonomy*) :relation))
+;; (defun get-taxonomy-db-relations ()
+;;   "-> taxonomy-relation-list
+;; Get the relation-taxonomies-property-list from the taxonomy database."
+;;     (getf (cadr *taxonomy*) :relation))
 
-(defun get-taxonomy-db-symbols ()
-  "-> taxonomy-symbol-list
-Get the symbol-taxonomies-property-list from the taxonomy database."
-  (getf (cadr *taxonomy*) :symbol))
+;; (defun get-taxonomy-db-symbols ()
+;;   "-> taxonomy-symbol-list
+;; Get the symbol-taxonomies-property-list from the taxonomy database."
+;;   (getf (cadr *taxonomy*) :symbol))
 
-(defun get-taxonomy-item (type taxonomy-name)
-   ":type-key taxonomy-string -> taxonomy-item-list
-Get exact named taxonomy-item whereby :type-key is :attribute, :relation or :symbol."
-  (dolist (taxonomy-item (getf (cadr *taxonomy*) type))
-     (if (string= taxonomy-name (getf taxonomy-item :taxonomy))
-	  (return-from get-taxonomy-item taxonomy-item)))
-  nil)
+;; (defun get-taxonomy-item (type taxonomy-name)
+;;    ":type-key taxonomy-string -> taxonomy-item-list
+;; Get exact named taxonomy-item whereby :type-key is :attribute, :relation or :symbol."
+;;   (dolist (taxonomy-item (getf (cadr *taxonomy*) type))
+;;      (if (string= taxonomy-name (getf taxonomy-item :taxonomy))
+;; 	  (return-from get-taxonomy-item taxonomy-item)))
+;;   nil)
 
-(defun get-taxo-prop (type taxonomy-name property)
-  ":type-key taxonomy-string :property-key -> type-string
-<get> <taxo>nomy <prop>erty of the taxonomy."
-  (let ((item (get-taxonomy-item type taxonomy-name)))
-     (if item
-	 (getf item property)
-	 nil)))
+;; (defun get-taxo-prop (type taxonomy-name property)
+;;   ":type-key taxonomy-string :property-key -> type-string
+;; <get> <taxo>nomy <prop>erty of the taxonomy."
+;;   (let ((item (get-taxonomy-item type taxonomy-name)))
+;;      (if item
+;; 	 (getf item property)
+;; 	 nil)))
+;; (defun load-std-taxonomy (&optional (taxonomy-filename *escad-taxonomy-file*))
+;;   "Load in taxonomy-tree information (all supported domains)."
+;;   (with-open-file (in taxonomy-filename)
+;;     (with-standard-io-syntax
+;;       (setf *taxonomy* (read in)))))
+
 
 (defun init-escad ()
-  (let ((cmd-line-args (cadr (get-cmdline-args))))
-    (init-views)
-    ;(read-config-file)
-    ;(load-taxonomy)
-    (start-gui-server) ; just for tests called here
-    ;(lisp_over_network)
-    ;(handler-bind ((escad-internal-error #'skip-json_rpc-request))
-    ;(json-rpc_over_network)))
-    (pprint "Welcome and thanks for using escad!  :-)")
-    (pprint "Please type now '(in-package :escad)' to switch to escad package for typing any escad command.")
-    (pprint "Type then (help) to see short info about available escad commands.")))
+  "<Init> <escad> so that it is ready for user interaction."
+  (init-internal-symbols)
+  (mount-taxonomy (load-expansion (concatenate 'string *escad-expansion-dir* "standard_expansion.lisp")) "_taxonomy")
+  (eval-cmd-line-input)
+  (load-view)
+  (eval-config-file)
+  (print-welcome-message))
 
-(defun init-views ()
-  "Initialize the two escad views with symbols and relations."
-  ;(ns "_escad" :taxonomy "escad.escad" :comment "Settings for escad (https://github.com/mkollmar/escad) belonging to this view.")
-  ;(ns "_encoding" :taxonomy "escad.encoding" :representation "UTF-8")
-  ;(ns "_view" :comment "Settings for active view." :taxonomy "escad.export.pdf")
-  ;(ns "_view_exportfile" :taxonomy "escad.filename_relative" :representation "view-0.pdf")
-  ;(cs "_view")
-  (tv)
-  ;(ns "_escad" :attributes '("url" "https://github.com/mkollmar/escad" "encoding" "UTF-8") :comment "Settings for escad belonging to this view." :taxonomy "escad.symbol._escad")
-  ;(ns "_view" :comment "Settings and a function for the current view.")
-  ;(s "_view" :taxonomy "escad.symbol._escad.export.pdf")
-  ;(asa "_view" (list "escad.attribute.filename_relative" "view-1.pdf"))
-  ;(cs "_view")
-  (tv))
+(defun load-expansion (file-name)
+  "Loads expansion and give back loaded package-name."
+  (reset (s "_error"))
+  (reset (s "_message"))
+  (if (load file-name :verbose nil :print t :if-does-not-exist nil)
+      (representation (s "_message")) ; sucess, thus get package name
+      (setf (representation (s "_error")) "error loading expansion!"))) ;error occured
 
-(defun load-taxonomy (&optional (taxonomy-filename *escad-taxonomy-file*))
-  "Load in taxonomy-tree information (all supported domains)."
-  (with-open-file (in taxonomy-filename)
-    (with-standard-io-syntax
-      (setf *taxonomy* (read in)))))
+(defun mount-taxonomy (package-name mount-point)
+  "Mount all taxonomy classes of a package to a escad symbol designated by mount-path (symbol name(s))."
+  (dolist (tax (funcall (find-symbol (string-upcase "list-taxonomies") package-name)))
+    (cs (string tax))
+    (cr mount-point (string tax))))
 
-(defun make-test-dot-import ()
-  "Create schematic to test svg-mindmap export-expansion."
-  (ns "import_dot!" :taxonomy "escad.symbol._escad.import.dot"))
+(defun init-internal-symbols ()
+  "<Init>ialize the escad <view> with the internal symbols and (if any) relations."
+  (cs "_error" :taxonomy "sym" :comment "Error messages of escad.")
+  (cs "_escad" :taxonomy "sym" :comment "Settings for escad (https://github.com/mkollmar/escad) belonging to this view.")
+  (cs "_expansion" :taxonomy "sym" :comment "")
+  (cs "_flow" :taxonomy "sym" :comment "")
+  (cs "_help" :taxonomy "sym" :comment "")
+  (cs "_message" :taxonomy "sym" :comment "")
+  (cs "_mount" :taxonomy "sym" :comment "")
+  (cs "_selection" :taxonomy "sym" :comment "")
+  (cs "_show" :taxonomy "sym" :comment "")
+  (cs "_taxonomy" :taxonomy "sym" :comment "")
+  (cs "_view" :taxonomy "sym" :comment "")
+  (cs "_warning" :taxonomy "sym" :comment "Contains warning messages in the representation-slot."))
 
-(defun make-tutorial-schematic ()
-  "Deletes current view and creates schematic for internal tutorial."
-  (cls)
-  (ns "mother") (ns "father") (ns "myself")
-  (nr "has_child[1]" "mother" "myself") (nr "has_child[2]" "father" "myself") (nr "are_married" "father" "mother") (nr "hatKind1" "Vater" "Ich"))
+(defun eval-cmd-line-input ()
+  "Eval all commandline input."
+  (let ((cmd-line-args (get-cmdline-args)))
+    (if (= 1 (list-length cmd-line-args))
+	(eval (read-from-string (car cmd-line-args)))
+	nil)))
+
+(defun load-view (&optional (file "view.lisp"))
+  ""
+;(lov (concatenate 'string *escad-workspace-dir* view-file))
+  t
+  )
+
+(defun eval-config-file ()
+  "Loads config file which allows to load needed expansions or to start the webserver (graphical ui)."
+  (reset (s "_error"))
+  (reset (s "_message"))
+  (if (load *escad-config-file* :verbose nil :print t :if-does-not-exist nil)
+      (setf (representation (s "_message")) "done")
+      (setf (representation (s "_error")) "")))
+
+(defun print-welcome-message ()
+  "Print welcome, hints and version of escad"
+  (format t "Welcome and thanks for using escad version ~a~%" *escad_version*)
+  (pprint "Type '(in-package :escad)' to switch to escad package for typing any escad command.")
+  (pprint "Type '(help)' to see short info about available escad commands."))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -316,23 +329,11 @@ multiple values: the diameter of longest path(s) and the path(s) itself."
 	       a))
 	nil)))
 
-(defun as (&optional (symbol "_view"))
-  "[symbol-name] -> info-string
-<a>ctivate <s>ymbol in current view.
-What happens depends on the taxonomy of the symbol. Many symbols print out a string as their contents.
-Symbols which represent expansions will execute the configured function of the expansion."
-  (let* ((taxonomy-name (getf (o (s symbol)) :taxonomy))
-	 (expansion-file (get-taxo-prop :symbol taxonomy-name :expansion))
-	 (expansion-package (get-taxo-prop :symbol taxonomy-name :package))
-	 (taxonomy-documentation (get-taxo-prop :symbol taxonomy-name :doc))
-	 (expansion-function (get-taxo-prop :symbol taxonomy-name :function)))
-    (cond
-     (expansion-file  ; this seems to be expansion
-      (unless (find-package expansion-package) (load (concatenate 'string *escad-lib-dir* expansion-file)))
-      (use-package expansion-package)
-      (pprint taxonomy-documentation)
-      (funcall (read-from-string expansion-function) symbol))
-     (t (pprint taxonomy-documentation)))))
+(defun as (&optional (symbol-name "_escad"))
+  "[symbol-name] -> string
+<a>ctivate <s>ymbol.
+What happens depends on the taxonomy of the symbol. Many symbols print out their representation slot."
+  (activate (s symbol-name)))
 
 (defun asa (symbol-name attr-tax-val-list)
   "symbol-name-string '(attrib-taxonomie-key value) -> nil / symbol-name
@@ -363,7 +364,7 @@ Symbols which represent expansions will execute the configured function of the e
 
 (defun cls ()
   "<cl>ear <s>chematic. This removes ALL symbols and relations in current view!"
-  (clrhash *symbols*) (clrhash *relations*) (init-views)
+  (clrhash *symbols*) (clrhash *relations*) (init-internal-symbols)
   t)
 
 ;(defun cps (symbols)
@@ -385,26 +386,71 @@ Symbols which represent expansions will execute the configured function of the e
   ;; 			   (setf (gethash name rels_dest) rel))))
   ;; symbols)
 
-(defun cpv ()
-  "[src dest] -> t/nil
-<c>o<p>y current active <v>iew in other view (all possible existing objects in destination will be deleted!)."
-  (tv)
-  (clrhash *symbols*)
-  (clrhash *relations*)
-  (if (eq *symbols* *symbols1*)
-      (progn ; cp 1 -> 2
-	(maphash #'(lambda(key value) (setf (gethash key *symbols2*) value)) *symbols1*)
-	(maphash #'(lambda(key value) (setf (gethash key *relations2*) value)) *relations1*))
-      (progn ; cp 2 -> 1
-	(maphash #'(lambda(key value) (setf (gethash key *symbols1*) value)) *symbols2*)
-	(maphash #'(lambda(key value) (setf (gethash key *relations1*) value)) *relations2*)))
-  t)
+;; (defun cpv ()
+;;   "[src dest] -> t/nil
+;; <c>o<p>y current active <v>iew in other view (all possible existing objects in destination will be deleted!)."
+;;   (tv)
+;;   (clrhash *symbols*)
+;;   (clrhash *relations*)
+;;   (if (eq *symbols* *symbols1*)
+;;       (progn ; cp 1 -> 2
+;; 	(maphash #'(lambda(key value) (setf (gethash key *symbols2*) value)) *symbols1*)
+;; 	(maphash #'(lambda(key value) (setf (gethash key *relations2*) value)) *relations1*))
+;;       (progn ; cp 2 -> 1
+;; 	(maphash #'(lambda(key value) (setf (gethash key *symbols1*) value)) *symbols2*)
+;; 	(maphash #'(lambda(key value) (setf (gethash key *relations1*) value)) *relations2*)))
+;;   t)
 
-(defun cus (&optional symbol)
-  "[symbol-name-string] -> current-symbol
-Get/set <cu>rrent <s>ymbol in current view."
-  (when (stringp symbol) (setf *current_symbol* symbol))
-  *current_symbol*)
+
+(defun cr (ref_from ref_to &optional name &key attributes comment label representation (taxonomy "rel") weight)
+  "ref_from, ref_to, [relation-name-string :attributes :comment :label :representation :taxonomy :weight] -> relation-name
+<C>reate new <r>elation with given name and possible additional values in schematic. If the relation-name already exists do nothing and return nil. Default type is undirected relation. To make a directed or bidirected relation, set the appropriate taxonomy (note that ref_from and ref_to are only technical terms meaning you first tie the relation from that symbol to another. it can mean that is directe, but it is not guaranted that the author means that unless he makes that explicit with a relation that declares that)."
+  (let* ((name name))
+    (if (not (stringp name))
+      (dotimes (i *escad-max-obj-count*)
+	(setq name (concatenate 'string "r" (write-to-string i)))
+	(unless (gethash name *relations*) (return name))))
+    (multiple-value-bind (rel rel-exists) (gethash name *relations*)
+      (if rel-exists
+	  nil
+	  (progn
+	    (with-slots ((ref_from1 ref_from)) (gethash ref_to *symbols*)
+	      (pushnew name ref_from1))
+	    (with-slots ((ref_to2 ref_to)) (gethash ref_from *symbols*)
+	      (pushnew name ref_to2))
+	    (setf (gethash name *relations*)
+		  (make-instance (taxonomy2intern taxonomy) :comment comment :label label :representation representation :ref_to (list ref_to)
+				 :ref_from (list ref_from) :taxonomy taxonomy :weight weight))
+	    (if attributes (ara name attributes))
+	    name)))))
+
+
+(defun cs (&optional name &key attributes comment label parameter representation (taxonomy "sym") weight)
+  "[symbol-name-string :attributes :comment :label :parameter :representation :taxonomy :weight] -> symbol-name | nil
+<C>reate a new <s>ymbol with given or automatically generated name and possible additional values in schematic, or
+if the symbol-name already exists do nothing and return nil."
+  (let ((name name) (par parameter))
+    (if (not (stringp name))
+      (dotimes (i *escad-max-obj-count*)
+	(setq name (concatenate 'string "s" (write-to-string i)))
+	(multiple-value-bind (sym sym-exists) (gethash name *symbols*)
+	  (unless sym-exists
+	    (setf (gethash name *symbols*) (make-instance (taxonomy2intern taxonomy) :attributes attributes :comment comment :id name :label label :parameter parameter :representation representation :taxonomy taxonomy :weight weight))
+	    ;(if attributes (asa name attributes))
+	    (return name)))) ; sym with generated name created
+      (multiple-value-bind (sym sym-exists) (gethash name *symbols*)
+	(if (not sym-exists)
+	    (progn
+	      (setf (gethash name *symbols*) (make-instance (taxonomy2intern taxonomy) :attributes attributes :comment comment :id name :label label :representation representation :taxonomy taxonomy :weight weight))
+	      (if attributes (asa name attributes))
+	      name) ; sym with requested name created
+	    nil))))) ; sym exists already
+
+;; (defun cus (&optional symbol)
+;;   "[symbol-name-string] -> current-symbol
+;; Get/set <cu>rrent <s>ymbol in current view."
+;;   (when (stringp symbol) (setf *current_symbol* symbol))
+;;   *current_symbol*)
 
 (defun get-copyright-info ()
   ""
@@ -461,16 +507,16 @@ If you want a other license (like for commercial purposes), please contact Marku
 	       (wei weight)) (s symbol-name)
     (list :comment com :label lab :representation rep :taxonomy tax :weight wei)))
 
-(defun gtd (&optional taxonomy)
-  "[taxonomy-string] -> taxonomy-doc-string | nil
-<G>et <t>axonomy <d>ocumentation. If there is no argument then print global documentation of taxonomy. If there is a argument then print documentation of the specified taxonomy. Return nil if doc or taxonomy not exists."
-  (let ((result-string nil))
-    (if taxonomy
-	(dolist (taxonomy-item (cadr *taxonomy*))
-	  (when (string= taxonomy (getf taxonomy-item :taxonomy))
-	    (setq result-string (getf taxonomy-item :doc))))
-	(setq result-string (getf (nth 1 (cdar *taxonomy*)) :doc)))
-    result-string))
+;; (defun gtd (&optional taxonomy)
+;;   "[taxonomy-string] -> taxonomy-doc-string | nil
+;; <G>et <t>axonomy <d>ocumentation. If there is no argument then print global documentation of taxonomy. If there is a argument then print documentation of the specified taxonomy. Return nil if doc or taxonomy not exists."
+;;   (let ((result-string nil))
+;;     (if taxonomy
+;; 	(dolist (taxonomy-item (cadr *taxonomy*))
+;; 	  (when (string= taxonomy (getf taxonomy-item :taxonomy))
+;; 	    (setq result-string (getf taxonomy-item :doc))))
+;; 	(setq result-string (getf (nth 1 (cdar *taxonomy*)) :doc)))
+;;     result-string))
 
 (defmacro help ()
   "-> command-list
@@ -505,7 +551,7 @@ Commands grouped depending on function:
  * REMOVE attributes: rra, rsa
  * SHOW      context: cs, lsc
  * EDIT/ACT. context: as, cs
- * INSERT    objects: nr, ns
+ * INSERT    objects: cr, cs
  * REMOVE    objects: rr, rs
  * SHOW      objects: o, r, s, rp, sp
  * EDIT      objects: r, s
@@ -618,12 +664,12 @@ Thanks. :-)
 
 (defun lov (file_name)
   "absolut-file-name -> result_status_string
-<lo>ad <v>iew from file into current view. All existing symbols and relations will be deleted! Note that the file can be a fast loading default escad save format or with key :as_escad_commands saved file. In the last case standard escad commands will be executed, so that this can take some time.
+<lo>ad <v>iew from file into current view. All existing symbols and relations will be deleted! Note that the file can be a fast loading default escad save format or with key :as_escad_commands saved file. In the last case the file begins with a lisp comment char so that standard escad commands will be executed.
 Escad recognizes the different files automatically, you not need to specify anything."
   (with-open-file (stream file_name :direction :input)
     (if (string= ";" (subseq (format nil "~a" (read-line stream)) 0 1)) ; if file starts with comment
 	(progn (load file_name :verbose nil :print t) (return-from lov "Executed file with escad-commands (slow format)."))
-	(with-open-file (in (concatenate 'string *escad-view-dir* file_name)) ; load in default file-format (may be faster):
+	(with-open-file (in (concatenate 'string *escad-workspace-dir* file_name)) ; load in default file-format (may be faster):
 	  (with-standard-io-syntax
 	    (let ((input '()) header symbols relations)
 	      (setf input (read in))
@@ -685,7 +731,7 @@ Additionally exclude symbols which match the exclude-taxonomy."
 			   append (ssel step1done-syms :taxonomy taxonomy)) :test #'string=)  ; return only symbols not in exclude list
 	step1done-syms)))
 
-(defun lsc (&optional (name *current_symbol*))
+(defun lsc (&optional name)
   "[symbol-name] -> list-of-2lists-of-lists
 <L>ist <s>ymbol <c>ontext of the current or a given symbol (default is current). The returned list has two lists. First are the input relation(s) and second with output relation(s). The containing data(s) is a two element list with first element containing the relation-name and the second is the related symbol-name of this relation."
   (let ((sym-go-in '()) (rel-go-in '()) (rel-go-out '()) (sym-go-out '()))
@@ -727,50 +773,6 @@ Additionally exclude symbols which match the exclude-taxonomy."
   (setf (gethash new_name *symbols*) (gethash name *symbols*))
   (remhash name *symbols*)
   (gethash new_name *symbols*))
-
-(defun nr (ref_from ref_to &optional name &key attributes comment label representation (taxonomy "escad") weight)
-  "ref_from, ref_to, [relation-name-string :attributes :comment :label :representation :taxonomy :weight] -> relation-name
-Create <n>ew <r>elation with given name and possible additional values in schematic. If the relation-name already exists do nothing and return nil. Default type is undirected relation. To make a directed or bidirected relation, set the appropriate taxonomy (note that ref_from and ref_to are only technical terms meaning you first tie the relation from that symbol to another. it can mean that is directe, but it is not guaranted that the author means that unless he makes that explicit with a relation that declares that)."
-  (let* ((name name))
-    (if (not (stringp name))
-      (dotimes (i *escad-max-obj-count*)
-	(setq name (concatenate 'string "r" (write-to-string i)))
-	(unless (gethash name *relations*) (return name))))
-    (multiple-value-bind (rel rel-exists) (gethash name *relations*)
-      (if rel-exists
-	  nil
-	  (progn
-	    (with-slots ((ref_from1 ref_from)) (gethash ref_to *symbols*)
-	      (pushnew name ref_from1))
-	    (with-slots ((ref_to2 ref_to)) (gethash ref_from *symbols*)
-	      (pushnew name ref_to2))
-	    (setf (gethash name *relations*)
-		  (make-instance 'rel :comment comment :label label :representation representation :ref_to (list ref_to)
-				 :ref_from (list ref_from) :taxonomy taxonomy :weight weight))
-	    (if attributes (ara name attributes))
-	    name)))))
-
-
-(defun ns (&optional name &key attributes comment label representation (taxonomy "escad") weight)
-  "[symbol-name-string :attributes :comment :label :representation :taxonomy :weight] -> symbol-name | nil
-Create a <n>ew <s>ymbol with given or automatically generated name and possible additional values in schematic, or
-if the symbol-name already exists do nothing and return nil."
-  (let ((name name))
-    (if (not (stringp name))
-      (dotimes (i *escad-max-obj-count*)
-	(setq name (concatenate 'string "s" (write-to-string i)))
-	(multiple-value-bind (sym sym-exists) (gethash name *symbols*)
-	  (unless sym-exists
-	    (setf (gethash name *symbols*) (make-instance 'sym :comment comment :label label :representation representation :taxonomy taxonomy :weight weight))
-	    (if attributes (asa name attributes))
-	    (return name)))) ; sym with generated name created
-      (multiple-value-bind (sym sym-exists) (gethash name *symbols*)
-	(if (not sym-exists)
-	    (progn
-	      (setf (gethash name *symbols*) (make-instance 'sym :comment comment :label label :representation representation :taxonomy taxonomy :weight weight))
-	      (if attributes (asa name attributes))
-	      name) ; sym with requested name created
-	    nil))))) ; sym exists already
 
 
 (defun path (path-list &optional (max-depth 10))
@@ -877,12 +879,13 @@ Get <r>elation <p>roperty as result."
 		      (push rname rel_set))))
     rel_set))
 
-(defun s (name &key comment label representation taxonomy weight)
-  "symbol-name [comment label representation taxonomy weight] -> sym-obj | nil
+(defun s (name &key comment label parameter representation taxonomy weight)
+  "symbol-name [comment label parameter representation taxonomy weight] -> sym-obj | nil
 Sets <s>ymbol properties (slots) depending of key - if any given - and returns symbol, or 'nil' if not existent."
   (multiple-value-bind (sym sym-exists) (gethash name *symbols*)
     (if sym-exists
-	(with-slots ((com comment) (lab label) (rep representation) (tax taxonomy) (wei weight)) sym
+	(with-slots ((com comment) (lab label) (par parameter) (rep representation) (tax taxonomy) (wei weight)) sym
+	  (when parameter (setf par parameter))
 	  (if comment (setf com comment))
 	  (if label (setf lab label))
 	  (if representation (setf rep representation))
@@ -907,7 +910,7 @@ However you can specify ::as_escad_commands key, which generates a file with esc
 	  (with-slots (attributes comment label ref_from ref_to representation taxonomy weight) (gethash name *relations*)
 	    (setq escad-commands (concatenate 'string escad-commands
 					      (format nil "(nr ~S :attributes '~S :comment ~S :label ~S :representation ~S :taxonomy ~S :weight ~S)~%" name attributes comment label representation taxonomy weight)))))	
-	(with-open-file (cmd-stream (concatenate 'string *escad-view-dir* file_name)
+	(with-open-file (cmd-stream (concatenate 'string *escad-workspace-dir* file_name)
 				    :direction :output
 				    :if-exists :supersede
 				    :if-does-not-exist :create)
@@ -926,7 +929,7 @@ However you can specify ::as_escad_commands key, which generates a file with esc
 			(cons 'representation representation) (cons 'taxonomy taxonomy)
 			(cons 'ref_from ref_from) (cons 'ref_to ref_to) (cons 'weight weight)) relations)))
 	(vector-push relations output)
-	(with-open-file (out (concatenate 'string *escad-view-dir* file_name)
+	(with-open-file (out (concatenate 'string *escad-workspace-dir* file_name)
 			     :direction :output
 			     :if-exists :supersede)
 	  (with-standard-io-syntax
@@ -954,28 +957,25 @@ get <s>ymbol <p>roperty as result."
 	  (push sname sym_set))))
     sym_set))
 
-(defun tv ()
-  "-> number_of_view
-Escad has two views, each representing a own schematic, so <t>oggle from one <v>iew to the other."
-  (if (eq *symbols* *symbols1*)
-      (progn
-	(setf *symbols* *symbols2*)
-	(setf *relations* *relations2*)
-	(setf *current_symbol* *current_symbol2*)
-	0)
-      (progn
-	(setf *symbols* *symbols1*)
-	(setf *relations* *relations1*)
-	(setf *current_symbol* *current_symbol1*)
-	1)))
+;; (defun tv ()
+;;   "-> number_of_view
+;; Escad has two views, each representing a own schematic, so <t>oggle from one <v>iew to the other."
+;;   (if (eq *symbols* *symbols1*)
+;;       (progn
+;; 	(setf *symbols* *symbols2*)
+;; 	(setf *relations* *relations2*)
+;; 	(setf *current_symbol* *current_symbol2*)
+;; 	0)
+;;       (progn
+;; 	(setf *symbols* *symbols1*)
+;; 	(setf *relations* *relations1*)
+;; 	(setf *current_symbol* *current_symbol1*)
+;; 	1)))
 
 (defun vs ()
-  " -> (ACTUAL_VIEW_NUMBER SYM_COUNT_VIEW1 REL_COUNT_VIEW1 SYM_COUNT_VIEW2 REL_COUNT_VIEW2)
+  " -> (SYM_COUNT REL_COUNT)
 Gives <v>iew <s>tatus."
-  (let ((act_view nil) (sc1 nil) (rc1 nil) (sc2 nil) (rc2 nil))
-    (setq act_view (if (eq *symbols* *symbols1*) 0 1))
-    (setq sc1 (hash-table-count *symbols1*))
-    (setq rc1 (hash-table-count *relations1*))
-    (setq sc2 (hash-table-count *symbols2*))
-    (setq rc2 (hash-table-count *relations2*))
-    (list act_view sc1 rc1 sc2 rc2)))
+  (let ((sc nil) (rc nil))
+    (setq sc (hash-table-count *symbols*))
+    (setq rc (hash-table-count *relations*))
+    (list sc rc)))

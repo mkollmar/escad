@@ -25,8 +25,9 @@
   (:nicknames :escad)
   (:shadow :exp)
   (:export :attributes :comment :label :representation :taxonomy :rel :ref_from :ref_to
-	   :ad :adp :apc :ara :as :asa :asp :asr :asw :aup :cs :cls :cpv :get-copyright-info :gra :grp :gsa :gsp :gtd :help :help-command :help-tutorial
-	   :le :los :lov :lr :ls :lsc :lt :mr :ms :nr :ns :r :rp :rr :rra :rs :rsa :s :sc :sp :ss :sav :tv :vs
-	   :call-expansion-function :file-data2string
-	   :*escad-lib-dir* :*escad-view-dir* :*escad_tmp_file*)
+	   :ad :adp :apc :ara :as :asa :asp :asr :asw :aup :cr :cs :cls :cpv :get-copyright-info :gra :grp :gsa :gsp :gtd :help :help-command :help-tutorial
+	   :init-escad :le :los :lov :lr :ls :lsc :lt :mr :ms :r :rp :rr :rra :rs :rsa :s :sc :sp :ss :sav :tv :vs
+	   :sym :rel :activate
+	   :start-gui-server :stop-gui-server :call-expansion-function :file-data2string
+	   :*escad-expansion-dir* :*escad_version* :*escad-workspace-dir* :*escad_tmp_file*)
   (:documentation "Expandable Symbolic Computer Aided Description."))

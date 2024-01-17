@@ -10,6 +10,10 @@ import contextMenus from 'cytoscape-context-menus';
 cytoscape.use(contextMenus); // register extension
 import { createMachine, interpret, assign } from 'xstate'; // https://xstate.js.org/
 
+const EscadServer = "http://127.0.0.1:4242/";
+//const EscadServer = "HTTP://LOCALHOST:4242/";
+const EscadVersion = "0.1.0";
+
 // Actions for state-machine:
 const pushNodeId = assign({ last_selected_two_nodes: (context, event) => {
     console.log("node pushed:" + event.id);
@@ -266,10 +270,10 @@ async function getDBTree(root_node_id) {
 }
 
 
-// get all taxonomies
-async function getDBClassNodes() {
+// get all escad internal symbols (starting with underscore):
+async function getDBInternalSymbols() {
     try {
-        let response = await fetch('http://127.0.0.1:4242/_escad/get-all-taxonomies',
+        let response = await fetch(EscadServer + EscadVersion + '/get-internal-symbols',
 			      { method: 'GET',
 				headers: {'Accept': 'application/json'} });
 	if (response.status === 200) {
@@ -430,10 +434,10 @@ async function removeDBNode(node_id) {
 
 // CLIENT EDGE/NODE OPERATIONS
 async function initGraph(cy) {
-    let nodes = await getDBClassNodes();
+    let nodes = await getDBInternalSymbols();
 
-    let nr = Date.now();
-    nodes.forEach( (n) => { nr = nr +1; cy.add({group: 'nodes', data: { id: nr.toString(), info: "info", _key: n, semantic: "semantic", type: "type", weight: 0, atdb: true }, position: { x: 100, y: 50 }} ); } );
+    let nr = Date.now();  // TODO: bett unique id function!
+    nodes.forEach( (n) => { nr = nr +1; cy.add({group: 'nodes', data: { id: nr.toString(), info: "info", _key: n.label, semantic: "semantic", type: "type", weight: 0, atdb: true }, position: { x: 100, y: 50 }} ); } );
     // let nr = Date.now();
     // nodes.forEach( (n) => { nr = nr +1; cy.add({group: 'nodes', data: { id: nr.toString(), info: n.info, _key: n._key, semantic: n.semantic, type: n.type, weight: n.weight, atdb: true }, position: { x: n.x, y: n.y }} ); } );
 }
